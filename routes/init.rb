@@ -1,0 +1,5 @@
+require_relative 'root'
+require_relative 'tracks'
+require_relative 'albums'
+require_relative 'streams'
+require_relative 'search'

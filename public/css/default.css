@@ -1,0 +1,12 @@
+body {
+  color: #110000;
+  font-family: "Cabin";
+}
+
+.jp-controls {
+  box-sizing: content-box;
+}
+
+#content {
+  padding-top:50px;
+}

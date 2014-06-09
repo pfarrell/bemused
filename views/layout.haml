@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+%html
+  %head
+    %title#title
+      #{@title}
+    %meta{:charset => "utf-8"}
+    %meta{:name => "viewport", :content=>"width=device-width, initial-scale=1, maximum-scale=1"}
+    %meta{:name=>"apple-mobile-web-app-capable", :content=>"yes"}
+    %script{:type => "text/javascript", :src => "http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"}
+    <!--%link{:rel => "stylesheet", :href => "http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/themes/base/jquery-ui.css", :type => "text/css"}-->
+    %link{:rel => "stylesheet", :href => "http://fonts.googleapis.com/css?family=Cabin", :type => "text/css", :media => "all"}
+    <!--%link{:rel => "stylesheet", :href => "//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css", :type => "text/css"}-->
+    %link{:rel => "stylesheet", :href => "#{url_for '/css/bootstrap/3.1.1/bootstrap.min.css'}", :type => "text/css"}
+    %link{:rel => "stylesheet", :href => "#{url_for '/blue.monday/jplayer.blue.monday.css'}", :type => "text/css" }
+    %link{:rel => "stylesheet", :href => "#{url_for '/css/default.css'}", :type => "text/css", :media => "screen" }
+    %script{:type => "text/javascript", :src => "#{url_for '/js/jquery.jplayer.min.js'}"}
+    %script{:type => "text/javascript", :src => "#{url_for '/js/jplayer.playlist.min.js'}"}
+  %body
+    %div.navbar.navbar-default.navbar-fixed-top
+      %div.container
+        %div.navbar-header
+    %div.container#content
+      =yield
+    %div.container
+      %div.row
+        %div.twelvecol
+          %div.container.footer
+:javascript
+  $('#reload').bind('click', function() {
+    document.title = 'Random Albums';
+    if(!endsWith(document.location.toString(), "#{@host}" + '/')){
+      history.pushState(null, "#{@title}", '/');
+    }
+    reload();
+    clearInterval();
+    setInterval(function() {
+      reload();
+    }, 15000);
+  });
+  function set_content(content) {
+    $('#content').html(content.data('fsr'));
+  }
+  function reload() {
+    $('#content').each(function(i) {
+      var content = $('#content');
+      $.post(
+        "#{url_for('/')}",
+        '{}',
+        function(INFO) {
+          content.data('fsr', INFO);
+          set_content(content);
+        },
+        'html'
+      );
+    });
+  }
+  function endsWith(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+  }
+

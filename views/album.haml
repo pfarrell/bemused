@@ -1,0 +1,74 @@
+#jquery_jplayer_1.jp-jplayer
+#jp_container_1.jp-audio
+  .jp-type-playlist
+    .jp-gui.jp-interface
+      %ul.jp-controls
+        %li
+          %a.jp-previous{:href=>'javascript:;', :tabindex => '1'}
+            previous
+        %li
+          %a.jp-play{:href=>'javascript:;', :tabindex => '1'}
+            play
+        %li
+          %a.jp-pause{:href=>'javascript:;', :tabindex => '1'}
+            pause
+        %li
+          %a.jp-next{:href=>'javascript:;', :tabindex => '1'}
+            next
+        %li
+          %a.jp-stop{:href=>'javascript:;', :tabindex => '1'}
+            stop
+        %li
+          %a.jp-mute{:href=>'javascript:;', :tabindex => '1'}
+            mute
+        %li
+          %a.jp-unmute{:href=>'javascript:;', :tabindex => '1'}
+            unmute
+        %li
+          %a.jp-volume-max{:href=>'javascript:;', :tabindex=>'1'}
+            max volume
+      %div.jp-progress
+        %div.jp-seek-bar
+          %div.jp-play-bar
+      %div.jp-volume-bar
+        %div.jp-volume-bar-value
+      %div.jp-current-time
+      %div.jp-duration
+      %ul.jp-toggles
+        %li
+          %a.jp-repeat{:href=>"javascript:;", :tabindex=>'1'}
+            repeat
+        %li
+          %a.jp-repeat-off{:href=>"javascript:;", :tabindex=>'1'}
+            repeat-off
+    %div.jp-playlist
+      %ul
+        %li
+    %div.jp-no-solution
+      %span
+        Update Required
+      To play the media you will need to either update your browser to a recent version
+ 
+:javascript
+    document.getElementById("content").style.background="url('#{url_for "/images/" + album.image_path}')";
+    document.getElementById("content").style.backgroundSize="900px 900px";
+    document.getElementById("content").style.backgroundPosition="0px 50px";
+    document.getElementById("content").style.backgroundRepeat="no-repeat";
+    document.getElementById("content").style.minHeight="900px";
+
+    $(document).ready(function() {
+      document.title = "#{album.title}";
+      new jPlayerPlaylist({
+        jPlayer: "#jquery_jplayer_1",
+        cssSelectorAncestor: "#jp_container_1"
+      }, 
+      [
+        #{ album.playlist }
+      ], 
+      {
+        swfPath: "http://patf.net/js",
+        supplied: "mp3",
+        wmode: "window"
+      });  
+    });
+
