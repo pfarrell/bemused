@@ -19,6 +19,9 @@
     %div.navbar.navbar-default.navbar-fixed-top
       %div.container
         %div.navbar-header
+          %form.navbar-form.navbar-left{id: "search", action: "#{url_for("/search")}", method: "GET"}
+            .form-group
+              %input.form-control{type: "TEXT", id: "q", name: "q"}
     %div.container#content
       =yield
     %div.container

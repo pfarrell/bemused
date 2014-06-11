@@ -5,7 +5,7 @@ class Album < Sequel::Model
   # returns tracks formatted as string of form
   # {title: "${track_number}. ${track_title}", mp3: "${path to mp3 (in public folder}"}, ...
   def playlist 
-    tracks.sort_by{ |t| t.track_number }.map do |track| 
+    tracks.sort_by{ |t| t.track_number.to_i }.map do |track| 
       %Q(
         {
           title: "#{track.track_number}. #{track.title}", 

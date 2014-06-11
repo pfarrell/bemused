@@ -1,7 +1,11 @@
--albums.each do |album|
-  .album
-    =album.title 
-
+%h3
+  Artists
 -artists.each do |artist|
   .artist
     =artist.name
+%h3
+  Albums
+-albums.each do |album|
+  .album
+    %a{href: "#{url_for "/album/#{album.id}"}"}
+      =album.title 
