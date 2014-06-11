@@ -2,7 +2,8 @@
   Artists
 -artists.each do |artist|
   .artist
-    =artist.name
+    %a{href: "#{url_for "/artist/#{artist.id}"}"}
+      =artist.name
 %h3
   Albums
 -albums.each do |album|
