@@ -27,7 +27,7 @@ set :deploy_via, :remote_cache
 # set :linked_files, %w{config/database.yml}
 
 # Default value for linked_dirs is []
- set :linked_dirs, %w{log tmp public/images public/mp3}
+ set :linked_dirs, %w{log tmp public/images public/mp3s}
 
 # Default value for default_env is {}
 # set :default_env, { path: "/opt/ruby/bin:$PATH" }
