@@ -9,7 +9,7 @@ class Album < Sequel::Model
       %Q(
         {
           title: "#{track.track_number}. #{track.title}", 
-          mp3: "#{ENV["PSHARE_PATH"]}/stream/#{track.id}"
+          mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}"
         }
       )
     end
