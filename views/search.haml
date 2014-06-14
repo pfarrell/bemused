@@ -7,6 +7,12 @@
 %h3
   Albums
 -albums.each do |album|
-  .item
-    %a{href: "#{url_for "/album/#{album.id}"}"}
-      %img{src: "#{url_for "/images/#{album.image_path}"}"}
+  %a.item{href: "#{url_for "/album/#{album.id}"}"}
+    %img{src: "#{url_for "/images/#{album.image_path}"}"}
+:javascript
+  var container = document.querySelector('.container');
+  var msnry = new Masonry( container, {
+    // options
+    columnWidth: 200,
+    itemSelector: '.item'
+  });
