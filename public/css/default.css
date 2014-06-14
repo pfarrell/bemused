@@ -10,3 +10,11 @@ body {
 #content {
   padding-top:80px;
 }
+
+.item {
+  width: 15%;
+}
+
+.item img {
+  width:250px;
+}

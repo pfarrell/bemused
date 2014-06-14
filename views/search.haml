@@ -7,6 +7,6 @@
 %h3
   Albums
 -albums.each do |album|
-  .album
+  .item
     %a{href: "#{url_for "/album/#{album.id}"}"}
-      =album.title 
+      %img{src: "#{url_for "/images/#{album.image_path}"}"}
