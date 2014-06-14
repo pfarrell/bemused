@@ -2,6 +2,5 @@
   =artist.name
 .albums
   -artist.albums.each do |album|
-    .album
-      %a{href: "#{url_for("/album/#{album.id}")}"}
+      %a.item{href: "#{url_for("/album/#{album.id}")}"}
         %img{src: "/images/#{album.image_path}"}

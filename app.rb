@@ -1,11 +1,13 @@
 require 'sinatra'
 require 'sinatra/url_for'
 require 'haml'
+require 'logger'
 
 class Bemused < Sinatra::Application
   helpers Sinatra::UrlForHelper
 
   enable :sessions
+  set :session_secret, ENV["BEMUSED_SESSION_SECRET"]
 
 
 end
