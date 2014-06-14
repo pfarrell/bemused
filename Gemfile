@@ -10,5 +10,6 @@ gem 'capistrano-bundler', '~> 1.1.2'
 gem 'passenger'
 
 group :development do
+  gem 'byebug'
   gem 'shotgun'
 end
