@@ -1,8 +1,8 @@
 %h3
   Artists
 -artists.each do |artist|
-  .artist
-    %a{href: "#{url_for "/artist/#{artist.id}"}"}
+  %a.item{href: "#{url_for "/artist/#{artist.id}"}"}
+    %img{src: "#{url_for "/images/artists/#{artist.image_path}"}"}
       =artist.name
 %h3
   Albums
