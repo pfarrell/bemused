@@ -2,8 +2,11 @@
   Artists
 -artists.each do |artist|
   %a.item{href: "#{url_for "/artist/#{artist.id}"}"}
-    %img{src: "#{url_for "/images/artists/#{artist.image_path}"}"}
-      =artist.name
+    .album
+      .img
+        %img{src: "#{url_for "/images/artists/#{artist.image_path}"}"}
+      .name
+        =artist.name
 %h3
   Albums
 -albums.each do |album|
