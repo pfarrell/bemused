@@ -57,10 +57,11 @@
     document.getElementById("content").style.minHeight="900px";
 
     var timer;
+    var myPlaylist
 
     $(document).ready(function() {
       document.title = "#{album.title}";
-      new jPlayerPlaylist({
+      myPlaylist = new jPlayerPlaylist({
         jPlayer: "#jquery_jplayer_1",
         cssSelectorAncestor: "#jp_container_1"
       }, 
@@ -81,6 +82,14 @@
       }
       timer = setTimeout(function() {
         $('#jquery_jplayer_1,#jp_container_1').fadeOut()
-        cleared = true;
-      }, 5000)
+      }, 2000)
+    });
+    $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
+        var current = myPlaylist.current,
+            playlist = myPlaylist.playlist;
+        $.each(playlist, function (index, obj) {
+            if (index == current) {
+                $('.jp_current_track_title').text("Now Playing: " + obj.title);   
+            }
+        });
     });
