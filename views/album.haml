@@ -56,6 +56,8 @@
     document.getElementById("content").style.backgroundRepeat="no-repeat";
     document.getElementById("content").style.minHeight="900px";
 
+    var timer;
+
     $(document).ready(function() {
       document.title = "#{album.title}";
       new jPlayerPlaylist({
@@ -71,4 +73,14 @@
         wmode: "window"
       });  
     });
-
+    $(document).mousemove(function() {
+      if(timer) {
+        clearTimeout(timer);
+        timer=0;
+        $('#jquery_jplayer_1,#jp_container_1').fadeIn();
+      }
+      timer = setTimeout(function() {
+        $('#jquery_jplayer_1,#jp_container_1').fadeOut()
+        cleared = true;
+      }, 5000)
+    });
