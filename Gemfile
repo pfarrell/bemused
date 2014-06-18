@@ -1,6 +1,7 @@
 source "https://rubygems.org"
 
 gem 'sinatra'
+gem 'rack-mobile-detect'
 gem 'haml'
 gem 'sequel'
 gem 'mysql'

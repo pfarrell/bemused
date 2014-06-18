@@ -1,10 +1,12 @@
 require 'sinatra'
 require 'sinatra/url_for'
+require 'rack/mobile-detect'
 require 'haml'
 require 'logger'
 
 class Bemused < Sinatra::Application
   helpers Sinatra::UrlForHelper
+  use Rack::MobileDetect
 
   enable :sessions
   set :session_secret, ENV["BEMUSED_SESSION_SECRET"]

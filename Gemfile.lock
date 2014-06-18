@@ -29,6 +29,8 @@ GEM
       rack
       rake (>= 0.8.1)
     rack (1.5.2)
+    rack-mobile-detect (0.4.0)
+      rack
     rack-protection (1.5.3)
       rack
     rake (10.3.2)
@@ -56,6 +58,7 @@ DEPENDENCIES
   haml
   mysql
   passenger
+  rack-mobile-detect
   sequel
   shotgun
   sinatra
