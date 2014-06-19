@@ -7,6 +7,7 @@ DB = Sequel.connect(
   logger: $console)
 DB.sql_log_level = :debug
 
+require_relative 'editable'
 require_relative 'track'
 require_relative 'album'
 require_relative 'media_file'

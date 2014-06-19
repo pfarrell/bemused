@@ -1,4 +1,6 @@
 class Album < Sequel::Model
+  include Editable
+
   many_to_one :artist
   one_to_many :tracks
 
