@@ -7,6 +7,8 @@ DB = Sequel.connect(
   logger: $console)
 DB.sql_log_level = :debug
 
+Sequel::Model.plugin :timestamps
+
 require_relative 'editable'
 require_relative 'track'
 require_relative 'album'
