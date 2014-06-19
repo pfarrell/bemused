@@ -1,6 +1,6 @@
 class Bemused < Sinatra::Application
   get "/album/:id" do
-    haml :album, :locals => {:album => Album[params[:id]]} 
+    haml :album, locals: {album: Album[params[:id]]} 
   end
 
   get "/admin/album/:id" do
@@ -8,6 +8,8 @@ class Bemused < Sinatra::Application
   end
 
   post "/admin/album/:id" do
-    params["title"]
+    album = Album[params[:id]].merge_params(params)
+    album.save
+    haml :album, locals: {album: album}
   end
 end

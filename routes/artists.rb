@@ -8,6 +8,8 @@ class Bemused < Sinatra::Application
   end
 
   post "/admin/artist/:id" do
-    params["name"]
+    artist = Artist[params[:id]].merge_params(params)
+    artist.save
+    haml :artist, locals: {artist: artist}
   end
 end

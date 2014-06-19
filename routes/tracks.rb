@@ -8,6 +8,8 @@ class Bemused < Sinatra::Application
   end
 
   post "/admin/track/:id" do
-    params["title"]
+    track = Track[params[:id]].merge_params(params)
+    track.save
+    "track saved"
   end
 end
