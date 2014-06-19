@@ -80,10 +80,10 @@
       if(timer) {
         clearTimeout(timer);
         timer=0;
-        $('#jquery_jplayer_1,#jp_container_1').fadeIn();
+        $('#jp_container_1').fadeIn();
       }
       timer = setTimeout(function() {
-        $('#jquery_jplayer_1,#jp_container_1').fadeOut()
+        $('#jp_container_1').fadeOut()
       }, 2000)
     });
     $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
