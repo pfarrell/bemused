@@ -24,6 +24,6 @@ class Bemused < Sinatra::Application
     }
     album.image_path="#{params[:image_name]}"
     album.save
-    redirect("/admin/album/#{album.id}")
+    redirect(url_for("/admin/album/#{album.id}"))
   end
 end
