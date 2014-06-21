@@ -1,11 +1,11 @@
 %h3
   Artists
--artists.each do |artist|
+-artists.to_a.select{|artist| artist.albums.size > 0}.each do |artist|
   %a.item{href: "#{url_for "/artist/#{artist.id}"}"}
     %img{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}
 %h3
   Albums
--albums.each do |album|
+-albums.to_a.select{|album| album.tracks.size > 0}.each do |album|
   %a.item{href: "#{url_for "/album/#{album.id}"}"}
     %img{title: "#{album.title}", src: "#{url_for "/images/#{album.image_path}"}"}
 :javascript
