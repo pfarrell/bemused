@@ -1,4 +1,5 @@
 require 'sequel'
+require 'redis'
 require 'logger'
   
 $console = Logger.new STDOUT
