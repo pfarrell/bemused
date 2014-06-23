@@ -14,6 +14,6 @@ class Bemused < Sinatra::Application
       redis.rpush("bemused:incoming", File.absolute_path("public/tmp/uploads/#{f[:filename]}") )
     end
 
-    redirect("#{url_for("/upload")}")
+    redirect("#{url_for "/upload"}")
   end
 end
