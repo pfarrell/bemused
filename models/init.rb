@@ -1,4 +1,5 @@
 require 'sequel'
+require 'redis'
 require 'logger'
   
 $console = Logger.new STDOUT
@@ -14,3 +15,4 @@ require_relative 'track'
 require_relative 'album'
 require_relative 'media_file'
 require_relative 'artist'
+require_relative 'mp3'
