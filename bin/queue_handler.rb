@@ -3,7 +3,6 @@
 require 'id3tag'
 require 'redis'
 require '../app'
-require 'byebug'
 
 redis = Redis.new
 
@@ -15,15 +14,16 @@ while(true)
   #Read tags
   tags = mp3.tags
   
-  byebug
-
   # mv to error dir if no tags, add to error queue
 
   # mv to nas if tagged
   nas_location = "#{ENV["BEMUSED_UPLOAD_BASE"]}/#{tags.artist}/#{tags.album}/#{File.basename(mp3.tags.source)}"
 
   FileUtils.mkdir_p(File.dirname(nas_location))
-  FileUtils.mv(file, nas_location)
+  begin
+    FileUtils.mv(file, nas_location, verbose: true)
+  rescue Exception
+  end
 
   artist = Artist.find_or_create(name: tags.artist)
   album = Album.find_or_create(artist: artist, title: tags.album)
