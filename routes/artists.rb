@@ -1,4 +1,5 @@
 require 'open-uri'
+require 'json'
 
 class Bemused < Sinatra::Application
   get "/artist/:id" do
@@ -7,6 +8,13 @@ class Bemused < Sinatra::Application
 
   get "/admin/artist/:id" do
     haml :"admin/artist", locals: {model: Artist[params[:id]]}
+  end
+
+  get "/artists" do 
+    artists = Artist.where(Sequel.ilike(:name, "%#{params[:q]}")).limit(10).map{|a| a.name}
+    respond_to do | wants|
+      wants.json { artists.to_json }
+    end
   end
 
   post "/admin/artist/:id" do
