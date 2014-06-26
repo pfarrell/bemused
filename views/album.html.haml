@@ -52,11 +52,11 @@
     %a.item{href: "#{url_for("/admin/album/#{album.id}")}"}
       Edit
 :javascript
-    document.getElementById("content").style.background="url('#{url_for "/images/" + album.image_path}')";
-    document.getElementById("content").style.backgroundSize="auto 500px";
-    document.getElementById("content").style.backgroundPosition="0px 50px";
-    document.getElementById("content").style.backgroundRepeat="no-repeat";
-    //document.getElementById("content").style.minHeight="900px";
+        document.getElementById("content").style.background="url('#{url_for "/images/" + (album.image_path || "")}')";
+        document.getElementById("content").style.backgroundSize="auto 500px";
+        document.getElementById("content").style.backgroundPosition="0px 50px";
+        document.getElementById("content").style.backgroundRepeat="no-repeat";
+        //document.getElementById("content").style.minHeight="900px";
 
     var timer;
     var myPlaylist

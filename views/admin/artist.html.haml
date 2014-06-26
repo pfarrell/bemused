@@ -1,0 +1,19 @@
+%form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}")}"}
+  -model.editable_attributes.each do |k,v|
+    .field
+      =k
+    %input{type:"text", name:"#{k}", value: "#{v}"}
+  .submit
+    %input{type:"Submit", value:"Submit"}
+%img{src: "#{url_for("/images/artists/#{model.image_path}")}"}
+%form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}/image")}"}
+  .field
+    Image Url
+  %input{type:"text", name:"image_url"}
+  .field
+    Image Name
+  %input{type:"text", name:"image_name", value: "#{model.image_path}"}
+  .submit
+    %input{type:"Submit", value:"Submit"}
+
+  

@@ -1,0 +1,3 @@
+-artists.to_a.select{|artist| artist.albums.size > 0}.each do |artist|
+  %a.item{href: "#{url_for "/artist/#{artist.id}"}"}
+    %img{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}
