@@ -18,5 +18,14 @@
     %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}"}
   .input-group.input-group-lg
     %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
+%form{method: "POST", action:"#{url_for("/admin/album/merge/#{model.id}")}"}
+  .input-group.input-group-lg
+    %span.input-group-addon
+      New owning album id
+    %input.form-control{type:"text", name:"new_album_id"}
+  .input-group.input-group-lg
+    .submit
+      %input.btn.btn-default.btn-lg{type:"Submit", value:"Move Tracks to Album"}
+
 
   

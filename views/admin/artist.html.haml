@@ -5,7 +5,7 @@
         =k
       %input.form-control{type:"text", name:"#{k}", value: "#{v}"}
   .submit
-    %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
+    %input.btn.btn-default.btn-lg{type:"Submit", value:"Update"}
 %img{src: "#{url_for("/images/artists/#{model.image_path}")}"}
 %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}/image")}"}
   .input-group.input-group-lg
@@ -18,6 +18,13 @@
     %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}"}
   .input-group.input-group-lg
     .submit
-      %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
+      %input.btn.btn-default.btn-lg{type:"Submit", value:"Set Image"}
+%form{method: "POST", action:"#{url_for("/admin/artist/merge/#{model.id}")}"}
+  .input-group.input-group-lg
+    %span.input-group-addon
+      New owning artist
+    %input.form-control{type:"text", name:"new_artist_id"}
+  .input-group.input-group-lg
+    .submit
+      %input.btn.btn-default.btn-lg{type:"Submit", value:"Replace Artist"}
 
-  

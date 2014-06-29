@@ -26,4 +26,15 @@ class Bemused < Sinatra::Application
     album.save
     redirect(url_for("/admin/album/#{album.id}"))
   end
+
+  post "/admin/album/merge/:id" do
+    old_album = Album[params[:id]]
+    new_album = Album[params[:new_album_id]]
+
+    old_album.tracks.each do |track|
+      track.album = new_album
+      track.save
+    end
+    redirect(url_for("/admin/album/#{new_album.id}"))
+  end
 end
