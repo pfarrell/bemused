@@ -10,11 +10,12 @@ module Editable
     self
   end
 
-  def log_event(track, album, artist, action)
+  def log_event(track, album, artist, ip, action)
     log = Log.new
     log.track = track
     log.artist = artist
     log.album = album
+    log.ip_address = ip
     log.action = action
     log.save
   end
