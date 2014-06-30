@@ -1,19 +1,30 @@
 %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}")}"}
   -model.editable_attributes.each do |k,v|
-    .field
-      =k
-    %input{type:"text", name:"#{k}", value: "#{v}"}
+    .input-group.input-group-lg
+      %span.input-group-addon
+        =k
+      %input.form-control{type:"text", name:"#{k}", value: "#{v}"}
   .submit
-    %input{type:"Submit", value:"Submit"}
+    %input.btn.btn-default.btn-lg{type:"Submit", value:"Update"}
 %img{src: "#{url_for("/images/artists/#{model.image_path}")}"}
 %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}/image")}"}
-  .field
-    Image Url
-  %input{type:"text", name:"image_url"}
-  .field
-    Image Name
-  %input{type:"text", name:"image_name", value: "#{model.image_path}"}
-  .submit
-    %input{type:"Submit", value:"Submit"}
+  .input-group.input-group-lg
+    %span.input-group-addon
+      Image Url
+    %input.form-control{type:"text", name:"image_url"}
+  .input-group.input-group-lg
+    %span.input-group-addon
+      Image Name
+    %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}"}
+  .input-group.input-group-lg
+    .submit
+      %input.btn.btn-default.btn-lg{type:"Submit", value:"Set Image"}
+%form{method: "POST", action:"#{url_for("/admin/artist/merge/#{model.id}")}"}
+  .input-group.input-group-lg
+    %span.input-group-addon
+      New owning artist
+    %input.form-control{type:"text", name:"new_artist_id"}
+  .input-group.input-group-lg
+    .submit
+      %input.btn.btn-default.btn-lg{type:"Submit", value:"Replace Artist"}
 
-  

@@ -6,13 +6,13 @@
   .input-group
     %span.input-group-addon
       Artist
-    %input{type:"text", name: "artist_name"}
+    %input.form-control{type:"text", name: "artist_name"}
   .input-group
     %span.input-group-addon
       Album
-    %input{type:"text", name: "album_name"}
+    %input.form-control{type:"text", name: "album_name"}
   .input-group
-    %input{type:"submit", value:"upload"}
+    %input.btn.btn-default.btn-lg{type:"submit", value:"upload"}
 
 -unless params["info"].nil?
   .text

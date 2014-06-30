@@ -17,6 +17,7 @@
     %script{:type => "text/javascript", :src => "#{url_for '/js/jplayer.playlist.min.js'}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/jquery.foggy.js'}"}
     %script{type: "text/javascript", src: "#{url_for "/js/masonry.pkgd.js"}"}
+    <!--%script{type: "text/javascript", src: "#{url_for "/js/masonry-horizontal.js"}"}-->
   %body
     %div.navbar.navbar-default.navbar-fixed-top
       %div.container
@@ -32,12 +33,14 @@
         %div.twelvecol
           %div.container.footer
 :javascript
-  $('.artist,.album').hover(
+  $('.item').hover(
     function(){
       $(this).foggy();
+      $(this .title).show();
     }, 
     function(){
       $(this).foggy(false);
+      $(this .title).hide();
     }
   );
   $('#reload').bind('click', function() {

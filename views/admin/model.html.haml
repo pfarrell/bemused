@@ -1,7 +1,8 @@
 %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}")}"}
   -model.editable_attributes.each do |k,v|
-    .field
-      =k
-    %input{type:"text", name:"#{k}", value: "#{v}"}
+    .input-group.input-group-lg
+      %span.input-group-addon
+        =k
+      %input.form-control{type:"text", name:"#{k}", value: "#{v}"}
   .submit
-    %input{type:"Submit", value:"Submit"}
+    %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
