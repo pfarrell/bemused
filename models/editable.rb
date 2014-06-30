@@ -9,4 +9,13 @@ module Editable
     self.values.merge!(symd)
     self
   end
+
+  def log_event(track, album, artist, action)
+    log = Log.new
+    log.track = track
+    log.artist = artist
+    log.album = album
+    log.action = action
+    log.save
+  end
 end

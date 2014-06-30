@@ -33,7 +33,7 @@ class Bemused < Sinatra::Application
 
     old_album.tracks.each do |track|
       track.album = new_album
-      track.save
+      track.save_changes
     end
     redirect(url_for("/admin/album/#{new_album.id}"))
   end
