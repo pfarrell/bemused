@@ -2,3 +2,4 @@ vendor
 public/mp3s
 public/images
 public/tmp
+.bundle
