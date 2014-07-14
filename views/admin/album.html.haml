@@ -1,4 +1,4 @@
-%a{href: "#{url_for("#{model.class.to_s.downcase}/#{model.id}")}"}
+%a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}"}
   =model.title
 %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}")}"}
   -model.editable_attributes.each do |k,v|
