@@ -53,8 +53,8 @@
       Edit
 :javascript
         document.getElementById("content").style.background="url('#{url_for "/images/" + (album.image_path || "")}')";
-        document.getElementById("content").style.backgroundSize="auto 800px";
         document.getElementById("content").style.backgroundPosition="0px 55px";
+        document.getElementById("content").style.backgroundSize="contain";
         document.getElementById("content").style.backgroundRepeat="no-repeat";
         //document.getElementById("content").style.minHeight="900px";
 
