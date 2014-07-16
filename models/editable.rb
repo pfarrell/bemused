@@ -5,7 +5,7 @@ module Editable
   end
 
   def merge_params(params)
-    symd = Hash[params.map {|k,v| [k.to_sym, v]}.select{|k,v| ![:id, :splat, :captures].include? k}]
+    symd = Hash[params.map {|k,v| [k.to_sym, v]}.select{|k,v| ![:id, :splat, :captures, :track_id].include? k}]
     self.values.merge!(symd)
     self
   end
