@@ -1,0 +1,7 @@
+.playlists
+  -playlists.each do |playlist|
+    %a.item{href: "#{url_for("/playlist/#{playlist.id}")}"}
+      =playlist.name
+    %a.item{href: "#{url_for("/admin/playlist/#{playlist.id}")}"}
+      Edit
+  

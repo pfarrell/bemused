@@ -3,6 +3,10 @@ class Bemused < Sinatra::Application
     haml :playlist, locals: {playlist: Playlist[params[:id]]} 
   end
 
+  get "/playlists" do
+    haml :playlists, locals: {playlists: Playlist.all}
+  end
+
   get "/admin/playlist/:id" do
     haml :"admin/playlist", locals: {model: Playlist[params[:id]]}
   end
