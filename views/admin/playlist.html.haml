@@ -1,3 +1,5 @@
+%a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}"}
+  =model.name
 %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}")}"}
   -model.editable_attributes.each do |k,v|
     .input-group.input-group-lg
@@ -10,3 +12,10 @@
     %input.form-control{type:"text", name:"track_id"}
   .submit
     %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
+.tracks
+  -model.tracks.each do |track|
+    .input-group.input-group-lg
+      %span.input-group-addon
+        &nbsp;
+      %span.form-control
+        #{track.title}
