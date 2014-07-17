@@ -1,7 +1,10 @@
 .playlists
   -playlists.each do |playlist|
-    %a.item{href: "#{url_for("/playlist/#{playlist.id}")}"}
-      =playlist.name
-    %a.item{href: "#{url_for("/admin/playlist/#{playlist.id}")}"}
-      Edit
+    .input-group.input-group-lg
+      %span.input-group-addon
+        &nbsp;
+      %a.form-control{href: "#{url_for("/playlist/#{playlist.id}")}"}
+        =playlist.name
+      %a.form-control{href: "#{url_for("/admin/playlist/#{playlist.id}")}"}
+        Edit
   
