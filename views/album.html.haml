@@ -91,7 +91,12 @@
             playlist = myPlaylist.playlist;
         $.each(playlist, function (index, obj) {
             if (index == current) {
-                $('.jp_current_track_title').html("<span class='album-title'>#{album.title}</span>: <span class='track-title'>" + obj.title + "</span>");
+              $('.jp_current_track_title').html("                        \
+                <a href='#{url_for("/artist/#{album.artist.id}")}'>      \
+                  <span class='artist-title'>#{album.artist.name}</span> \
+                </a>>                                                    \
+                <span class='album-title'>#{album.title}</span>>         \
+                <span class='track-title'>" + obj.title + "</span>");
             }
         });
     });
