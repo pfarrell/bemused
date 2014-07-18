@@ -18,4 +18,16 @@ class Bemused < Sinatra::Application
     playlist.save
     haml :"admin/playlist", locals: {model: playlist}
   end
+
+  post "/admin/playlist/:id/image" do
+    playlist = Playlist[params[:id]]
+    open("#{params[:image_url]}") {|f|
+      File.open("public/images/#{params[:image_name]}", "wb") do |file|
+        file.puts f.read
+      end
+    }
+    playlist.image_path="#{params[:image_name]}"
+    playlist.save
+    redirect(url_for("/admin/playlist/#{playlist.id}"))
+  end
 end

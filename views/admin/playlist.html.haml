@@ -12,6 +12,18 @@
     %input.form-control{type:"text", name:"track_id"}
   .submit
     %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
+%img{src: "#{url_for("/images/#{model.image_path}")}"}
+%form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}/image")}"}
+  .input-group.input-group-lg
+    %span.input-group-addon
+      Image Url
+    %input.form-control{type:"text", name:"image_url"}
+  .input-group.input-group-lg
+    %span.input-group-addon
+      Image Name
+    %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}"}
+  .input-group.input-group-lg
+    %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
 .tracks
   -model.tracks.each do |track|
     .input-group.input-group-lg
