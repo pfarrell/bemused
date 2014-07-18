@@ -26,3 +26,12 @@ body {
 .item img {
   height:250px;
 }
+
+.album-title {
+  font-style:italic;
+}
+
+.track-title {
+  font-weight:bold;
+  color:#CF7C29;
+}

@@ -91,7 +91,7 @@
             playlist = myPlaylist.playlist;
         $.each(playlist, function (index, obj) {
             if (index == current) {
-                $('.jp_current_track_title').text("Now Playing: " + obj.title);   
+                $('.jp_current_track_title').html("<span class='album-title'>#{album.title}</span>: <span class='track-title'>" + obj.title + "</span>");
             }
         });
     });
