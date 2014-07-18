@@ -10,13 +10,16 @@
     -tracks.each do |track|
       %tr
         %td
-          #{track.title} (#{track.id})
+          %a{href: "#{url_for("/admin/track/#{track.album.artist.id}")}"}
+            #{track.title} (#{track.id})
         %td
           -unless track.album.nil? || track.album.artist.nil?
-            #{track.album.artist.name} (#{track.album.artist.id})
+            %a{href: "#{url_for("/artist/#{track.album.artist.id}")}"}
+              #{track.album.artist.name} (#{track.album.artist.id})
         %td
           -unless track.album.nil?
-            #{track.album.title} (#{track.album.id})
+            %a{href: "#{url_for("/album/#{track.album.id}")}"}
+              #{track.album.title} (#{track.album.id})
 :javascript
   $('#search').prop('action', "#{url_for('/tracks')}");
   
