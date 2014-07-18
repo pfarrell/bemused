@@ -5,7 +5,7 @@ class Bemused < Sinatra::Application
 
   get "/tracks" do
     query = params[:q] || ""
-    redirect(url_for("/#{query[1..-1]}")) if query =~ /^>/
+    redirect(url_for("/#{query[1..-1]}")) if query =~ /^\//
     tracks = Track.where(Sequel.ilike(:title, "%#{query}%")) if query.length > 1
     haml :tracks, locals: {
       :tracks => tracks || []
