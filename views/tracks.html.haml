@@ -10,7 +10,7 @@
     -tracks.each do |track|
       %tr
         %td
-          %a{href: "#{url_for("/admin/track/#{track.album.artist.id}")}"}
+          %a{href: "#{url_for("/admin/track/#{track.id}")}"}
             #{track.title} (#{track.id})
         %td
           -unless track.album.nil? || track.album.artist.nil?
