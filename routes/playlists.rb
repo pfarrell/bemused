@@ -7,6 +7,11 @@ class Bemused < Sinatra::Application
     haml :playlists, locals: {playlists: Playlist.all}
   end
 
+  post "/playlists/new" do
+    playlist = Playlist.new(name: params["name"]).save
+    redirect url_for("/admin/playlist/#{playlist.id}")
+  end
+
   get "/admin/playlist/:id" do
     haml :"admin/playlist", locals: {model: Playlist[params[:id]]}
   end
