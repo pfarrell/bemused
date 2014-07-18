@@ -1,0 +1,22 @@
+%table.table
+  %thead
+    %th
+      Title (id)
+    %th
+      Artist (id)
+    %th
+      Album (id)
+  %tbody
+    -tracks.each do |track|
+      %tr
+        %td
+          #{track.title} (#{track.id})
+        %td
+          -unless track.album.nil? || track.album.artist.nil?
+            #{track.album.artist.name} (#{track.album.artist.id})
+        %td
+          -unless track.album.nil?
+            #{track.album.title} (#{track.album.id})
+:javascript
+  $('#search').prop('action', "#{url_for('/tracks')}");
+  

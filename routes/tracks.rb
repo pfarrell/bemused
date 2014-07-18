@@ -3,6 +3,15 @@ class Bemused < Sinatra::Application
     "hello from track"
   end
 
+  get "/tracks" do
+    query = params[:q] || ""
+    redirect(url_for("/#{query[1..-1]}")) if query =~ /^>/
+    tracks = Track.where(Sequel.ilike(:title, "%#{query}%")) if query.length > 1
+    haml :tracks, locals: {
+      :tracks => tracks || []
+    }
+  end  
+
   get "/admin/track/:id" do
     haml :"admin/model", locals: {model: Track[params[:id]]}
   end
