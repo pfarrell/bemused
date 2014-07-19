@@ -17,6 +17,7 @@
     %script{:type => "text/javascript", :src => "#{url_for '/js/jplayer.playlist.min.js'}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/jquery.foggy.js'}"}
     %script{type: "text/javascript", src: "#{url_for "/js/masonry.pkgd.js"}"}
+    %script{type: "text/javascript", src: "#{url_for "/js/autocomplete-1.2.9.js"}"}
     <!--%script{type: "text/javascript", src: "#{url_for "/js/masonry-horizontal.js"}"}-->
   %body
     %div.navbar.navbar-default.navbar-fixed-top
@@ -74,4 +75,9 @@
   function endsWith(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
   }
+  $('#q').autocomplete({
+    serviceUrl: '#{url_for "/livesearch"}',
+    paramName: 'q',
+    minChars: 3
+  })
 

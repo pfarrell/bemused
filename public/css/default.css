@@ -35,3 +35,14 @@ body {
   font-weight:bold;
   color:#CF7C29;
 }
+
+.autocomplete-suggestion {
+  background-color:#f8f8f8;
+  border: 1px solid #e7e7e7;
+}
+
+.autocomplete-selected {
+  background-color:#e7e7e7;
+  border: 1px solid #f8f8f8;
+  font-weight:bold;
+}

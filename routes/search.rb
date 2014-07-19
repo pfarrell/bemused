@@ -1,3 +1,4 @@
+require 'json'
 class Bemused < Sinatra::Application
   get "/search" do
     query = params[:q]
@@ -7,5 +8,12 @@ class Bemused < Sinatra::Application
       :albums => Album.where(Sequel.ilike(:title, "%#{query}%")),
       :artists => Artist.where(Sequel.ilike(:name, "%#{query}%"))
     }
+  end
+
+  get "/livesearch" do
+    query = params[:q]
+    res = {"suggestions"=> Artist.where(Sequel.ilike(:name, "%#{query}%")).map{|x| {"value"=>"#{x.name}"}}}
+    Album.where(Sequel.ilike(:title, "%#{query}%")).each {|x| res["suggestions"] << {"value"=>"#{x.title}"}}
+    res.to_json
   end
 end
