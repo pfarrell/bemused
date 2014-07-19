@@ -25,7 +25,7 @@
           %form.navbar-form.navbar-left{id: "search", action: "#{url_for("/search")}", method: "GET"}
             .form-group
               %input.form-control{type: "TEXT", id: "q", name: "q", autofocus: true}
-            %span.jp_current_track_title
+            %span.navbar-info
     %div.container#content
       =yield
     %div.container

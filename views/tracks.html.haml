@@ -22,4 +22,4 @@
               #{track.album.title} (#{track.album.id})
 :javascript
   $('#search').prop('action', "#{url_for('/tracks')}");
-  
+  $('.navbar-info').html("#{tracks.count} tracks");
