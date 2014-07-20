@@ -18,5 +18,9 @@ class Album < Sequel::Model
     end
     .join(',')
   end
+
+  def to_s
+    self.title
+  end
 end
 

@@ -14,4 +14,9 @@ class Playlist < Sequel::Model
     end
     .join(',')
   end
+
+  def to_s
+    self.name
+  end
 end
+
