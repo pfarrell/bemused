@@ -23,3 +23,6 @@
 :javascript
   $('#search').prop('action', "#{url_for('/tracks')}");
   $('.navbar-info').html("#{tracks.count} tracks");
+  $(document).ready(function() {
+    $('#q').autocomplete('disable');
+  });
