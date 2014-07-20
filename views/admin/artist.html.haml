@@ -1,5 +1,5 @@
 %a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}"}
-  =model.title
+  =model.to_s
 %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}")}"}
   -model.editable_attributes.each do |k,v|
     .input-group.input-group-lg
