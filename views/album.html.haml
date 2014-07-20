@@ -100,3 +100,12 @@
             }
         });
     });
+
+    $(document).ready(function() {
+      $('.navbar-info').html("                        \
+        <a href='#{url_for("/artist/#{album.artist.id}")}'>      \
+          <span class='artist-title'>#{album.artist.name}</span> \
+        </a>>                                                    \
+        <span class='album-title'>#{album.title}</span>");
+    });
+
