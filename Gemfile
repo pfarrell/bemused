@@ -13,6 +13,7 @@ gem 'sinatra-respond_to'
 gem 'capistrano', '~> 3.2.0'
 gem 'capistrano-bundler', '~> 1.1.2'
 gem 'passenger'
+gem 'unicorn'
 
 group :development do
   gem 'byebug'
