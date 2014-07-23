@@ -31,7 +31,6 @@
           #{log.ip_address}
 
 :javascript
-  $('#search').prop('action', "#{url_for('/tracks')}");
   $('.navbar-info').html("#{logs.count} log entries");
   $(document).ready(function() {
     $('#q').autocomplete('disable');
