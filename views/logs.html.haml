@@ -14,12 +14,15 @@
     -logs.each do |log|
       %tr
         %td
+          - unless log.artist.nil?
           %a{href: "#{url_for("/artist/#{log.artist.id}")}"}
             #{log.artist.name} (#{log.artist.id})
         %td
+          - unless log.album.nil?
           %a{href: "#{url_for("/album/#{log.album.id}")}"}
             #{log.album.title} (#{log.album.id})
         %td
+          - unless log.track.nil?
           %a{href: "#{url_for("/admin/track/#{log.track.id}")}"}
             #{log.track.title} (#{log.track.id})
         %td
