@@ -1,0 +1,35 @@
+%table.table
+  %thead
+    %th
+      Artist (id)
+    %th
+      Album (id)
+    %th
+      Title (id)
+    %th
+      Date
+    %th
+      IP Address
+  %tbody
+    -logs.each do |log|
+      %tr
+        %td
+          %a{href: "#{url_for("/artist/#{log.artist.id}")}"}
+            #{log.artist.name} (#{log.artist.id})
+        %td
+          %a{href: "#{url_for("/album/#{log.album.id}")}"}
+            #{log.album.title} (#{log.album.id})
+        %td
+          %a{href: "#{url_for("/admin/track/#{log.track.id}")}"}
+            #{log.track.title} (#{log.track.id})
+        %td
+          #{log.created_at}
+        %td
+          #{log.ip_address}
+
+:javascript
+  $('#search').prop('action', "#{url_for('/tracks')}");
+  $('.navbar-info').html("#{logs.count} log entries");
+  $(document).ready(function() {
+    $('#q').autocomplete('disable');
+  });
