@@ -17,7 +17,7 @@ class Bemused < Sinatra::Application
   set :session_secret, ENV["BEMUSED_SESSION_SECRET"]
 
   before do
-    response.set_cookie(:bmc, value: SecureRandom.uuid, expires: Time.now + 3600 * 24) if request.cookies["bmc"].nil?
+    response.set_cookie(:bmc, value: SecureRandom.uuid, expires: Time.now + 3600 * 24 * 365 * 10) if request.cookies["bmc"].nil?
   end
 
 end
