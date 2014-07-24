@@ -10,6 +10,8 @@
       Date
     %th
       IP Address
+    %th
+      Cookie
   %tbody
     -logs.each do |log|
       %tr
@@ -29,6 +31,8 @@
           #{log.created_at}
         %td
           #{log.ip_address}
+        %td
+          #{log.cookie}
 
 :javascript
   $('.navbar-info').html("#{logs.count} log entries");
