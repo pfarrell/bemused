@@ -7,5 +7,9 @@ class AutoComplete
     ["/tracks","/playlists", "/upload", "/rand", "/logs"].select{|x| x =~ /.*#{query}.*/}.each{|x| res["suggestions"] << {"value" => x}}
     res
    end
+
+   def self.tracks(query)
+    {"suggestions"=> Track.where(Sequel.ilike(:title, "%#{query}%")).all.map{|x| {"value"=>"#{x.title}"}}}
+   end
 end
 
