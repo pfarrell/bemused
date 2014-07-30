@@ -91,7 +91,18 @@
             playlist = myPlaylist.playlist;
         $.each(playlist, function (index, obj) {
             if (index == current) {
-                $('.jp_current_track_title').text("Now Playing: " + obj.title);   
+              $('.navbar-info').html("                                   \
+                <a href='#{url_for("/playlist/#{playlist.id}")}'>      \
+                  <span class='album-title'>#{playlist.name}</span> \
+                </a>>                                                    \
+                <span class='track-title'>" + obj.title + "</span>");
             }
         });
+    });
+
+    $(document).ready(function() {
+      $('.navbar-info').html("                        \
+        <a href='#{url_for("/playlist/#{playlist.id}")}'>      \
+          <span class='album-title'>#{playlist.name}</span> \
+        </a>");
     });
