@@ -22,6 +22,7 @@ class Playlist < Sequel::Model
   def self.surprise(size=10)
     playlist = Playlist.new()
     playlist.name= "Surprise!!"
+    playlist.image_path="shells.jpg"
     Track.order{rand{}}.limit(size).each{|track| playlist.tracks << track}
     playlist
   end
