@@ -18,5 +18,12 @@ class Playlist < Sequel::Model
   def to_s
     self.name
   end
+
+  def self.surprise(size=10)
+    playlist = Playlist.new()
+    playlist.name= "Surprise!!"
+    Track.order{rand{}}.limit(size).each{|track| playlist.tracks << track}
+    playlist
+  end
 end
 

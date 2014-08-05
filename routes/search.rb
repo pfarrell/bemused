@@ -21,4 +21,8 @@ class Bemused < Sinatra::Application
   get "/rand" do
     haml :album, locals: {album: Album.order{rand{}}.first}
   end
+
+  get "/surprise" do
+    haml :playlist, locals: {playlist: Playlist.surprise(10)}
+  end
 end
