@@ -4,10 +4,11 @@ class Playlist < Sequel::Model
   many_to_many :tracks
 
   def track_list 
-    tracks.sort_by{ |t| t.track_number.to_i }.map do |track| 
+    tracks.map.with_index do |track,i| 
+      artist_name = track.artist.nil? ? "unknown" : track.artist.name
       %Q(
         {
-          title: "#{track.track_number}. #{track.title}", 
+          title: "#{i+1}. #{track.title} (#{artist_name})", 
           mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}"
         }
       )
