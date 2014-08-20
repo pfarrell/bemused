@@ -5,7 +5,8 @@ class Playlist < Sequel::Model
 
   def track_list 
     tracks.map.with_index do |track,i| 
-      artist_name = track.album.artist.nil? ? "unknown" : track.album.artist.name
+      next if track.nil?
+      artist_name = track.album.nil? || track.album.artist.nil? ? "unknown" : track.album.artist.name
       %Q(
         {
           title: "#{i+1}. #{track.title} (#{artist_name})", 

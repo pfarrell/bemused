@@ -7,6 +7,28 @@ class Bemused < Sinatra::Application
     haml :playlists, locals: {playlists: Playlist.all}
   end
 
+  get "/top" do
+    playlist = Playlist.new
+    playlist.name= "Top 20"
+    Log.group_and_count(:track_id).filter('created_at > ?', Date.today - 7).order(Sequel.desc(:count), Sequel.desc('created_at')).limit(20).map do |x| 
+      track = Track[x.track_id]
+      next if track.nil?
+      playlist.tracks << track
+    end
+    haml :playlist, locals: {playlist: playlist}
+  end
+
+  get "/active" do
+    playlist = Playlist.new
+    playlist.name= "Random Active Tracks"
+    Log.group_and_count(:track_id).filter('created_at > ?', Date.today - 7).order{rand{}}.limit(11).map do |x| 
+      track = Track[x.track_id]
+      next if track.nil?
+      playlist.tracks << track
+    end
+    haml :playlist, locals: {playlist: playlist}
+  end
+
   post "/playlists/new" do
     playlist = Playlist.new(name: params["name"]).save
     redirect url_for("/admin/playlist/#{playlist.id}")
