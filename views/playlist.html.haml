@@ -92,7 +92,7 @@
         $.each(playlist, function (index, obj) {
             if (index == current) {
               $('.navbar-info').html("                                   \
-                <a href='#{url_for("/playlist/#{playlist.id}")}'>      \
+                <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}'>      \
                   <span class='album-title'>#{playlist.name}</span> \
                 </a>>                                                    \
                 <span class='track-title'>" + obj.title + "</span>");
@@ -102,7 +102,7 @@
 
     $(document).ready(function() {
       $('.navbar-info').html("                        \
-        <a href='#{url_for("/playlist/#{playlist.id}")}'>      \
+        <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}'>      \
           <span class='album-title'>#{playlist.name}</span> \
         </a>");
     });
