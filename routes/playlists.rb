@@ -15,6 +15,7 @@ class Bemused < Sinatra::Application
       next if track.nil?
       playlist.tracks << track
     end
+    playlist.image_path = playlist.random_image
     haml :playlist, locals: {playlist: playlist}
   end
 
@@ -26,6 +27,7 @@ class Bemused < Sinatra::Application
       next if track.nil?
       playlist.tracks << track
     end
+    playlist.image_path = playlist.random_image
     haml :playlist, locals: {playlist: playlist}
   end
 

@@ -31,5 +31,9 @@ class Playlist < Sequel::Model
     end
     playlist
   end
+
+  def random_image
+    tracks.sample.album.image_path 
+  end
 end
 
