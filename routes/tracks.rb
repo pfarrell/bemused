@@ -8,8 +8,14 @@ class Bemused < Sinatra::Application
     redirect(url_for("/#{query[1..-1]}")) if query =~ /^\//
     redirect(url_for("/")) if query == ""
     tracks = Track.where(Sequel.ilike(:title, "%#{query}%")) if !query.nil? && query.length > 1
+    album = Album.new
+    unless tracks.nil?
+      album.title = query
+      tracks.each{ |track| album.tracks << track }
+    end
     haml :tracks, locals: {
-      :tracks => tracks || []
+      :tracks => tracks || [],
+      :album => album
     }
   end  
 
