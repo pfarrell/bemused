@@ -11,7 +11,10 @@ class Bemused < Sinatra::Application
     album = Album.new
     unless tracks.nil?
       album.title = query
-      tracks.each{ |track| album.tracks << track }
+      tracks.each_with_index do |track, i| 
+        track.track_number = i + 1
+        album.tracks << track 
+      end
     end
     haml :tracks, locals: {
       :tracks => tracks || [],
