@@ -96,3 +96,13 @@
       wmode: "window"
     });  
   });
+  $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
+      var current = myPlaylist.current,
+          playlist = myPlaylist.playlist;
+      $.each(playlist, function (index, obj) {
+          if (index == current) {
+            $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
+            $('.navbar-info').html("<span class='track-title'>" + obj.title + "</span>");
+          }
+      });
+  });
