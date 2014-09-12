@@ -22,5 +22,9 @@ class Album < Sequel::Model
   def to_s
     self.title
   end
+  
+  def image
+    self.image_path == "" ? "artists/#{self.artist.image_path}" : self.image_path
+  end
 end
 
