@@ -29,13 +29,13 @@
           %span.icon-bar
           %span.icon-bar
           %span.icon-bar
-        %a{href:"#"}
+        %a.navbar-brand{href:"#"}
           Bemused
       .collapse.navbar-collapse#navbar-collapse
         %form.navbar-form.navbar-left{id: "search", action: "#{url_for("/search")}", method: "GET"}
           .form-group
             %input.form-control{type: "TEXT", id: "q", name: "q", autofocus: true}
-        %ul.nav.navbar-nav
+        %ul.nav.navbar-brand
           %li
             %span.navbar-info
     .container#content
