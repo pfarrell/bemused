@@ -13,6 +13,7 @@
     %link{:rel => "stylesheet", :href => "#{url_for '/css/bootstrap/3.1.1/bootstrap.min.css'}", :type => "text/css"}
     %link{:rel => "stylesheet", :href => "#{url_for '/blue.monday/jplayer.blue.monday.css'}", :type => "text/css" }
     %link{:rel => "stylesheet", :href => "#{url_for '/css/default.css'}", :type => "text/css", :media => "screen" }
+    %script{:type => "text/javascript", :src => "#{url_for '/js/bootstrap.min.js'}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/jquery.jplayer.min.js'}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/jplayer.playlist.min.js'}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/jquery.foggy.js'}"}
@@ -20,16 +21,24 @@
     %script{type: "text/javascript", src: "#{url_for "/js/autocomplete-1.2.9.js"}"}
     <!--%script{type: "text/javascript", src: "#{url_for "/js/masonry-horizontal.js"}"}-->
   %body
-    %div.navbar.navbar-default.navbar-fixed-top
-      %div.container
-        .nav.navbar-collapse.collapse
-          %form.navbar-form.navbar-left{id: "search", action: "#{url_for("/search")}", method: "GET"}
-            .form-group
-              %input.form-control{type: "TEXT", id: "q", name: "q", autofocus: true}
-          %ul.nav.navbar-nav
-            %li
-              %span.navbar-info
-    %div.container#content
+    %nav.navbar.navbar-default{role: "navigation"}
+      .navbar-header
+        %button.navbar-toggle{type:"button", data:{toggle: "collapse", target: "#navbar-collapse"}}
+          %span.sr-only
+            Toggle navigation
+          %span.icon-bar
+          %span.icon-bar
+          %span.icon-bar
+        %a{href:"#"}
+          Bemused
+      .collapse.navbar-collapse#navbar-collapse
+        %form.navbar-form.navbar-left{id: "search", action: "#{url_for("/search")}", method: "GET"}
+          .form-group
+            %input.form-control{type: "TEXT", id: "q", name: "q", autofocus: true}
+        %ul.nav.navbar-nav
+          %li
+            %span.navbar-info
+    .container#content
       =yield
       %div.row
         %div.twelvecol
