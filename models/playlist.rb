@@ -32,6 +32,17 @@ class Playlist < Sequel::Model
     playlist
   end
 
+  def self.recent(size=10)
+    playlist = Playlist.new()
+    playlist.name = "Recent Additions"
+    playlist.image_path="nursery.jpg"
+    Track.order(Sequel.desc(:created_at)).limit(size).each_with_index do |track, i|
+      track.track_number = i + 1
+      playlist.tracks << track
+    end
+    playlist
+  end
+
   def random_image
     tracks.sample.album.image_path 
   end
