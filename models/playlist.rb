@@ -9,8 +9,9 @@ class Playlist < Sequel::Model
       artist_name = track.album.nil? || track.album.artist.nil? ? "unknown" : track.album.artist.name
       %Q(
         {
-          title: "#{i+1}. #{track.title} (#{artist_name})", 
-          mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}"
+          title: "#{i+1}. #{track.title}", 
+          mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
+          artist: "#{artist_name}"
         }
       )
     end
@@ -40,6 +41,14 @@ class Playlist < Sequel::Model
       track.track_number = i + 1
       playlist.tracks << track
     end
+    playlist
+  end
+
+  def self.single(name)
+    playlist = Playlist.new()
+    playlist.name=(name)
+    playlist.image_path="radio.jpg"
+    playlist.tracks << Track.random.first
     playlist
   end
 
