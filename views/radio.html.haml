@@ -60,12 +60,13 @@
 
     function append(playlist, json) {
       track = JSON.parse(json)[0];
-      playlist.add(track, true);
+      playlist.add(track, false);
     }
 
     $(document).ready(function() {
       document.title = "#{playlist.name}";
-      myPlaylist = new jPlayerPlaylist({
+      myPlaylist = new jPlayerPlaylist(
+      {
         jPlayer: "#jquery_jplayer_1",
         cssSelectorAncestor: "#jp_container_1"
       }, 
@@ -75,7 +76,10 @@
       {
         swfPath: "http://patf.net/js",
         supplied: "mp3",
-        wmode: "window"
+        wmode: "window",
+        playlistOptions: {
+          enableRemoveControls: true
+        }
       });  
     });
     $(document).mousemove(function() {
@@ -100,10 +104,14 @@
         });
     });
 
-    $("#jquery_jplayer_1").bind($.jPlayer.event.ended, function (event) {
-      $.ajax({
-        type: "GET", 
-        url: "#{url_for("/track/random")}",
-        success: function(result) {append(myPlaylist, result);}
-      });
+    $("#jquery_jplayer_1").bind($.jPlayer.event.loadstart, function (event) {
+      var current = myPlaylist.current,
+        playlist = myPlaylist.playlist;
+      if(current == playlist.length - 1) {
+        $.ajax({
+          type: "GET", 
+          url: "#{url_for("/track/random")}",
+          success: function(result) {append(myPlaylist, result);}
+        });
+      }
     });
