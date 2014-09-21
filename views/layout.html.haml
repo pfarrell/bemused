@@ -14,10 +14,9 @@
     %link{:rel => "stylesheet", :href => "#{url_for '/blue.monday/jplayer.blue.monday.css'}", :type => "text/css" }
     %link{:rel => "stylesheet", :href => "#{url_for '/css/default.css'}", :type => "text/css", :media => "screen" }
     %script{:type => "text/javascript", :src => "#{url_for '/js/bootstrap.min.js'}"}
-    %script{:type => "text/javascript", :src => "#{url_for '/js/isotope.pdgd.min.js'}"}
+    %script{:type => "text/javascript", :src => "#{url_for '/js/isotope.pkgd.min.js'}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/jquery.jplayer.min.js'}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/jplayer.playlist.min.js'}"}
-    %script{:type => "text/javascript", :src => "#{url_for '/js/jquery.foggy.js'}"}
     %script{type: "text/javascript", src: "#{url_for "/js/masonry.pkgd.js"}"}
     %script{type: "text/javascript", src: "#{url_for "/js/autocomplete-1.2.9.js"}"}
     <!--%script{type: "text/javascript", src: "#{url_for "/js/masonry-horizontal.js"}"}-->
@@ -49,16 +48,6 @@
               patf
             joint
 :javascript
-  $('.item').hover(
-    function(){
-      $(this).foggy();
-      $(this .title).show();
-    }, 
-    function(){
-      $(this).foggy(false);
-      $(this .title).hide();
-    }
-  );
   $('#reload').bind('click', function() {
     document.title = 'Random Albums';
     if(!endsWith(document.location.toString(), "#{@host}" + '/')){
