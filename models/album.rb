@@ -9,10 +9,12 @@ class Album < Sequel::Model
   # {title: "${track_number}. ${track_title}", mp3: "${path to mp3 (in public folder}"}, ...
   def playlist 
     tracks.sort_by{ |t| t.track_number.to_i }.map do |track| 
+      artist_name = track.artist.nil? ? track.album.artist.name : track.artist.name
       %Q(
         {
           title: "#{track.track_number}. #{track.title}", 
-          mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}"
+          mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
+          artist: "#{artist_name}"
         }
       )
     end
