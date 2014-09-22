@@ -12,12 +12,12 @@ DB.extension(:pagination)
 Sequel::Model.plugin :timestamps
 Sequel::Model.plugin :json_serializer
 
-require_relative 'editable'
-require_relative 'track'
-require_relative 'album'
-require_relative 'media_file'
-require_relative 'artist'
-require_relative 'mp3'
-require_relative 'log'
-require_relative 'playlist'
-require_relative 'auto_complete'
+require 'models/editable'
+require 'models/track'
+require 'models/album'
+require 'models/media_file'
+require 'models/artist'
+require 'models/mp3'
+require 'models/log'
+require 'models/playlist'
+require 'models/auto_complete'
