@@ -11,6 +11,10 @@ class Track < Sequel::Model
     Track.order{rand{}}.limit(1)
   end
 
+  def track_artist
+    track.album.nil? ? track.artist : track.album.artist
+  end
+
   def to_json(opts={})
     {
       id: self.id,
