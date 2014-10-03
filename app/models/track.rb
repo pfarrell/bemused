@@ -7,12 +7,21 @@ class Track < Sequel::Model
   one_to_many :logs
   many_to_many :playlists
 
-  def self.random
-    Track.order{rand{}}.limit(1)
+  def self.random(n=1)
+    Track.order{rand{}}.limit(n)
+  end
+
+  def self.active(n=1)
+    Log.group_and_count(:track_id)
+       .filter('created_at > ?', Date.today - 7)
+       .order{rand{}}
+       .limit(n).map do |x| 
+      Track[x.track_id]
+    end.select{ |x| !x.nil? }
   end
 
   def track_artist
-    track.album.nil? ? track.artist : track.album.artist
+    self.album.nil? ? self.artist : self.album.artist
   end
 
   def to_json(opts={})

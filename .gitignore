@@ -2,5 +2,6 @@ vendor
 public/mp3s
 public/images
 public/tmp
+public/share
 .bundle
 .bundle/config

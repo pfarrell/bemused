@@ -3,6 +3,13 @@ class Bemused < Sinatra::Application
     "hello from track"
   end
 
+  get "/track/random" do
+    Track.random.to_json
+  end
+
+  get "/track/active" do
+  end
+
   get "/tracks" do
     query = params[:q] 
     redirect(url_for("/#{query[1..-1]}")) if query =~ /^\//

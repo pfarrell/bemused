@@ -22,11 +22,7 @@ class Bemused < Sinatra::Application
   get "/active" do
     playlist = Playlist.new
     playlist.name= "Random Active Tracks"
-    Log.group_and_count(:track_id).filter('created_at > ?', Date.today - 7).order{rand{}}.limit(11).map do |x| 
-      track = Track[x.track_id]
-      next if track.nil?
-      playlist.tracks << track
-    end
+    playlist.tracks << Track.active
     playlist.image_path = playlist.random_image
     haml :playlist, locals: {playlist: playlist}
   end
