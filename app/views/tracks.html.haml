@@ -103,6 +103,7 @@
           if (index == current) {
             $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
             $('.navbar-info').html("<span class='track-title'>" + obj.title + "</span>");
+            $(document).title = obj.title;
           }
       });
   });
