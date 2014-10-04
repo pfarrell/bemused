@@ -22,9 +22,9 @@ class Bemused < Sinatra::Application
   get "/active" do
     playlist = Playlist.new
     playlist.name= "Random Active Tracks"
-    playlist.tracks << Track.active
+    playlist.tracks << Track.active[0]
     playlist.image_path = playlist.random_image
-    haml :playlist, locals: {playlist: playlist}
+    haml :radio, locals: {playlist: playlist}
   end
 
   get "/newborns" do
