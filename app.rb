@@ -23,6 +23,9 @@ class Bemused < Sinatra::Application
     response.set_cookie(:bmc, value: SecureRandom.uuid, expires: Time.now + 3600 * 24 * 365 * 10) if request.cookies["bmc"].nil?
   end
 
+  not_found do
+    haml :hunh
+  end
 end
 
 require 'models'
