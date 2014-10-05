@@ -97,7 +97,7 @@
                   <span class='album-title'>#{playlist.name}</span> \
                 </a>>                                                    \
                 <span class='track-title'>" + obj.title + "</span>");
-              $(document).title = obj.title;
+              $(document).prop("title", obj.title);
             }
         });
     });
