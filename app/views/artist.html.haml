@@ -9,13 +9,12 @@
   %a.item{href: "#{url_for("/admin/artist/#{artist.id}")}"}
     Edit
 :javascript
-  var $container = $('.albums');
-  // init
-  $(document).ready( function() {
-    $container.isotope({
-        // options
-          itemSelector: '.item',
-            layoutMode: 'fitRows'
-    });
+  var container = document.querySelector('.albums');
+  var msnry = new Masonry( container, {
+    // options
+    columnWidth: 200,
+    itemSelector: '.item'
   });
-  
+  imagesLoaded(container, function() {
+    msnry.layout();
+  });
