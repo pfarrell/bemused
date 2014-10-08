@@ -8,4 +8,14 @@
 .edit
   %a.item{href: "#{url_for("/admin/artist/#{artist.id}")}"}
     Edit
+:javascript
+  var $container = $('.albums');
+  // init
+  $(document).ready( function() {
+    $container.isotope({
+        // options
+          itemSelector: '.item',
+            layoutMode: 'fitRows'
+    });
+  });
   
