@@ -6,21 +6,17 @@
     %meta{:charset => "utf-8"}
     %meta{:name => "viewport", :content=>"width=device-width, initial-scale=1, maximum-scale=1"}
     %meta{:name=>"apple-mobile-web-app-capable", :content=>"yes"}
-    %script{:type => "text/javascript", :src => "//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"}
-    <!--%link{:rel => "stylesheet", :href => "http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/base/jquery-ui.css", :type => "text/css"}-->
+    %script{:type => "text/javascript", :src => "#{url_for('/libs/jquery/dist/jquery.min.js')}"}
     %link{:rel => "stylesheet", :href => "//fonts.googleapis.com/css?family=Cabin", :type => "text/css", :media => "all"}
-    <!--%link{:rel => "stylesheet", :href => "//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css", :type => "text/css"}-->
-    %link{:rel => "stylesheet", :href => "#{url_for '/css/bootstrap/3.1.1/bootstrap.min.css'}", :type => "text/css"}
-    %link{:rel => "stylesheet", :href => "#{url_for '/blue.monday/jplayer.blue.monday.css'}", :type => "text/css" }
+    %link{:rel => "stylesheet", :href => "#{url_for '/libs/bootstrap/dist/css/bootstrap.min.css'}", :type => "text/css"}
+    %link{:rel => "stylesheet", :href => "#{url_for '/libs/jplayer/skin/blue.monday/jplayer.blue.monday.css'}", :type => "text/css" }
     %link{:rel => "stylesheet", :href => "#{url_for '/css/default.css'}", :type => "text/css", :media => "screen" }
-    %script{:type => "text/javascript", :src => "#{url_for '/js/bootstrap.min.js'}"}
-    %script{:type => "text/javascript", :src => "#{url_for '/js/isotope.pkgd.min.js'}"}
-    %script{:type => "text/javascript", :src => "#{url_for '/js/jquery.jplayer.min.js'}"}
-    %script{:type => "text/javascript", :src => "#{url_for '/js/jplayer.playlist.min.js'}"}
-    %script{type: "text/javascript", src: "#{url_for "/js/masonry.pkgd.js"}"}
-    %script{type: "text/javascript", src: "#{url_for "/js/imagesLoaded.pkgd.min.js"}"}
-    %script{type: "text/javascript", src: "#{url_for "/js/autocomplete-1.2.9.js"}"}
-    <!--%script{type: "text/javascript", src: "#{url_for "/js/masonry-horizontal.js"}"}-->
+    %script{:type => "text/javascript", :src => "#{url_for '/libs/bootstrap/dist/js/bootstrap.min.js'}"}
+    %script{:type => "text/javascript", :src => "#{url_for '/libs/jplayer/jquery.jplayer/jquery.jplayer.js'}"}
+    %script{:type => "text/javascript", :src => "#{url_for '/libs/jplayer/add-on/jplayer.playlist.js'}"}
+    %script{type: "text/javascript", src: "#{url_for "/libs/masonry/dist/masonry.pkgd.js"}"}
+    %script{type: "text/javascript", src: "#{url_for "/libs/imagesloaded/imagesLoaded.pkgd.min.js"}"}
+    %script{type: "text/javascript", src: "#{url_for "/libs/devbridge-autocomplete/dist/jquery.autocomplete.min.js"}"}
   %body
     %nav.navbar.navbar-default{role: "navigation"}
       .navbar-header
