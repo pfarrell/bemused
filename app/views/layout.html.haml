@@ -49,37 +49,6 @@
               patf
             joint
 :javascript
-  $('#reload').bind('click', function() {
-    document.title = 'Random Albums';
-    if(!endsWith(document.location.toString(), "#{@host}" + '/')){
-      history.pushState(null, "#{@title}", '/');
-    }
-    reload();
-    clearInterval();
-    setInterval(function() {
-      reload();
-    }, 15000);
-  });
-  function set_content(content) {
-    $('#content').html(content.data('fsr'));
-  }
-  function reload() {
-    $('#content').each(function(i) {
-      var content = $('#content');
-      $.post(
-        "#{url_for('/')}",
-        '{}',
-        function(INFO) {
-          content.data('fsr', INFO);
-          set_content(content);
-        },
-        'html'
-      );
-    });
-  }
-  function endsWith(str, suffix) {
-    return str.indexOf(suffix, str.length - suffix.length) !== -1;
-  }
   $('#q').autocomplete({
     serviceUrl: '#{url_for "/livesearch"}',
     paramName: 'q',
