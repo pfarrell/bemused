@@ -20,4 +20,6 @@ gem 'unicorn'
 group :development do
   gem 'byebug'
   gem 'shotgun'
+  gem 'simplecov'
+  gem 'rspec'
 end

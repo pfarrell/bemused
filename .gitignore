@@ -6,3 +6,4 @@ public/share
 public/libs
 .bundle
 .bundle/config
+coverage
