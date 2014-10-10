@@ -1,8 +1,4 @@
 class Bemused < Sinatra::Application
-  get "/track" do
-    "hello from track"
-  end
-
   get "/track/random" do
     Track.random.to_json
   end
