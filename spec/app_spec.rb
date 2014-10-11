@@ -105,6 +105,9 @@ describe 'Bemused' do
     expect(last_response.body).to match(/Bemused/)
   end           
 
- 
+  it "redirects for searches with / as first character" do
+    get "/search?q=/test"
+    expect(last_response).to be_redirect
+  end
 
 end
