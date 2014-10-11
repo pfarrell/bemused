@@ -99,6 +99,11 @@ describe 'Bemused' do
     expect(last_response.body).to match(/Bemused/)
   end           
 
+  it "streams music" do
+    get "/stream/1"
+    expect(last_response).to be_ok
+  end           
+
   it "has a search route" do
     get "/search?q=wax"
     expect(last_response).to be_ok
@@ -109,6 +114,12 @@ describe 'Bemused' do
     get "/search?q=/test"
     expect(last_response).to be_redirect
   end
+
+  it "has a playlist admin route" do
+    get "/admin/playlists"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/^\[\{.*\}\]$/)
+  end           
 
   it "has a playlist admin route" do
     get "/admin/playlists"
