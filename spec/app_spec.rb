@@ -116,16 +116,8 @@ describe 'Bemused' do
   end
 
   it "has a playlist admin route" do
-    get "/admin/playlists"
+    get "/admin/playlist/1"
     expect(last_response).to be_ok
-    expect(last_response.body).to match(/^\[\{.*\}\]$/)
+    expect(last_response.body).to match(/Bemused/)
   end           
-
-  it "has a playlist admin route" do
-    get "/admin/playlists"
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/^\[\{.*\}\]$/)
-  end           
-
-
 end
