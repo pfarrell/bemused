@@ -4,6 +4,6 @@ public/images
 public/tmp
 public/share
 public/libs
-.bundle
+.bundle/*
 .bundle/config
 coverage
