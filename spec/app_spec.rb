@@ -110,4 +110,11 @@ describe 'Bemused' do
     expect(last_response).to be_redirect
   end
 
+  it "has a playlist admin route" do
+    get "/admin/playlists"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/^\[\{.*\}\]$/)
+  end           
+
+
 end
