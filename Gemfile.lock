@@ -1,10 +1,3 @@
-GIT
-  remote: https://github.com/pfarrell/sinatra-local_app.git
-  revision: e7f640cf78e560e0501dd2dae41680036c9c8290
-  specs:
-    sinatra-local_app (0.0.1)
-      sinatra (~> 1.3)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -84,6 +77,8 @@ GEM
       rack-test
       sinatra (~> 1.4.0)
       tilt (~> 1.3)
+    sinatra-presence (0.0.1)
+      sinatra (~> 1.3)
     sinatra-respond_to (0.9.0)
       sinatra (~> 1.3)
     sshkit (1.5.1)
@@ -118,6 +113,6 @@ DEPENDENCIES
   simplecov
   sinatra
   sinatra-contrib
-  sinatra-local_app!
+  sinatra-presence
   sinatra-respond_to
   unicorn

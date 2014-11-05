@@ -2,7 +2,7 @@ $: << File.expand_path('../app', __FILE__)
 
 require 'sinatra'
 require 'sinatra/url_for'
-require 'sinatra/local_app'
+require 'sinatra/presence'
 require 'rack/mobile-detect'
 require 'sinatra/respond_to'
 require 'sinatra/cookies'
@@ -15,7 +15,7 @@ class Bemused < Sinatra::Application
   helpers Sinatra::Cookies
   use Rack::MobileDetect
   register Sinatra::RespondTo
-  register Sinatra::LocalApp
+  register Sinatra::Presence
 
   enable :sessions
   set :session_secret, ENV["BEMUSED_SESSION_SECRET"]
