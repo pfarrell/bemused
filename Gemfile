@@ -16,6 +16,7 @@ gem 'capistrano-bundler', '~> 1.1.2'
 gem 'capistrano-bower'
 gem 'passenger'
 gem 'unicorn'
+gem 'sinatra-local_app', git: 'https://github.com/pfarrell/sinatra-local_app.git'
 
 group :development do
   gem 'byebug'

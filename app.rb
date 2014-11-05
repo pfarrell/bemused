@@ -2,6 +2,7 @@ $: << File.expand_path('../app', __FILE__)
 
 require 'sinatra'
 require 'sinatra/url_for'
+require 'sinatra/local_app'
 require 'rack/mobile-detect'
 require 'sinatra/respond_to'
 require 'sinatra/cookies'
@@ -14,10 +15,12 @@ class Bemused < Sinatra::Application
   helpers Sinatra::Cookies
   use Rack::MobileDetect
   register Sinatra::RespondTo
+  register Sinatra::LocalApp
 
   enable :sessions
   set :session_secret, ENV["BEMUSED_SESSION_SECRET"]
   set :views, Proc.new { File.join(root, "app/views") }
+  set :local_ip, '192.168.0.47'
 
   before do
     response.set_cookie(:bmc, value: SecureRandom.uuid, expires: Time.now + 3600 * 24 * 365 * 10) if request.cookies["bmc"].nil?
