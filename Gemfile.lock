@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/pfarrell/sinatra-local_app.git
-  revision: d55ce537593c1115bbe10c580ae2da585b504b96
+  revision: e7f640cf78e560e0501dd2dae41680036c9c8290
   specs:
     sinatra-local_app (0.0.1)
       sinatra (~> 1.3)
