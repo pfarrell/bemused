@@ -4,7 +4,7 @@ class Playlist < Sequel::Model
   many_to_many :tracks
 
   def track_list 
-    tracks.map.with_index do |track,i| 
+    tracks.sort_by{|t| t.id}.map.with_index do |track,i|
       next if track.nil?
       artist_name = track.album.nil? || track.album.artist.nil? ? "unknown" : track.album.artist.name
       %Q(
