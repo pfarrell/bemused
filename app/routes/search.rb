@@ -18,6 +18,14 @@ class Bemused < Sinatra::Application
     AutoComplete.tracks(params["q"]).to_json
   end
 
+  get "/searchalbums" do
+    AutoComplete.albums(params["q"]).to_json
+  end
+
+  get "/searchartists" do
+    AutoComplete.artists(params["q"]).to_json
+  end
+
   get "/rand" do
     haml :album, locals: {album: Album.order{rand{}}.first}
   end
