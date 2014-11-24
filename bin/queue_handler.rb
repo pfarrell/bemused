@@ -28,7 +28,7 @@ while(true)
   # mv to error dir if no tags, add to error queue
 
   # mv to nas if tagged
-  nas_location = "#{ENV["BEMUSED_UPLOAD_BASE"]}/#{album_artist_name}/#{album_name}/#{File.basename(mp3.tags.source)}"
+  nas_location = "#{ENV["BEMUSED_UPLOAD_BASE"]}#{album_artist_name}/#{album_name}/#{File.basename(mp3.tags.source)}".gsub(/[ ]*:/, "").gsub(/[\(\)\?\"]/, "")
 
   FileUtils.mkdir_p(File.dirname(nas_location))
   begin
@@ -40,7 +40,7 @@ while(true)
   track_artist = Artist.find_or_create(name: track_artist_name)
   album_artist = Artist.find_or_create(name: album_artist_name)
   album = Album.find_or_create(artist: album_artist, title: album_name)
-  track = Track.find_or_create(artist: track_artist, album: album, title: tags.title)
+  track = Track.find_or_create(artist: track_artist, album: album, title: tags.title, track_number: tags.track_nr)
   track.track_number = tags.track_nr
   track.save
   file = MediaFile.find_or_create(absolute_path: nas_location)
