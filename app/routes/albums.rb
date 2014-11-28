@@ -1,6 +1,11 @@
 require 'open-uri'
 
 class Bemused < Sinatra::Application
+
+  def shorten(str, len=50)
+    str.length > len ? "#{str[0,len]}..." : str
+  end
+  
   get "/album/:id" do
     haml :album, locals: {album: Album[params[:id]]} 
   end
