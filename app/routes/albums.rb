@@ -49,6 +49,6 @@ class Bemused < Sinatra::Application
 
   get "/albums/recent/:page" do
      page = params[:page].to_i
-     haml :recent_albums, locals: {albums: Album.order(Sequel.desc(:id)).paginate(page, 25), nxt: page + 1, prev: page - 1}
+     haml :recent_albums, locals: {albums: Album.order(Sequel.desc(:id)).paginate(page, 24), nxt: page + 1, prev: page - 1}
   end
 end
