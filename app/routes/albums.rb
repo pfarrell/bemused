@@ -1,6 +1,11 @@
 require 'open-uri'
 
 class Bemused < Sinatra::Application
+
+  def shorten(str, len=50)
+    str.length > len ? "#{str[0,len]}..." : str
+  end
+  
   get "/album/:id" do
     haml :album, locals: {album: Album[params[:id]]} 
   end
@@ -36,5 +41,14 @@ class Bemused < Sinatra::Application
       track.save_changes
     end
     redirect(url_for("/admin/album/#{new_album.id}"))
+  end
+
+  get "/albums/recent" do 
+    redirect url_for("/albums/recent/1")
+  end
+
+  get "/albums/recent/:page" do
+     page = params[:page].to_i
+     haml :recent_albums, locals: {albums: Album.order(Sequel.desc(:id)).paginate(page, 24), nxt: page + 1, prev: page - 1}
   end
 end

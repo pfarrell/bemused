@@ -23,6 +23,9 @@ file = MediaFile.find_or_create(absolute_path: ARGV[0])
 file.track = track;
 file.save
 track.media_file = file
-track.save
+begin
+  track.save
+rescue 
+end
 
 puts "processed: #{File.basename(mp3.tags.source)}"

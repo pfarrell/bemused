@@ -1,0 +1,18 @@
+%a{href:"#{url_for("/albums/recent/#{prev}")}"}
+  <<
+%a{href:"#{url_for("/albums/recent/#{nxt}")}"}
+  >>
+.albums
+  -albums.each do |album|
+    %a.item{href: "#{url_for "/album/#{album.id}"}"}
+      %img.album{src: "#{url_for "/images/#{album.image_path}"}", title: "#{album.title}"}
+:javascript
+  var container = document.querySelector('.albums');
+  var msnry = new Masonry( container, {
+    // options
+    columnWidth: 200,
+    itemSelector: '.item'
+  });
+  imagesLoaded(container, function() {
+    msnry.layout();
+  });
