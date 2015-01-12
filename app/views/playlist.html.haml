@@ -93,6 +93,7 @@
             if (index == current) {
               $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
               $('.navbar-info').html("                                   \
+                <a href='#{url_for("/playlists")}'>playlists</a>>      \
                 <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}'>      \
                   <span class='album-title'>#{playlist.name}</span> \
                 </a>>                                                    \
@@ -104,6 +105,7 @@
 
     $(document).ready(function() {
       $('.navbar-info').html("                        \
+        <a href='#{url_for("/playlists")}'>playlists</a>>      \
         <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}'>      \
           <span class='album-title'>#{playlist.name}</span> \
         </a>");
