@@ -96,7 +96,7 @@
                 <a href='#{url_for("/playlists")}'><span class='album-title'>playlists</span></a> >      \
                 <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}'>      \
                   <span class='album-title'>#{playlist.name}</span> \
-                </a>>                                                    \
+                </a> >                                                    \
                 <span class='track-title'>" + obj.title + "</span>");
               $(document).prop("title", obj.title);
             }
