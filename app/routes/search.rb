@@ -41,7 +41,7 @@ class Bemused < Sinatra::Application
       .select(:title)
       .all
       .each{|r| r[:title].split(' ')
-      .each{|w| hsh[w.strip]+=1} unless r[:title].nil?}
+      .each{|w| hsh[w.downcase.strip]+=1} unless r[:title].nil?}
     hsh.sort_by{|k,v| v * -1}.first(size.to_i).to_json
   end
 end
