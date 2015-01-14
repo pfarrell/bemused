@@ -21,10 +21,10 @@ module Editable
   end
 
   def self.included(base)
-    base.extend(EditMethods)
+    base.extend(ClassMethods)
   end
 
-  module EditMethods
+  module ClassMethods
 
     def words(field, size=100)
       hsh = Hash.new(0)
