@@ -1,5 +1,4 @@
 module Editable
-
   def editable_attributes
     self.values.select {|k,v| ![:id,:created_at,:updated_at].include? k}
   end
@@ -19,5 +18,21 @@ module Editable
     log.action = action
     log.cookie = cookie
     log.save
+  end
+
+  def self.included(base)
+    base.extend(EditMethods)
+  end
+
+  module EditMethods
+
+    def words(field, size=100)
+      hsh = Hash.new(0)
+      self.select(field)
+        .all
+        .each{|r| r[field].split(' ')
+        .each{|w| hsh[w.downcase.strip.gsub(/[^A-Za-z0-9]/,'')]+=1} unless r[field].nil?}
+      data = hsh.sort_by{|k,v| v * -1}.first(size.to_i)
+    end
   end
 end

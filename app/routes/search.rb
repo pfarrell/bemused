@@ -34,14 +34,4 @@ class Bemused < Sinatra::Application
     haml :playlist, locals: {playlist: Playlist.surprise(10)}
   end
 
-  get "/wordlist" do
-    size=params[:words] || "100"
-    hsh = Hash.new(0)
-    DB[:tracks]
-      .select(:title)
-      .all
-      .each{|r| r[:title].split(' ')
-      .each{|w| hsh[w.downcase.strip.gsub(/[^A-Za-z0-9]/,'')]+=1} unless r[:title].nil?}
-    hsh.sort_by{|k,v| v * -1}.first(size.to_i).to_json
-  end
 end
