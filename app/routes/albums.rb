@@ -51,4 +51,9 @@ class Bemused < Sinatra::Application
      page = params[:page].to_i
      haml :recent_albums, locals: {albums: Album.order(Sequel.desc(:id)).paginate(page, 24), nxt: page + 1, prev: page - 1}
   end
+
+  get "/albums/words" do
+    words= params[:size] || 100
+    Album.words(:title, words).to_json
+  end
 end

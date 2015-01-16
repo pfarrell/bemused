@@ -46,4 +46,9 @@ class Bemused < Sinatra::Application
     end
     redirect(url_for("/admin/artist/#{new_artist.id}"))
   end
+
+  get "/artists/words" do
+    words= params[:size] || 100
+    Artist.words(:name, words).to_json
+  end
 end

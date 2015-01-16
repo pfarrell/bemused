@@ -35,7 +35,7 @@ class Bemused < Sinatra::Application
     "track saved"
   end
 
-  get "/track/wordcount" do
+  get "/tracks/words" do
     words= params[:size] || 100
     Track.words(:title, words).to_json
   end
