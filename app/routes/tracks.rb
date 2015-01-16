@@ -41,7 +41,7 @@ class Bemused < Sinatra::Application
         words= params[:size] || 100
         Track.words(:title, words).to_json
       }
-      wants.html{ redirect "/tracks/words/1" }
+      wants.html{ redirect url_for("/tracks/words/1") }
     end
   end
 
