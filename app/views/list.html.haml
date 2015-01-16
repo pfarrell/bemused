@@ -1,0 +1,21 @@
+%a.btn.btn-primary{href:"#{prev}"}
+  <<
+%a.btn.btn-primary{href:"#{nxt}"}
+  >>
+%table.table
+  %thead
+    %tr
+      -header.keys.each do |header|
+        %th
+          =header
+  %tbody
+    -data.each do |row|
+      %tr
+        -header.each do |name,prop|
+          %td
+            .table-data
+              -if prop[:link].nil?
+                =prop[:value].call(row)
+              -else
+                %a{href:"#{prop[:link].call(row)}"}
+                  =prop[:value].call(row)
