@@ -40,7 +40,7 @@ class Bemused < Sinatra::Application
     data = Track.words(:title, words)
     respond_to do |wants|
       wants.json{ 
-        Track.words(:title, words).to_json
+        data.to_json
       }
       wants.html{ 
         props={}
