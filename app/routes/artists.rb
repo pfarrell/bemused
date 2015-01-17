@@ -49,6 +49,17 @@ class Bemused < Sinatra::Application
 
   get "/artists/words" do
     words= params[:size] || 100
-    Artist.words(:name, words).to_json
+    data = Artist.words(:name, words)
+    respond_to do |wants|
+      wants.json{ 
+        data.to_json
+      }
+      wants.html{ 
+        props={}
+        props["word"] = {value: lambda{|x| x[0]}}
+        props["count"] = {value: lambda{|x| x[1]}}
+        haml :nonpaginatedlist, locals: {header:props, data: data}
+      }
+    end
   end
 end
