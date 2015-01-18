@@ -37,7 +37,7 @@ class Bemused < Sinatra::Application
 
   get "/tracks/words" do
     words= params[:size] || 100
-    data = Track.words(:title, words)
+    data = Track.words(words, :title)
     respond_to do |wants|
       wants.json{ 
         data.to_json

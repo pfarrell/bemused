@@ -26,7 +26,7 @@ module Editable
 
   module ClassMethods
 
-    def words(field, size=100)
+    def words(size=100, field=nil, &block)
       hsh = Hash.new(0)
       self.select(field)
         .all

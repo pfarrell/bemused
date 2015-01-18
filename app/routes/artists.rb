@@ -49,7 +49,7 @@ class Bemused < Sinatra::Application
 
   get "/artists/words" do
     words= params[:size] || 100
-    data = Artist.words(:name, words)
+    data = Artist.words(words, :name)
     respond_to do |wants|
       wants.json{ 
         data.to_json
