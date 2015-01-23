@@ -24,6 +24,7 @@
     "devbridge-autocomplete": "~1.2.14",
     "imagesloaded": "~3.1.8",
     "jplayer": "~2.7.1",
-    "masonry": "~3.1.5"
+    "masonry": "~3.1.5",
+    "ember": "~1.9.1"
   }
 }
