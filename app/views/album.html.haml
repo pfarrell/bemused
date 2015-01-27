@@ -93,10 +93,10 @@
             if (index == current) {
               $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
               $('.navbar-info').html("                                   \
-                <a href='#{url_for("/artist/#{album.artist.id}")}'>      \
+                <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
                   <span class='artist-title'>#{shorten album.artist.name, 20}</span> \
                 </a>>                                                    \
-                <a href='#{url_for("/album/#{album.id}")}'>              \
+                <a href='#{url_for("/album/#{album.id}")}' title='#{album.title}'>      \
                   <span class='album-title'>#{shorten album.title, 20}</span>        \
                 </a>>                                                    \
                 <span class='track-title'>" + obj.title + "</span>");
@@ -107,10 +107,10 @@
 
     $(document).ready(function() {
       $('.navbar-info').html("                        \
-        <a href='#{url_for("/artist/#{album.artist.id}")}'>      \
+        <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
           <span class='artist-title'>#{shorten album.artist.name, 20}</span> \
         </a>>                                                    \
-        <a href='#{url_for("/album/#{album.id}")}'>      \
+        <a href='#{url_for("/album/#{album.id}")}' title='#{album.title}'>      \
           <span class='album-title'>#{shorten album.title, 20}</span> \
         </a>");
     });
