@@ -93,8 +93,8 @@
             if (index == current) {
               $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
               $('.navbar-info').html("                                   \
-                <a href='#{url_for("/playlists")}'><span class='album-title'>playlists</span></a> >      \
-                <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}'>      \
+                <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \
+                <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}' title='#{playlist.name}'>      \
                   <span class='album-title'>#{playlist.name}</span> \
                 </a> >                                                    \
                 <span class='track-title'>" + obj.title + "</span>");
@@ -105,8 +105,8 @@
 
     $(document).ready(function() {
       $('.navbar-info').html("                        \
-        <a href='#{url_for("/playlists")}'><span class='album-title'>playlists</span></a> >      \
-        <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}'>      \
+        <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \
+        <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}' title='#{playlist.name}'>      \
           <span class='album-title'>#{playlist.name}</span> \
         </a>");
     });
