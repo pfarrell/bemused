@@ -137,4 +137,16 @@ describe 'Bemused' do
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
   end
+
+  it "has a words route for artists" do
+    get "/artists/words"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+  end
+
+  it "has a words route for tracks" do
+    get "/tracks/words"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+  end
 end
