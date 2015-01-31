@@ -8,6 +8,7 @@ $(document).keydown(function(event) {
   if(!$("#q").is(":focus")) {
     switch(event.which) {
       case 32: //space bar
+        event.preventDefault();
         $(".jp-state-playing").length == 1 ? myPlaylist.pause() : myPlaylist.play();
         break;
       case 37:
