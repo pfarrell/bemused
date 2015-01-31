@@ -51,18 +51,15 @@
   .edit
     %a.item{href: "#{url_for("/admin/album/#{album.id}")}"}
       Edit
+%script{:type => "text/javascript", :src => "#{url_for '/js/keypress.js'}"}
 :javascript
-        document.getElementById("content").style.background="url('#{url_for "/images/" + (album.image || "")}')";
-        document.getElementById("content").style.backgroundPosition="0px 0px";
-        document.getElementById("content").style.backgroundSize="contain";
-        document.getElementById("content").style.backgroundRepeat="no-repeat";
-        //document.getElementById("content").style.minHeight="900px";
+    document.getElementById("content").style.background="url('#{url_for "/images/" + (album.image || "")}')";
+    document.getElementById("content").style.backgroundPosition="0px 0px";
+    document.getElementById("content").style.backgroundSize="contain";
+    document.getElementById("content").style.backgroundRepeat="no-repeat";
+    //document.getElementById("content").style.minHeight="900px";
 
-    var myPlaylist
-    function toggle_visible(obj) {
-      obj.is(':visible') ?  obj.fadeOut() : obj.fadeIn();
-    }
-
+    var myPlaylist;
     $(document).ready(function() {
       document.title = "#{album.title}";
       myPlaylist = new jPlayerPlaylist({
@@ -77,9 +74,6 @@
         supplied: "mp3",
         wmode: "window"
       });  
-    });
-    $(document).keypress(function(event) {
-      if(event.which == 112) { toggle_visible($('#jp_container_1')); }
     });
     $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
         var current = myPlaylist.current,

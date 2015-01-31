@@ -48,6 +48,7 @@
       %span
         Update Required
       To play the media you will need to either update your browser to a recent version
+%script{:type => "text/javascript", :src => "#{url_for '/js/keypress.js'}"}
 :javascript
         document.getElementById("content").style.background="url('#{url_for "/images/" + (playlist.image_path || "")}')";
         document.getElementById("content").style.backgroundPosition="0px 0px";
@@ -56,10 +57,6 @@
         //document.getElementById("content").style.minHeight="900px";
 
     var myPlaylist
-
-    function toggle_visible(obj) {
-      obj.is(':visible') ?  obj.fadeOut() : obj.fadeIn();
-    }
 
     function append(playlist, json) {
       track = JSON.parse(json)[0];
@@ -85,9 +82,7 @@
         }
       });  
     });
-    $(document).keypress(function(event) {
-      if(event.which == 112) { toggle_visible($('#jp_container_1')); }
-    });
+
     $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
         var current = myPlaylist.current,
             playlist = myPlaylist.playlist;

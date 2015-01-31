@@ -51,6 +51,7 @@
   .edit
     %a.item{href: "#{url_for("/admin/playlist/#{playlist.id}")}"}
       Edit
+%script{:type => "text/javascript", :src => "#{url_for '/js/keypress.js'}"}
 :javascript
         document.getElementById("content").style.background="url('#{url_for "/images/" + (playlist.image_path || "")}')";
         document.getElementById("content").style.backgroundPosition="0px 0px";
@@ -59,10 +60,6 @@
         //document.getElementById("content").style.minHeight="900px";
 
     var myPlaylist
-
-    function toggle_visible(obj) {
-      obj.is(':visible') ?  obj.fadeOut() : obj.fadeIn();
-    }
 
     $(document).ready(function() {
       document.title = "#{playlist.name}";
@@ -79,9 +76,7 @@
         wmode: "window"
       });  
     });
-    $(document).keypress(function(event) {
-      if(event.which == 112) { toggle_visible($('#jp_container_1')); }
-    });
+
     $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
         var current = myPlaylist.current,
             playlist = myPlaylist.playlist;
