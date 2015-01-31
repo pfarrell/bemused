@@ -55,8 +55,11 @@
         document.getElementById("content").style.backgroundRepeat="no-repeat";
         //document.getElementById("content").style.minHeight="900px";
 
-    var timer;
     var myPlaylist
+
+    function toggle_visible(obj) {
+      obj.is(':visible') ?  obj.fadeOut() : obj.fadeIn();
+    }
 
     function append(playlist, json) {
       track = JSON.parse(json)[0];
@@ -82,15 +85,8 @@
         }
       });  
     });
-    $(document).mousemove(function() {
-      if(timer) {
-        clearTimeout(timer);
-        timer=0;
-        $('#jp_container_1').fadeIn();
-      }
-      timer = setTimeout(function() {
-        $('#jp_container_1').fadeOut()
-      }, 15000)
+    $(document).keypress(function(event) {
+      if(event.which == 112) { toggle_visible($('#jp_container_1')); }
     });
     $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
         var current = myPlaylist.current,
