@@ -10,6 +10,8 @@ this project supports many keyboard shortcuts for controlling the app.
 
 |key|meaning|
 |---|---|
+|b|scrub track backward|
+|f|scrub track forward|
 |p|show/hide the playlist|
 |r|randomize the playlist|
 |s|search|
