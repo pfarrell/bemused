@@ -11,12 +11,6 @@ $(document).keydown(function(event) {
         event.preventDefault();
         $(".jp-state-playing").length == 1 ? myPlaylist.pause() : myPlaylist.play();
         break;
-      case 37: //left arrow
-        myPlaylist.previous(); 
-        break;
-      case 39: //right arrow
-        myPlaylist.next();
-        break;
       case 80: //p
         toggle_visible($('#jp_container_1')); 
         break;
@@ -27,9 +21,15 @@ $(document).keydown(function(event) {
         event.preventDefault();
         $("#q").focus();
         break;
-
     }
-    console.log(event.which);
+  }
+  switch(event.which) {
+    case 37: //left arrow
+      myPlaylist.previous(); 
+      break;
+    case 39: //right arrow
+      myPlaylist.next();
+      break;
   }
 });
 
