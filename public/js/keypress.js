@@ -35,6 +35,7 @@ $(document).keydown(function(event) {
 
 //Handles the key down event (so the user can hold a key down to continue)
 $(document).keydown(function (e) {
+  if($("#q").is(":focus")) { return; }
     wasplaying = $(".jp-state-playing").length == 1;
     //Rewind
     if (e.keyCode == 66 && (!rewinding)) {
