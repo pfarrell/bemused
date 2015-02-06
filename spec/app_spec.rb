@@ -100,7 +100,7 @@ describe 'Bemused' do
   end           
 
   it "streams music" do
-    get "/stream/1"
+    get "/stream/65"
     expect(last_response).to be_ok
   end           
 
