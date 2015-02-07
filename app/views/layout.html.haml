@@ -39,13 +39,12 @@
             %span.navbar-info
     .container#content
       =yield
-      %div.row
-        %div.twelvecol
-          %div.container.footer
-            A 
-            %a{href:"https://patf.net"}
-              patf
-            joint
+    %div.row#footer
+      %div.container.footer
+        A 
+        %a{href:"https://patf.net"}
+          patf
+        joint
 :javascript
   $('#q').autocomplete({
     serviceUrl: '#{url_for "/livesearch"}',
