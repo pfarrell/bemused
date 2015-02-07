@@ -20,7 +20,7 @@
     %script{type: "text/javascript", src: "#{url_for "/libs/imagesloaded/imagesloaded.pkgd.min.js"}"}
     %script{type: "text/javascript", src: "#{url_for "/libs/devbridge-autocomplete/dist/jquery.autocomplete.min.js"}"}
   %body
-    %nav.navbar.navbar-default{role: "navigation"}
+    %nav.navbar.navbar-default{id:"nav", role: "navigation"}
       .navbar-header
         %button.navbar-toggle{type:"button", data:{toggle: "collapse", target: "#navbar-collapse"}}
           %span.sr-only
