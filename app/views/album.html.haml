@@ -80,7 +80,9 @@
             playlist = myPlaylist.playlist;
         $.each(playlist, function (index, obj) {
             if (index == current) {
-              $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
+              if(!scrubbing) {
+                $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
+              }
               $('.navbar-info').html("                                   \
                 <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
                   <span class='artist-title'>#{shorten album.artist.name, 20}</span> \
