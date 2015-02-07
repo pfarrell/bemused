@@ -1,4 +1,4 @@
-var fastforward, rewinding, rwaction, wasplaying = null;
+var scrubbing, rwaction, wasplaying = null;
 
 function toggle_visible(obj) {
   obj.is(':visible') ?  obj.fadeOut() : obj.fadeIn();
@@ -13,6 +13,7 @@ $(document).keydown(function(event) {
         break;
       case 80: //p
         toggle_visible($('#jp_container_1')); 
+        toggle_visible($('#nav')); 
         break;
       case 82: //r
         myPlaylist.shuffle();
