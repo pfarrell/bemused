@@ -1,4 +1,4 @@
-var scrubbing, rwaction, wasplaying = null;
+var scrubbing, scrubaction, wasplaying = null;
 
 function toggle_visible(obj) {
   obj.is(':visible') ?  obj.fadeOut() : obj.fadeIn();
@@ -39,19 +39,19 @@ $(document).keydown(function (e) {
   if($("#q").is(":focus")) { return; }
     wasplaying = $(".jp-state-playing").length == 1;
     //Rewind
-    if (e.keyCode == 66 && (!rewinding)) {
-        rewinding = true;
+    if (e.keyCode == 66 && (!scrubbing)) {
+        scrubbing = true;
         //Pause the player
         //$("#jquery_jplayer_1").jPlayer("pause");
         RewindTrack();
-        rwaction = window.setInterval(function () { RewindTrack() }, 200);
+        scrubaction = window.setInterval(function () { RewindTrack() }, 200);
     }
-    else if (e.keyCode == 70 && (!fastforward)) {
-        fastforward = true;
+    else if (e.keyCode == 70 && (!scrubbing)) {
+        scrubbing = true;
         //Pause the player
         //$("#jquery_jplayer_1").jPlayer("pause");
         FastforwardTrack();
-        ffaction = window.setInterval(function () { FastforwardTrack() }, 200);
+        scrubaction = window.setInterval(function () { FastforwardTrack() }, 200);
     }
 });
 //Ends the action
@@ -59,13 +59,13 @@ $(document).keyup(function (e) {
     var returnState = wasplaying ? "play" : "pause";
     //Rewind
     if (e.keyCode == 66) {
-      rewinding = false;
-      window.clearInterval(rwaction);
+      scrubbing = false;
+      window.clearInterval(scrubaction);
       $("#jquery_jplayer_1").jPlayer(returnState);
     }
     else if (e.keyCode == 70) {
-      fastforward = false;
-      window.clearInterval(ffaction);
+      scrubbing = false;
+      window.clearInterval(scrubaction);
       $("#jquery_jplayer_1").jPlayer(returnState);
     }
 });
@@ -83,8 +83,8 @@ function RewindTrack() {
     var futureProgress = currentProgress - 1.5;
     //If it goes past the starting point - stop rewinding and pause
     if (futureProgress <= 0) {
-        rewinding = false;
-        window.clearInterval(rwaction);
+        scrubbining = false;
+        window.clearInterval(scrubaction);
         //$("#jquery_jplayer_1").jPlayer("pause", 0);
     }
     //Continue rewinding
@@ -101,8 +101,8 @@ function FastforwardTrack() {
     var futureProgress = currentProgress + 1.5;
     //If the percentage exceeds the max - stop fast forwarding at the end.
     if (futureProgress >= 100) {
-        fastforward = false;
-        window.clearInterval(ffaction);
+        scrubbing = false;
+        window.clearInterval(scrubaction);
         $("#jquery_jplayer_1").jPlayer("playHead", parseInt($('.jp-duration').text().replace(':', '')));
     }
     else {
