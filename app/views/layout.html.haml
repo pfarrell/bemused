@@ -45,6 +45,7 @@
         %a{href:"https://patf.net"}
           patf
         joint
+%script{:type => "text/javascript", :src => "#{url_for '/js/keypress.js'}"}
 :javascript
   $('#q').autocomplete({
     serviceUrl: '#{url_for "/livesearch"}',
