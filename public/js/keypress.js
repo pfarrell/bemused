@@ -11,6 +11,18 @@ $(document).keydown(function(event) {
         event.preventDefault();
         $(".jp-state-playing").length == 1 ? myPlaylist.pause() : myPlaylist.play();
         break;
+      case 63: //?
+        $("#dialog").dialog({
+          buttons: [
+            {
+              text: "OK",
+              click: function() {
+                $(this).dialog("close");
+              }
+            }
+          ]
+        });
+        break;
       case 80: //p
         toggle_visible($('#jp_container_1')); 
         toggle_visible($('#nav')); 
@@ -18,10 +30,10 @@ $(document).keydown(function(event) {
       case 82: //r
         myPlaylist.shuffle();
         break;
-      case 83: //s
-        event.preventDefault();
-        $("#q").focus();
-        break;
+      //case 83: //s
+      //  event.preventDefault();
+      //  $("#q").focus();
+      //  break;
     }
   }
   switch(event.which) {
