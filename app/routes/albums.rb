@@ -56,7 +56,7 @@ class Bemused < Sinatra::Application
     words= params[:size] || 100
     data = Album.words(words, :title)
     respond_to do |wants|
-      wants.json { data.do_json }
+      wants.json { data.to_json }
       wants.html {
         props={}
         props["word"] = {value: lambda{|x| x[0]}}
