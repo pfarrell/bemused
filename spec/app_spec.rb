@@ -33,6 +33,11 @@ describe 'Bemused' do
     expect(last_response.body).to match(/Bemused/)
   end
 
+  it "has a log route" do
+    get "/log/#{Track.first.id}"
+    expect(last_response.body).to be_empty
+  end
+
   it "has a top route" do
     get "/top"
     expect(last_response).to be_ok
@@ -138,8 +143,27 @@ describe 'Bemused' do
     expect(last_response.body).to match(/Bemused/)
   end
 
+  it "has a words.json route for albums" do
+    get "/albums/words.json"
+    expect(last_response).to be_ok
+  end
+
   it "has a words route for artists" do
     get "/artists/words"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+  end
+
+  it "has a words.json route for artists" do
+    get "/artists/words.json"
+    expect(last_response).to be_ok
+  end
+
+  it "has an artist route" do
+    get "/artists.json"
+    hsh=JSON.parse(last_response.body)
+    artist=Artist.where(name:hsh.first).first
+    get "/artist/#{artist.id}"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
   end
@@ -148,5 +172,10 @@ describe 'Bemused' do
     get "/tracks/words"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
+  end
+
+  it "has a words.json route for tracks" do
+    get "/tracks/words.json"
+    expect(last_response).to be_ok
   end
 end
