@@ -74,6 +74,22 @@ describe 'Bemused' do
     expect(last_response.body).to match(/suggestions/)
   end           
 
+  it "has live searchalbums route" do
+    get "/searchalbums"
+    expect(last_response).to be_ok
+  end
+
+  it "has live searchartists route" do
+    get "/searchartists"
+    expect(last_response).to be_ok
+  end
+
+  it "handles bad routes gracefully" do
+    get "/foo"
+    expect(last_response.status).to eq(404) 
+    expect(last_response.body).to match(/Bemused/)
+  end
+
   it "has a searchtracks route" do
     get "/searchtracks?q=w"
     expect(last_response).to be_ok
