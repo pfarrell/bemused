@@ -1,3 +1,5 @@
+require 'id3tag'
+
 class Mp3
   attr_accessor :file_path
 
@@ -18,8 +20,6 @@ class Mp3
   end
 
   def tags
-    puts @file_path
-    puts @file_path.class
     ID3Tag.read(File.open(@file_path)) unless @file_path.nil?
   end
 end
