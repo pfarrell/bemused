@@ -5,7 +5,6 @@ class Track < Sequel::Model
   one_to_one  :media_file
   many_to_one :artist
   one_to_many :logs
-  many_to_many :playlists
 
   def self.random(n=1)
     Track.order{rand{}}.limit(n)

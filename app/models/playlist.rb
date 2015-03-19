@@ -1,10 +1,11 @@
 class Playlist < Sequel::Model
   include Editable
 
-  many_to_many :tracks
+  one_to_many :playlist_tracks
 
   def track_list 
-    tracks.sort_by{|t| t.id}.map.with_index do |track,i|
+    tracks = playlist_tracks.sort_by{|x| x.order}.map{|x| x.track}
+    tracks.map.with_index do |track,i|
       next if track.nil?
       artist_name = track.album.nil? || track.album.artist.nil? ? "unknown" : track.album.artist.name
       %Q(
@@ -28,7 +29,7 @@ class Playlist < Sequel::Model
     playlist.image_path="shells.jpg"
     Track.order{rand{}}.limit(size).each_with_index do |track, i| 
       track.track_number = i + 1
-      playlist.tracks << track
+      playlist.playlist_tracks << PlaylistTrack.new(track: track)
     end
     playlist
   end
@@ -39,7 +40,7 @@ class Playlist < Sequel::Model
     playlist.image_path="nursery.jpg"
     Track.order(Sequel.desc(:created_at)).limit(size).each_with_index do |track, i|
       track.track_number = i + 1
-      playlist.tracks << track
+      playlist.playlist_tracks << PlaylistTrack.new(track: track)
     end
     playlist
   end
@@ -48,12 +49,12 @@ class Playlist < Sequel::Model
     playlist = Playlist.new()
     playlist.name=(name)
     playlist.image_path="radio.jpg"
-    playlist.tracks << Track.random.first
+    playlist.playlist_tracks << PlaylistTrack.new(track: Track.random.first)
     playlist
   end
 
   def random_image
-    tracks.sample.album.image_path 
+    playlist_tracks.sample.track.album.image_path 
   end
 end
 

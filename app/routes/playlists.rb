@@ -13,7 +13,7 @@ class Bemused < Sinatra::Application
     Log.group_and_count(:track_id).filter('created_at > ?', Date.today - 7).order(Sequel.desc(:count), Sequel.desc('created_at')).limit(20).map do |x| 
       track = Track[x.track_id]
       next if track.nil?
-      playlist.tracks << track
+      playlist.playlist_tracks << PlaylistTrack.new(track: track)
     end
     playlist.image_path = playlist.random_image
     haml :playlist, locals: {playlist: playlist}
@@ -22,7 +22,7 @@ class Bemused < Sinatra::Application
   get "/active" do
     playlist = Playlist.new
     playlist.name= "Random Active Tracks"
-    playlist.tracks << Track.active[0]
+    playlist.playlist_tracks << PlaylistTrack.new(track: Track.active[0])
     playlist.image_path = playlist.random_image
     haml :radio, locals: {playlist: playlist}
   end
@@ -43,7 +43,8 @@ class Bemused < Sinatra::Application
   post "/admin/playlist/:id" do
     playlist = Playlist[params[:id]]
     playlist.name = params[:name]
-    playlist.add_track(Track.first(title: [params[:track_name]])) unless params[:track_name].nil? || params[:track_name] == ""
+    track = Track.first(title: [params[:track_name]]) unless params[:track_name].nil? || params[:track_name] == ""
+    playlist.playlist_track << PlaylistTrack.new(track: track)
     playlist.save
     haml :"admin/playlist", locals: {model: playlist}
   end
