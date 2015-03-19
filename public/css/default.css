@@ -23,6 +23,10 @@ body {
 <!--  width: 15%;-->
 }
 
+.item img {
+  width:200px;
+}
+
 .album-title {
   font-style:italic;
 }
