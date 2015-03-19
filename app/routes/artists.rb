@@ -3,15 +3,12 @@ require 'open-uri'
 require 'json'
 
 class Bemused < Sinatra::Application
-  get "/artist/:id" do
-    redirect url_for("/artist/:id/1")
-  end
 
   get "/artist/:id" do
-    page = params[:page].to_i
+    page = (params[:page] || 1).to_i
     artist = Artist[params[:id]]
     albums = Album.where(:artist => artist).order(:title).paginate(page, 24).to_a.select{|album| album.tracks.size > 0}
-    haml :artist, locals: {artist: artist, albums: Artist[params[:id]], nxt: page + 1, prev: page - 1} 
+    haml :artist, locals: {artist: artist, albums: albums, nxt: page + 1, prev: page - 1} 
   end
 
   get "/admin/artist/:id" do
