@@ -1,7 +1,11 @@
+%a{href:"#{url_for("/logs/#{prev}")}"}
+  <<
+%a{href:"#{url_for("/logs/#{nxt}")}"}
+  >>
 .artist
   =artist.name
 .albums
-  -artist.albums.to_a.select{|album| album.tracks.size > 0}.each do |album|
+  -albums.each do |album|
     %a.item{href: "#{url_for("/album/#{album.id}")}"}
       %img.artist{title: "#{album.title}", src: "/images/#{album.image_path}"}
 
