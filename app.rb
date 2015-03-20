@@ -20,7 +20,7 @@ class Bemused < Sinatra::Application
   enable :sessions
   set :session_secret, ENV["BEMUSED_SESSION_SECRET"]
   set :views, Proc.new { File.join(root, "app/views") }
-  set :local_authority, '192.168.0.47' # for Sinatra::LocalApp
+  set :local_authority, 'http://192.168.0.47' # for Sinatra::LocalApp
 
   before do
     response.set_cookie(:bmc, value: SecureRandom.uuid, expires: Time.now + 3600 * 24 * 365 * 10) if request.cookies["bmc"].nil?
