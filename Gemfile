@@ -16,7 +16,7 @@ gem 'capistrano-bundler', '~> 1.1.2'
 gem 'capistrano-bower'
 gem 'passenger'
 gem 'unicorn'
-gem 'sinatra-presence', '~> 0.0.2'
+gem 'sinatra-presence', '~> 0.0.3'
 
 group :development do
   gem 'byebug'
