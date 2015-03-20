@@ -7,7 +7,7 @@
 .albums
   -albums.each do |album|
     %a.item{href: "#{url_for("/album/#{album.id}")}"}
-      %img.artist{title: "#{album.title}", src: "/images/#{album.image_path}"}
+      %img.artist{title: "#{album.title}", src: "#{url_for("/images/#{album.image_path}")}"}
 
 .edit
   %a.item{href: "#{url_for("/admin/artist/#{artist.id}")}"}
