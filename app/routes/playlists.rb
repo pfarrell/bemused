@@ -43,8 +43,10 @@ class Bemused < Sinatra::Application
   post "/admin/playlist/:id" do
     playlist = Playlist[params[:id]]
     playlist.name = params[:name]
-    track = Track.first(title: [params[:track_name]]) unless params[:track_name].nil? || params[:track_name] == ""
-    playlist.playlist_track << PlaylistTrack.new(track: track)
+    unless params[:track_name].nil? || params[:track_name] == ""
+      pt = PlaylistTrack.new(track: Track.first(title: params[:track_name]))
+      playlist.add_playlist_track(pt) 
+    end
     playlist.save
     haml :"admin/playlist", locals: {model: playlist}
   end
