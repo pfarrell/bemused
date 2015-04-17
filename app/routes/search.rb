@@ -34,4 +34,8 @@ class Bemused < Sinatra::Application
     haml :playlist, locals: {playlist: Playlist.surprise(10)}
   end
 
+  get "/track_paths/:search" do
+    MediaFile.where(Sequel.ilike(:absolute_path, "%#{params[:search]}%")).to_json
+  end
+
 end
