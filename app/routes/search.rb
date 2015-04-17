@@ -35,6 +35,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/track_paths/:search" do
+    content_type :json
     MediaFile.where(Sequel.ilike(:absolute_path, "%#{params[:search]}%")).to_json
   end
 
