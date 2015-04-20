@@ -1,11 +1,28 @@
 require 'spec_helper'
 
 describe 'Bemused' do
-  let(:artist) {
-    get "/artists.json"
-    hsh=JSON.parse(last_response.body)
-    Artist.where(name:hsh.first).first
+  let(:playlist) {
+    Playlist.find_or_create(name:"test_generated_playlist")
   }
+
+  let(:artist) {
+    Artist.find_or_create(name: "test_generated_artist")
+  }
+
+  let(:track) {
+    track=Track.find_or_create(title: "test_generated_track")
+    track.save
+    track
+  }
+
+  let(:album) {
+    album=Album.find_or_create(title: "test_generated_album")
+    album.artist=artist
+    album.tracks << track
+    album.save
+    album
+  }
+
   it "should allow access to the home page" do
     get "/"
     expect(last_response).to be_ok
@@ -31,7 +48,6 @@ describe 'Bemused' do
   end
 
   it "has a playlist route" do
-    playlist=Playlist.first
     get "/playlist/#{playlist.id}"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
@@ -43,11 +59,30 @@ describe 'Bemused' do
   end
 
   it "updates playlists" do
-    playlist=Playlist.find_or_create(name:"test_generated_playlist")
-
     post "/admin/playlist/#{playlist.id}", {name: "test_generated_playlist_update"}
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
+  end
+
+  it "adds tracks to playlists" do
+    post "/admin/playlist/#{playlist.id}",
+      {
+        name: "test_generated_playlist_updated",
+        track_name: track.title
+      }
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+    expect(playlist.playlist_tracks.size).to eq(1)
+  end
+
+  it "updates artists" do
+    post "/admin/artist/#{artist.id}",
+    {
+      name: "artist_name_updated"
+    }
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+    expect(artist.name).to eq("artist_name_updated")
   end
 
   it "has a logs route" do
@@ -139,7 +174,6 @@ describe 'Bemused' do
   end           
 
   it "has a tracks admin route" do
-    track = artist.albums.first.tracks.first
     get "/admin/track/#{track.id}"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
@@ -176,6 +210,12 @@ describe 'Bemused' do
   it "has a recent albums route" do
     get "/albums/recent"
     expect(last_response).to be_redirect
+  end
+
+  it "updates albums" do
+    post "/admin/album/#{album.id}"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
   end
 
   it "has a recent albums route" do
@@ -219,14 +259,12 @@ describe 'Bemused' do
   end
 
   it "has an album route" do
-    album=artist.albums.first
     get "/album/#{album.id}"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
   end
 
   it "has an album admin route" do
-    album=artist.albums.first
     get "/admin/album/#{album.id}"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
