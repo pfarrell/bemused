@@ -35,6 +35,10 @@ RSpec.configure do |config|
 
   #config.warnings = true
 
+  config.around(:each) do |example|
+    DB.transaction(:rollback=>:always, :auto_savepoint=>true){example.run}
+  end
+
   if config.files_to_run.one?
     config.default_formatter = 'doc'
   end
