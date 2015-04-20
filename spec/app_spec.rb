@@ -30,11 +30,30 @@ describe 'Bemused' do
     expect(last_response.body).to match(/Bemused/)
   end
 
+  it "has a playlist route" do
+    playlist=Playlist.first
+    get "/playlist/#{playlist.id}"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+  end
+
+  it "creates playlists" do
+    post "/playlists/new", {name: "test_generated_playlist"}
+    expect(last_response).to be_redirect
+  end
+
+  it "updates playlists" do
+    playlist=Playlist.find_or_create(name:"test_generated_playlist")
+
+    post "/admin/playlist/#{playlist.id}", {name: "test_generated_playlist_update"}
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+  end
+
   it "has a logs route" do
     get "/logs"
     expect(last_response).to be_redirect
     follow_redirect!
-    puts last_request.url
     expect(last_response.body).to match(/Bemused/)
   end
 
