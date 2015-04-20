@@ -1,6 +1,11 @@
 require 'spec_helper'
 
 describe 'Bemused' do
+  let(:artist) {
+    get "/artists.json"
+    hsh=JSON.parse(last_response.body)
+    Artist.where(name:hsh.first).first
+  }
   it "should allow access to the home page" do
     get "/"
     expect(last_response).to be_ok
@@ -114,6 +119,13 @@ describe 'Bemused' do
     expect(last_response.body).to match(/Bemused/)
   end           
 
+  it "has a tracks admin route" do
+    track = artist.albums.first.tracks.first
+    get "/admin/track/#{track.id}"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+  end           
+
   it "has a tracks route with a search" do
     get "/tracks?q=the"
     expect(last_response).to be_ok
@@ -176,10 +188,27 @@ describe 'Bemused' do
   end
 
   it "has an artist route" do
-    get "/artists.json"
-    hsh=JSON.parse(last_response.body)
-    artist=Artist.where(name:hsh.first).first
     get "/artist/#{artist.id}"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+  end
+
+  it "has an artist admin route" do
+    get "/admin/artist/#{artist.id}"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+  end
+
+  it "has an album route" do
+    album=artist.albums.first
+    get "/album/#{album.id}"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+  end
+
+  it "has an album admin route" do
+    album=artist.albums.first
+    get "/admin/album/#{album.id}"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
   end
