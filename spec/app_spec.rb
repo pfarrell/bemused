@@ -82,7 +82,8 @@ describe 'Bemused' do
     }
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
-    expect(artist.name).to eq("artist_name_updated")
+    ar=Artist[artist.id]
+    expect(ar.name).to eq("artist_name_updated")
   end
 
   it "has a logs route" do
@@ -243,6 +244,11 @@ describe 'Bemused' do
 
   it "has a words.json route for artists" do
     get "/artists/words.json"
+    expect(last_response).to be_ok
+  end
+
+  it "has an artists json route" do
+    get "/artists.json?q=wax"
     expect(last_response).to be_ok
   end
 
