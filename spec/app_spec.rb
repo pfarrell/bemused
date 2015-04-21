@@ -19,6 +19,8 @@ describe 'Bemused' do
     album=Album.find_or_create(title: "test_generated_album")
     album.artist=artist
     album.tracks << track
+    track.album = album
+    track.save
     album.save
     album
   }

@@ -40,17 +40,6 @@ class Bemused < Sinatra::Application
     redirect(url_for("/admin/artist/#{artist.id}"))
   end
 
-  post "/admin/artist/merge/:id" do
-    old_artist = Artist[params[:id]]
-    new_artist = Artist[params[:new_artist_id]]
-
-    old_artist.albums.each do |album|
-      album.artist = new_artist
-      album.save
-    end
-    redirect(url_for("/admin/artist/#{new_artist.id}"))
-  end
-
   get "/artists/words" do
     words= params[:size] || 100
     data = Artist.words(words, :name)
