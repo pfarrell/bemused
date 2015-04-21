@@ -29,10 +29,15 @@ class Track < Sequel::Model
       title: self.title,
       album: self.album.nil? ? "" : self.album.title,
       artist: self.artist.nil? ? "" : self.artist.name,
-      image: self.album.image_path == "" ? "artists/#{self.artist.image_path}" : self.album.image_path,
+      image: image,
       mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{self.id}",
       free: false
     }.to_json(opts)
+  end
+
+  def image
+    return self.album.image_path unless self.album.nil? || self.album.image_path.nil? || self.album.image_path == ""
+    return "artists/#{self.artist.image_path}" unless self.artist.nil?
   end
 
 end
