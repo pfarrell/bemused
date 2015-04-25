@@ -1,7 +1,19 @@
 #Bemused
 A simple sinatra based media library
 
-search bar is a command bar too
+search bar is a command bar
+|/upload|
+|/playlists|
+|/radio|
+|/newborns|
+|/track\_paths|
+|/tracks|
+|/rand|
+|/active|
+|/top|
+|/albums/recent|
+
+
 
 works on mobule, built on bootstrap
 
@@ -22,3 +34,4 @@ this project supports many keyboard shortcuts for controlling the app.
 uses bootstrap and masonry but images need some work...
 keybindings are causing some conflicts with form based pages...
 for instance, space doesn't work...
+
