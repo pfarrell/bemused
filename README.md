@@ -2,16 +2,18 @@
 A simple sinatra based media library
 
 search bar is a command bar
-|/upload|
-|/playlists|
-|/radio|
-|/newborns|
-|/track\_paths|
-|/tracks|
-|/rand|
-|/active|
-|/top|
-|/albums/recent|
+
+|/active|playlist of tracks with plays in past 2 weeks|
+|/albums/recent|Recently uploaded albums|
+|/logs|Log entries of plays|
+|/newborns|Recently added tracks|
+|/playlists|User created playlists|
+|/upload|Upload file(s)|
+|/radio|Unending random playlist|
+|/rand|Load a random album|
+|/top|Playlist of most played tunes|
+|/track\_paths|Search of file metadata, returns JSON|
+|/tracks|Changes search to be for track names, not album/artist names|
 
 
 
