@@ -3,12 +3,14 @@ A simple sinatra based media library
 
 search bar is a command bar
 
+|path|description|
+|---|---|
 |/active|playlist of tracks with plays in past 2 weeks|
 |/albums/recent|Recently uploaded albums|
 |/logs|Log entries of plays|
 |/newborns|Recently added tracks|
 |/playlists|User created playlists|
-|/upload|Upload file(s)|
+|/upload|Upload file(s)|                                             h
 |/radio|Unending random playlist|
 |/rand|Load a random album|
 |/top|Playlist of most played tunes|
