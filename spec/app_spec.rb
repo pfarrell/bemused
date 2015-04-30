@@ -1,6 +1,9 @@
 require 'spec_helper'
 
 describe 'Bemused' do
+  let(:redis) {
+    Redis.new
+  }
   let(:playlist) {
     Playlist.find_or_create(name:"test_generated_playlist")
   }
@@ -292,5 +295,44 @@ describe 'Bemused' do
   it "has a words.json route for tracks" do
     get "/tracks/words.json"
     expect(last_response).to be_ok
+  end
+
+  it "has ability to get more metadata about tracks" do
+    get "/track_paths/test"
+    expect(last_response).to be_ok
+  end
+
+  it "lets you update track metadata" do 
+    post "/admin/track/#{track.id}", {title: "new test title"}
+    new_track = Track[track.id]
+    expect(new_track.title).to eq("new test title")
+  end
+
+  it "saves images from urls for albums" do
+    post "/admin/album/#{album.id}/image", {image_url: "./spec/fixtures/tumblin_dice.jpg", image_name: "tumblin_dice.jpg"}
+    expect(Album[album.id].image_path).to eq("tumblin_dice.jpg")
+    expect(last_response).to be_redirect
+  end
+
+  it "saves images from urls for artists" do
+    post "/admin/artist/#{artist.id}/image", {image_url: "./spec/fixtures/tumblin_dice.jpg", image_name: "tumblin_dice.jpg"}
+    expect(Artist[artist.id].image_path).to eq("tumblin_dice.jpg")
+    expect(last_response).to be_redirect
+  end
+
+  it "saves images from urls for playlists" do
+    post "/admin/playlist/#{playlist.id}/image", {image_url: "./spec/fixtures/tumblin_dice.jpg", image_name: "tumblin_dice.jpg"}
+    expect(Playlist[playlist.id].image_path).to eq("tumblin_dice.jpg")
+    expect(last_response).to be_redirect
+  end
+  
+  it "uploads files" do
+    require 'byebug'
+    byebug
+    last=redis.llen("bemused:incoming").to_i
+    post "/upload", {images: [Rack::Test::UploadedFile.new("./spec/fixtures/tumblin_dice.jpg", "image/jpg")]}
+    redis.llen("bemused:incoming")
+    expect(redis.llen("bemused:incoming").to_i).to eq(last + 1)
+    expect(last_response).to be_redirect
   end
 end
