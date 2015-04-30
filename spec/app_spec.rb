@@ -110,6 +110,8 @@ describe 'Bemused' do
   end
 
   it "has an active route" do
+    track = album.tracks.first
+    get "/log/#{track.id}"
     get "/active"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
