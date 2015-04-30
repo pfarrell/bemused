@@ -19,6 +19,7 @@ describe 'Bemused' do
     album=Album.find_or_create(title: "test_generated_album")
     album.artist=artist
     album.tracks << track
+    album.image_path='test_path/example.jpg'
     track.album = album
     track.save
     album.save
@@ -101,6 +102,8 @@ describe 'Bemused' do
   end
 
   it "has a top route" do
+    track = album.tracks.first
+    get "/log/#{track.id}"
     get "/top"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
