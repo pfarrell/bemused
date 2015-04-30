@@ -7,8 +7,6 @@ class Bemused < Sinatra::Application
   end
 
   post '/upload' do
-    require 'byebug'
-    byebug
     content_type :text
     redis = Redis.new
 

@@ -327,8 +327,6 @@ describe 'Bemused' do
   end
   
   it "uploads files" do
-    require 'byebug'
-    byebug
     last=redis.llen("bemused:incoming").to_i
     post "/upload", {images: [Rack::Test::UploadedFile.new("./spec/fixtures/tumblin_dice.jpg", "image/jpg")]}
     redis.llen("bemused:incoming")
