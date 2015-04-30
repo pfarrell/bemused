@@ -1,4 +1,5 @@
-#Bemused
+#Bemused  <img src="https://raw.githubusercontent.com/pfarrell/bemused/master/coverage/coverage-badge.png" align="right" height="25" >
+
 A simple sinatra based media library
 
 search bar is a command bar
@@ -39,4 +40,4 @@ uses bootstrap and masonry but images need some work...
 keybindings are causing some conflicts with form based pages...
 for instance, space doesn't work...
 
-![coverage report](https://raw.githubusercontent.com/pfarrell/bemused/master/coverage/coverage-badge.png)
+
