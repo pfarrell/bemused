@@ -23,4 +23,5 @@ group :development do
   gem 'shotgun'
   gem 'simplecov'
   gem 'rspec'
+  gem 'simplecov-badge'
 end
