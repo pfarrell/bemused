@@ -8,6 +8,18 @@ class AutoComplete
     res
   end
 
+  def self.translate(query)
+    lkup={"t"=>"/tracks",
+     "p"=>"playlists", 
+     "u"=>"upload", 
+     "r"=>"rand", 
+     "l"=>"logs", 
+     "s"=>"surprise", 
+     "a"=>"active", 
+     "n"=>"newborns"} 
+     return lkup[query].nil? ? query : lkup[query]
+   end
+
   def self.tracks(query)
     {"suggestions"=> Track.where(Sequel.ilike(:title, "%#{query}%")).all.map{|x| {"value"=>"#{x.title}"}}}
   end
