@@ -196,6 +196,8 @@ describe 'Bemused' do
   end           
 
   it "has a search route" do
+    Album.new(title: "wax lips").save
+    Album.new(title: "waxing moon").save
     get "/search?q=wax"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
