@@ -203,6 +203,18 @@ describe 'Bemused' do
     expect(last_response.body).to match(/Bemused/)
   end           
 
+  it "has a search route" do
+    Album.new(title: "slartibartfast").save
+    get "/search?q=bartfas"
+    expect(last_response).to be_redirect
+  end           
+
+  it "has a search route" do
+    Artist.new(name: "jj mclure").save
+    get "/search?q=mclure"
+    expect(last_response).to be_redirect
+  end           
+
   it "redirects for searches with / as first character" do
     get "/search?q=/test"
     expect(last_response).to be_redirect
