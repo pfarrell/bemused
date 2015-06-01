@@ -166,12 +166,6 @@ describe 'Bemused' do
     expect(last_response.body).to match(/suggestions/)
   end           
 
-  it "has a track route" do
-    get "/search?q=wax"
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/Bemused/)
-  end           
-
   it "has a random track route" do
     get "/track/random"
     expect(last_response).to be_ok
@@ -327,10 +321,10 @@ describe 'Bemused' do
   end
   
   it "uploads files" do
-    last=redis.llen("bemused:incoming").to_i
-    post "/upload", {images: [Rack::Test::UploadedFile.new("./spec/fixtures/tumblin_dice.jpg", "image/jpg")]}
-    redis.llen("bemused:incoming")
-    expect(redis.llen("bemused:incoming").to_i).to eq(last + 1)
+    test_key = "testbemused:incoming"
+    last=redis.llen(test_key).to_i
+    post "/upload", {key: test_key, images: [Rack::Test::UploadedFile.new("./spec/fixtures/tumblin_dice.jpg", "image/jpg")]}
+    expect(redis.llen(test_key).to_i).to eq(last + 1)
     expect(last_response).to be_redirect
   end
 end
