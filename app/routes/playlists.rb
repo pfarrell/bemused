@@ -28,7 +28,8 @@ class Bemused < Sinatra::Application
   end
 
   get "/newborns" do
-    haml :playlist, locals: {playlist: Playlist.recent(25)}
+    size = params[:size] || "25"
+    haml :playlist, locals: {playlist: Playlist.recent(size.to_i)}
   end
 
   post "/playlists/new" do
