@@ -6,6 +6,7 @@ $console = Logger.new STDOUT
 DB = Sequel.connect(ENV["BEMUSED_DB"], logger: $console)
 DB.sql_log_level = :debug
 DB.extension(:pagination)
+DB.extension(:connection_validator)
 
 Sequel::Model.plugin :timestamps
 Sequel::Model.plugin :json_serializer
