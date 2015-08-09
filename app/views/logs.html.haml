@@ -1,7 +1,4 @@
-%a{href:"#{url_for("/logs/#{prev}")}"}
-  <<
-%a{href:"#{url_for("/logs/#{nxt}")}"}
-  >>
+=haml :paging, locals: {model: model, base: "/logs"}
 %table.table
   %thead
     %th
@@ -17,7 +14,7 @@
     %th
       Cookie
   %tbody
-    -logs.each do |log|
+    -model[:data].each do |log|
       %tr
         %td
           - unless log.artist.nil?
@@ -39,7 +36,7 @@
           #{log.cookie}
 
 :javascript
-  $('.navbar-info').html("#{logs.count} log entries");
+  $('.navbar-info').html("#{model[:data].count} log entries");
   $(document).ready(function() {
     $('#q').autocomplete('disable');
   });
