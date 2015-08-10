@@ -1,9 +1,6 @@
-%a{href:"#{url_for("/albums/recent/#{prev}")}"}
-  <<
-%a{href:"#{url_for("/albums/recent/#{nxt}")}"}
-  >>
+=haml :paging, locals: {model: model, base: "/albums/recent"}
 .albums
-  -albums.each do |album|
+  -model[:data].each do |album|
     %a.item{href: "#{url_for "/album/#{album.id}"}"}
       %img.album{src: "#{url_for "/images/#{album.image_path}"}", title: "#{album.title}"}
 :javascript
