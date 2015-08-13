@@ -6,17 +6,17 @@ search bar is a command bar
 
 |path|description|
 |---|---|
-|/active|playlist of tracks with plays in past 2 weeks|
+|/active, /a|playlist of tracks with plays in past 2 weeks|
 |/albums/recent|Recently uploaded albums|
-|/logs|Log entries of plays|
-|/newborns|Recently added tracks|
-|/playlists|User created playlists|
-|/upload|Upload file(s)|                                             h
+|/logs, /l|Log entries of plays|
+|/newborns /n|Recently added tracks|
+|/playlists, /p|User created playlists|
+|/upload, /u|Upload file(s)|                                             h
 |/radio|Unending random playlist|
-|/rand|Load a random album|
+|/rand, /r|Load a random album|
 |/top|Playlist of most played tunes|
 |/track\_paths|Search of file metadata, returns JSON|
-|/tracks|Changes search to be for track names, not album/artist names|
+|/tracks, /t|Changes search to be for track names, not album/artist names|
 
 
 
