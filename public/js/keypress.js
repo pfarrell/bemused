@@ -5,6 +5,7 @@ function toggle_visible(obj) {
 }
 
 $(document).keydown(function(event) {
+  if(keypress_disable) { return; }
   if(!$("#q").is(":focus")) {
     switch(event.which) {
       case 32: //space bar
