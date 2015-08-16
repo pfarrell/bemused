@@ -28,7 +28,6 @@ GEM
     id3tag (0.7.0)
     kgio (2.9.2)
     multi_json (1.10.1)
-    mysql2 (0.3.16)
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
     net-ssh (2.9.1)
@@ -36,6 +35,7 @@ GEM
       daemon_controller (>= 1.2.0)
       rack
       rake (>= 0.8.1)
+    pg (0.18.2)
     rack (1.5.2)
     rack-mobile-detect (0.4.0)
       rack
@@ -103,8 +103,8 @@ DEPENDENCIES
   emk-sinatra-url-for
   haml
   id3tag
-  mysql2
   passenger
+  pg
   rack-mobile-detect
   rake
   redis

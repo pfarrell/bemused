@@ -2,10 +2,12 @@ require 'sequel'
 require 'redis'
 require 'logger'
   
-$console = Logger.new STDOUT
-DB = Sequel.connect(ENV["BEMUSED_DB"], logger: $console)
+$console = ENV['RACK_ENV'] == 'development' ? Logger.new(STDOUT) : nil
+DB = Sequel.connect(ENV['BEMUSED_DB'] || 'postgres://localhost/pigeon',logger: $console)
+
 DB.sql_log_level = :debug
 DB.extension(:pagination)
+DB.extension(:pg_array, :pg_json)
 DB.extension(:connection_validator)
 
 Sequel::Model.plugin :timestamps
