@@ -14,7 +14,7 @@ Sequel.migration do
       add_index :absolute_path
     end
 
-    alter_table(:playlists_tracks) do
+    alter_table(:playlist_tracks) do
       add_index :playlist_id
       add_index :track_id
     end
