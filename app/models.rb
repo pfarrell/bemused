@@ -3,7 +3,7 @@ require 'redis'
 require 'logger'
   
 $console = ENV['RACK_ENV'] == 'development' ? Logger.new(STDOUT) : nil
-DB = Sequel.connect(ENV['BEMUSED_DB'] || 'postgres://localhost/pigeon',logger: $console)
+DB = Sequel.connect(ENV['BEMUSED_DB'] || 'postgres://localhost/bemused',logger: $console)
 
 DB.sql_log_level = :debug
 DB.extension(:pagination)
