@@ -7,13 +7,13 @@ class Track < Sequel::Model
   one_to_many :logs
 
   def self.random(n=1)
-    Track.order{rand{}}.limit(n)
+    Track.order{Sequel.lit('RANDOM()')}.limit(n)
   end
 
   def self.active(n=1)
     Log.group_and_count(:track_id)
        .filter('created_at > ?', Date.today - 7)
-       .order{rand{}}
+       .order{Sequel.lit('RANDOM()')}
        .limit(n).map do |x| 
       Track[x.track_id]
     end.select{ |x| !x.nil? }

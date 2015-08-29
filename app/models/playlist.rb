@@ -27,7 +27,7 @@ class Playlist < Sequel::Model
     playlist = Playlist.new()
     playlist.name= "Surprise!!"
     playlist.image_path="shells.jpg"
-    Track.order{rand{}}.limit(size).each_with_index do |track, i| 
+    Track.order{Sequel.lit('RANDOM()')}.limit(size).each_with_index do |track, i| 
       track.track_number = i + 1
       playlist.playlist_tracks << PlaylistTrack.new(track: track)
     end
