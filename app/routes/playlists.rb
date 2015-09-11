@@ -10,7 +10,7 @@ class Bemused < Sinatra::Application
   get "/top" do
     playlist = Playlist.new
     playlist.name= "Top 20"
-    Log.group_and_count(:track_id).filter('created_at > ?', Date.today - 7).order(Sequel.desc(:count), Sequel.desc('created_at')).limit(20).map do |x| 
+    Log.group_and_count(:track_id).filter('created_at > ?', Date.today - 7).order(Sequel.desc(:count)).limit(20).map do |x| 
       track = Track[x.track_id]
       next if track.nil?
       playlist.playlist_tracks << PlaylistTrack.new(track: track)
