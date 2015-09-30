@@ -226,7 +226,7 @@ describe 'Bemused' do
   end
 
   it "has a playlist admin route" do
-    get "/admin/playlist/1"
+    get "/admin/playlist/#{playlist.id}"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
   end           
