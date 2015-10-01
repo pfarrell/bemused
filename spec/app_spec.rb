@@ -242,7 +242,7 @@ describe 'Bemused' do
     expect(last_response.body).to match(/Bemused/)
   end
 
-  it "has a recent albums route" do
+  it "pages recent albums" do
     get "/albums/recent/1"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)

@@ -6,6 +6,7 @@ class AutoComplete
     #Playlist.where(Sequel.ilike(:name, "%#{query}%")).all.select{|x| x.tracks.count > 0}.each {|x| res["suggestions"] << {"value"=>"#{x.name}"}}
     ["/active",
      "/albums/recent",
+     "/albums/words",
      "/logs",
      "/newborns",
      "/playlists",
@@ -14,6 +15,8 @@ class AutoComplete
      "/surprise",
      "/top",
      "/tracks",
+     "/tracks/words",
+     "/track_paths",
      "/upload"
      ].select{|x| x =~ /.*#{query}.*/}.each{|x| res["suggestions"] << {"value" => x}}
     res

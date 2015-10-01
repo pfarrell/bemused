@@ -8,19 +8,19 @@ search bar is a command bar
 |---|---|
 |/active, /a|playlist of tracks with plays in past 2 weeks|
 |/albums/recent|Recently uploaded albums|
+|/albums/words|Top words used in album names|
 |/logs, /l|Log entries of plays|
 |/newborns /n|Recently added tracks|
 |/playlists, /p|User created playlists|
-|/upload, /u|Upload file(s)|                                             h
 |/radio|Comin' up, a lifetime of commercial free|
 |/random, /r|Load a random album|
 |/top|Playlist of most played tunes|
-|/track\_paths|Search of file metadata, returns JSON|
 |/tracks, /t|Changes search to be for track names, not album/artist names|
+|/tracks/words|Top words used in track titles|
+|/track\_paths/{search}|Top words used in track titles|
+|/upload, /u|Upload file(s)|                                             h
 
-
-
-works on mobule, built on bootstrap
+works on mobile, built on bootstrap
 
 #KeyBindings
 this project supports many keyboard shortcuts for controlling the app.
