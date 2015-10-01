@@ -4,7 +4,18 @@ class AutoComplete
     res = {"suggestions"=> Artist.where(Sequel.ilike(:name, "%#{query}%")).all.select{|x| x.albums.count > 0}.map{|x| {"value"=>"#{x.name}"}}}
     Album.where(Sequel.ilike(:title, "%#{query}%")).all.select{|x| x.tracks.count > 0}.each {|x| res["suggestions"] << {"value"=>"#{x.title}"}}
     #Playlist.where(Sequel.ilike(:name, "%#{query}%")).all.select{|x| x.tracks.count > 0}.each {|x| res["suggestions"] << {"value"=>"#{x.name}"}}
-    ["/tracks","/playlists", "/upload", "/rand", "/logs", "/surprise", "/top", "/active", "/newborns", "/radio", "/albums/recent"].select{|x| x =~ /.*#{query}.*/}.each{|x| res["suggestions"] << {"value" => x}}
+    ["/active",
+     "/albums/recent",
+     "/logs",
+     "/newborns",
+     "/playlists",
+     "/radio",
+     "/random",
+     "/surprise",
+     "/top",
+     "/tracks",
+     "/upload"
+     ].select{|x| x =~ /.*#{query}.*/}.each{|x| res["suggestions"] << {"value" => x}}
     res
   end
 
@@ -12,7 +23,7 @@ class AutoComplete
     lkup={"t"=>"/tracks",
      "p"=>"playlists", 
      "u"=>"upload", 
-     "r"=>"rand", 
+     "r"=>"random", 
      "l"=>"logs", 
      "s"=>"surprise", 
      "a"=>"active", 

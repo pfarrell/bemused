@@ -12,8 +12,8 @@ search bar is a command bar
 |/newborns /n|Recently added tracks|
 |/playlists, /p|User created playlists|
 |/upload, /u|Upload file(s)|                                             h
-|/radio|Unending random playlist|
-|/rand, /r|Load a random album|
+|/radio|Comin' up, a lifetime of commercial free|
+|/random, /r|Load a random album|
 |/top|Playlist of most played tunes|
 |/track\_paths|Search of file metadata, returns JSON|
 |/tracks, /t|Changes search to be for track names, not album/artist names|

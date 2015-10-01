@@ -131,8 +131,8 @@ describe 'Bemused' do
     expect(last_response.body).to match(/Bemused/)
   end
 
-  it "has a rand route" do
-    get "/rand"
+  it "has a random route" do
+    get "/random"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
   end           
