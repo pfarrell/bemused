@@ -9,6 +9,7 @@
   %a.item{href: "#{url_for("/admin/artist/#{artist.id}")}"}
     Edit
 :javascript
+  keypress_disable=true;
   var container = document.querySelector('.albums');
   var msnry = new Masonry( container, {
     // options
