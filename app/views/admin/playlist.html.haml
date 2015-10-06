@@ -32,7 +32,6 @@
       %span.form-control
         #{playlist_track.track.title}
 :javascript
-  keypress_disable=true;
   $('#track').autocomplete({
     serviceUrl: '#{url_for "/searchtracks"}',
     paramName: 'q',
