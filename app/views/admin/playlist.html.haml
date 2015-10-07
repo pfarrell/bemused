@@ -30,7 +30,7 @@
       %span.input-group-addon
         &nbsp;
       %span.form-control
-        #{playlist_track.track.title}
+        #{playlist_track.track.title unless playlist_track.nil? || playlist_track.track.nil?}
 :javascript
   $('#track').autocomplete({
     serviceUrl: '#{url_for "/searchtracks"}',
