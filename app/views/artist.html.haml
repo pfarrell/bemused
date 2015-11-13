@@ -1,7 +1,6 @@
-.artist
-  =artist.name
-  %img.artist{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}
 .albums
+  %a.item{href: "#{url_for("/artist/#{artist.id}")}"}
+    %img.artist{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}
   -artist.albums.each do |album|
     %a.item{href: "#{url_for("/album/#{album.id}")}"}
       %img.artist{title: "#{album.title}", src: "#{url_for("/images/#{album.image_path}")}"}
@@ -11,6 +10,8 @@
     Edit
 :javascript
   keypress_disable=true;
+  $(document).attr("title", "#{artist.name}");
+  $('.navbar-info').html("<span class='artist-title'>#{artist.name}</span>");
   var container = document.querySelector('.albums');
   var msnry = new Masonry( container, {
     // options
