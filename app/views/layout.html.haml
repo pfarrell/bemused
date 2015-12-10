@@ -52,7 +52,7 @@
   $('#q').autocomplete({
     serviceUrl: '#{url_for "/livesearch"}',
     paramName: 'q',
-    minChars: 1,
+    minChars: 3,
     lookupLimit: 50,
     autoSelectFirst: true,
   });
