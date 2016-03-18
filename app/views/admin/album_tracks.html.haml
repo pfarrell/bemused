@@ -1,0 +1,5 @@
+-model.tracks.each do |track|
+  .track
+    =track.title
+    %a{href: "/admin/track/#{track.id}"}
+      Edit

@@ -1,6 +1,12 @@
-%a{href: "#{url_for("/artist/#{model.artist.id}")}"}
-%a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}"}
-  =model.to_s
+.link
+  %a{href: "#{url_for("/artist/#{model.artist.id}")}"}
+    =model.artist.name
+.link
+  %a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}"}
+    =model.to_s
+.link
+  %a{href: "#{url_for("/admin/album/#{model.id}/tracks")}"}
+    tracks
 %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}")}"}
   -model.editable_attributes.each do |k,v|
     .input-group.input-group-lg
