@@ -20,9 +20,9 @@ while(true)
 
   #Read tags
   tags = mp3.tags
-  track_artist_name = coalesce tags.artist, hsh["artist_name"]
-  album_artist_name = coalesce hsh["artist_name"], tags.artist
-  album_name = coalesce hsh["album_name"], tags.album
+  track_artist_name = coalesce tags.artist.strip, hsh["artist_name"]
+  album_artist_name = coalesce hsh["artist_name"], tags.artist.strip
+  album_name = coalesce hsh["album_name"], tags.album.strip
   src= hsh["file_name"]
   
   # mv to error dir if no tags, add to error queue
@@ -40,7 +40,7 @@ while(true)
   track_artist = Artist.find_or_create(name: track_artist_name)
   album_artist = Artist.find_or_create(name: album_artist_name)
   album = Album.find_or_create(artist: album_artist, title: album_name)
-  track = Track.find_or_create(artist: track_artist, album: album, title: tags.title, track_number: tags.track_nr)
+  track = Track.find_or_create(artist: track_artist, album: album, title: tags.title.strip, track_number: tags.track_nr)
   track.track_number = tags.track_nr
   track.save
   file = MediaFile.find_or_create(absolute_path: nas_location)
