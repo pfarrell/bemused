@@ -20,7 +20,7 @@ gem 'unicorn'
 gem 'sinatra-presence', '~> 0.0.3'
 
 group :development do
-  gem 'byebug'
+  gem 'pry'
   gem 'shotgun'
   gem 'simplecov'
   gem 'rspec'
