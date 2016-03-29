@@ -27,7 +27,7 @@ class Bemused < Sinatra::Application
   post "/admin/album/:id/image" do
     album = Album[params[:id]]
     open("#{params[:image_url]}") {|f|
-      File.open("public/images/#{params[:image_name]}", "wb") do |file|
+      File.open("public/images/albums/#{params[:image_name]}", "wb") do |file|
         file.puts f.read
       end
     }

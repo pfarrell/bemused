@@ -4,9 +4,6 @@
 .link
   %a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}"}
     =model.to_s
-.link
-  %a{href: "#{url_for("/admin/album/#{model.id}/tracks")}"}
-    tracks
 %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}")}"}
   -model.editable_attributes.each do |k,v|
     .input-group.input-group-lg
@@ -27,6 +24,12 @@
     %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}"}
   .input-group.input-group-lg
     %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
+-model.tracks.each do |track|
+  .input-group.input-group-lg
+    %span.input-group-addon
+      =track.title
+    %a.btn.btn-default.navbar-btn{href: "#{url_for("/admin/track/#{track.id}")}"}
+      Edit
 :javascript
   keypress_disable=true;
 
