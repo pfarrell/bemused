@@ -5,9 +5,9 @@ class Bemused < Sinatra::Application
   def shorten(str, len=50)
     str.length > len ? "#{str[0,len]}..." : str
   end
-  
+
   get "/album/:id" do
-    haml :album, locals: {album: Album[params[:id]]} 
+    haml :album, locals: {album: Album[params[:id]]}
   end
 
   get "/admin/album/:id" do
@@ -36,7 +36,7 @@ class Bemused < Sinatra::Application
     redirect(url_for("/admin/album/#{album.id}"))
   end
 
-  get "/albums/recent" do 
+  get "/albums/recent" do
     redirect url_for("/albums/recent/1")
   end
 
