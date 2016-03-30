@@ -5,6 +5,7 @@ public/tmp
 public/share
 public/libs
 public/media
+.byebug_history
 .bundle/*
 .bundle/config
 coverage/**/*

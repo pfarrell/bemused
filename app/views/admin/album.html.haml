@@ -24,13 +24,37 @@
     %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}"}
   .input-group.input-group-lg
     %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
--model.tracks.each do |track|
-  .input-group.input-group-lg
-    %span.input-group-addon
-      =track.title
-    %a.btn.btn-default.navbar-btn{href: "#{url_for("/admin/track/#{track.id}")}"}
-      Edit
+.row
+  .col-xs-12
+    %table.table
+      %thead
+        %tr
+          %th.col-xs-4
+            Track Number
+          %th.col-xs-4
+            Title
+          %th.col-xs-4
+      %tbody
+        -model.tracks.each do |track|
+          %tr
+            %form{class: "form#{track.id}"}
+              %td
+                %input.form-control{type: 'text', name: 'title', value: "#{track.title}"}
+              %td
+                %input.form-control{type: 'text', name: 'track_number', value: "#{track.track_number}"}
+              %td
+                %input.form-control.btn.btn-default.navbar-btn{type: 'Submit', value: 'Submit', onClick: "post(#{track.id})"}
 :javascript
   keypress_disable=true;
-
-  
+  function post(id) {
+    var form= $(".form" + id);
+    $.ajax( {
+        url: "/admin/track/" + id, 
+        data: form.serialize(), 
+        method: 'post',
+    })
+    .done(function(msg) {
+      alert(msg);
+    });
+  }
+                  

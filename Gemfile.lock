@@ -2,6 +2,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     backports (3.6.8)
+    byebug (8.2.2)
     capistrano (3.2.1)
       i18n
       rake (>= 10.0.0)
@@ -101,6 +102,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  byebug
   capistrano (~> 3.2.0)
   capistrano-bower
   capistrano-bundler (~> 1.1.2)
@@ -124,3 +126,6 @@ DEPENDENCIES
   sinatra-presence (~> 0.0.3)
   sinatra-respond_to
   unicorn
+
+BUNDLED WITH
+   1.11.2
