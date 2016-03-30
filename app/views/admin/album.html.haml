@@ -4,46 +4,43 @@
 .link
   %a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}"}
     =model.to_s
-%form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}")}"}
-  -model.editable_attributes.each do |k,v|
+.row
+  %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}")}"}
+    -model.editable_attributes.each do |k,v|
+      .input-group.input-group-lg
+        %span.input-group-addon
+          =k
+        %input.form-control{type:"text", name:"#{k}", value: "#{v}"}
+    .submit
+      %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
+.row
+  %img{src: "#{url_for("/images/albums/#{model.image_path}")}"}
+.row
+  %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}/image")}"}
     .input-group.input-group-lg
       %span.input-group-addon
-        =k
-      %input.form-control{type:"text", name:"#{k}", value: "#{v}"}
-  .submit
-    %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
-%img{src: "#{url_for("/images/albums/#{model.image_path}")}"}
-%form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}/image")}"}
-  .input-group.input-group-lg
-    %span.input-group-addon
-      Image Url
-    %input.form-control{type:"text", name:"image_url"}
-  .input-group.input-group-lg
-    %span.input-group-addon
-      Image Name
-    %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}"}
-  .input-group.input-group-lg
-    %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
-.row
-  .col-xs-12
-    %table.table
-      %thead
-        %tr
-          %th.col-xs-4
-            Track Number
-          %th.col-xs-4
-            Title
-          %th.col-xs-4
-      %tbody
-        -model.tracks.each do |track|
-          %tr
-            %form{class: "form#{track.id}"}
-              %td
-                %input.form-control{type: 'text', name: 'title', value: "#{track.title}"}
-              %td
-                %input.form-control{type: 'text', name: 'track_number', value: "#{track.track_number}"}
-              %td
-                %input.form-control.btn.btn-default.navbar-btn{type: 'Submit', value: 'Submit', onClick: "post(#{track.id})"}
+        Image Url
+      %input.form-control{type:"text", name:"image_url"}
+    .input-group.input-group-lg
+      %span.input-group-addon
+        Image Name
+      %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}"}
+    .input-group.input-group-lg
+      %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
+.row.sp-top-lg
+  .col-md-1
+    TrackNum
+  .col-md-6
+    Title
+-model.tracks.each do |track|
+  .row
+    %form{class: "form#{track.id}"}
+      .col-md-1
+        %input.col-md-4.form-control{type: 'text', name: 'track_number', value: "#{track.track_number}"}
+      .col-md-6
+        %input.form-control{type: 'text', name: 'title', value: "#{track.title}"}
+      .col-md-2
+        %input.col-.md-4.form-control.btn.btn-primary.navbar-btn{type: 'Button', value: 'Save', onClick: "post(#{track.id})"}
 :javascript
   keypress_disable=true;
   function post(id) {
@@ -54,7 +51,6 @@
         method: 'post',
     })
     .done(function(msg) {
-      alert(msg);
     });
   }
                   
