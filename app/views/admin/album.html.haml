@@ -46,7 +46,7 @@
   function post(id) {
     var form= $(".form" + id);
     $.ajax( {
-        url: "/admin/track/" + id, 
+        url: "#{url_for('/admin/track/')}" + id, 
         data: form.serialize(), 
         method: 'post',
     })
