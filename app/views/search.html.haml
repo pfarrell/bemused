@@ -7,7 +7,7 @@
   Albums
 -albums.to_a.select{|album| album.tracks.size > 0}.each do |album|
   %a.item{href: "#{url_for "/album/#{album.id}"}"}
-    %img.album{title: "#{album.title}", src: "#{url_for "/images/#{album.image_path}"}"}
+    %img.album{title: "#{album.title}", src: "#{url_for "/images/albums/#{album.image_path}"}"}
 :javascript
   var $container = $('#container');
   // init
