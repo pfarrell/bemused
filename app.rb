@@ -9,7 +9,6 @@ require 'sinatra/cookies'
 require 'securerandom'
 require 'haml'
 require 'logger'
-require 'byebug'
 
 class Bemused < Sinatra::Application
   helpers Sinatra::UrlForHelper
