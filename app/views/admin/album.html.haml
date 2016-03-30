@@ -27,20 +27,20 @@
       %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}"}
     .input-group.input-group-lg
       %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
-.row.sp-top-lg
+.row.sp-top-lg.no-pad
   .col-md-1
     TrackNum
   .col-md-6
     Title
 -model.tracks.each do |track|
-  .row
-    %form{class: "form#{track.id}"}
+  %form{class: "form#{track.id}"}
+    .row.no-pad
       .col-md-1
         %input.col-md-4.form-control{type: 'text', name: 'track_number', value: "#{track.track_number}"}
       .col-md-6
         %input.form-control{type: 'text', name: 'title', value: "#{track.title}"}
       .col-md-2
-        %input.col-.md-4.form-control.btn.btn-primary.navbar-btn{type: 'Button', value: 'Save', onClick: "post(#{track.id})"}
+        %input.col-.md-4.form-control.btn.btn-primary{type: 'Button', value: 'Save', onClick: "post(#{track.id})"}
 :javascript
   keypress_disable=true;
   function post(id) {
