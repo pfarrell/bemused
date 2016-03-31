@@ -5,24 +5,15 @@ function toggle_visible(obj) {
 }
 
 $(document).keydown(function(event) {
-  if(keypress_disable) { return; }
-  if(!$("#q").is(":focus")) {
+  if(keypress_disable || document.activeElement.id == 'q') { return; }
     switch(event.which) {
       case 32: //space bar
         event.preventDefault();
         $(".jp-state-playing").length == 1 ? myPlaylist.pause() : myPlaylist.play();
         break;
-      case 63: //?
-        $("#dialog").dialog({
-          buttons: [
-            {
-              text: "OK",
-              click: function() {
-                $(this).dialog("close");
-              }
-            }
-          ]
-        });
+      case 63:  //?
+      case 191: // shift+backspace
+        //dialog?
         break;
       case 80: //p
         toggle_visible($('#jp_container_1')); 
@@ -31,41 +22,35 @@ $(document).keydown(function(event) {
       case 82: //r
         myPlaylist.shuffle();
         break;
-      //case 83: //s
-      //  event.preventDefault();
-      //  $("#q").focus();
-      //  break;
-    }
-  }
-  switch(event.which) {
-    case 37: //left arrow
-      myPlaylist.previous(); 
-      break;
-    case 39: //right arrow
-      myPlaylist.next();
-      break;
+      case 37: //left arrow
+        myPlaylist.previous(); 
+        break;
+      case 39: //right arrow
+        myPlaylist.next();
+        break;
   }
 });
 
 //Handles the key down event (so the user can hold a key down to continue)
 $(document).keydown(function (e) {
-  if($("#q").is(":focus")) { return; }
-    wasplaying = $(".jp-state-playing").length == 1;
-    //Rewind
-    if (e.keyCode == 66 && (!scrubbing)) {
-        scrubbing = true;
-        //Pause the player
-        //$("#jquery_jplayer_1").jPlayer("pause");
-        RewindTrack();
-        scrubaction = window.setInterval(function () { RewindTrack() }, 200);
-    }
-    else if (e.keyCode == 70 && (!scrubbing)) {
-        scrubbing = true;
-        //Pause the player
-        //$("#jquery_jplayer_1").jPlayer("pause");
-        FastforwardTrack();
-        scrubaction = window.setInterval(function () { FastforwardTrack() }, 200);
-    }
+  if(document.activeElement.id == 'q') { return; }
+
+  wasplaying = $(".jp-state-playing").length == 1;
+  //Rewind
+  if (e.keyCode == 66 && (!scrubbing)) {
+      scrubbing = true;
+      //Pause the player
+      //$("#jquery_jplayer_1").jPlayer("pause");
+      RewindTrack();
+      scrubaction = window.setInterval(function () { RewindTrack() }, 200);
+  }
+  else if (e.keyCode == 70 && (!scrubbing)) {
+      scrubbing = true;
+      //Pause the player
+      //$("#jquery_jplayer_1").jPlayer("pause");
+      FastforwardTrack();
+      scrubaction = window.setInterval(function () { FastforwardTrack() }, 200);
+  }
 });
 //Ends the action
 $(document).keyup(function (e) {
