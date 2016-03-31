@@ -5,7 +5,7 @@ function toggle_visible(obj) {
 }
 
 $(document).keydown(function(event) {
-  if(keypress_disable || document.activeElement.id == 'q') { return; }
+  if(keypress_disable || ['q', 'track'].includes(document.activeElement.id)) { return; }
     switch(event.which) {
       case 32: //space bar
         event.preventDefault();
