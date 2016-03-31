@@ -19,6 +19,7 @@ describe 'Bemused' do
   let(:track) {
     track=Track.find_or_create(title: "test_generated_track")
     track.media_file = media_file
+    track.artist = artist
     track.save
     track
   }
@@ -135,19 +136,20 @@ describe 'Bemused' do
     get "/random"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
-  end           
+  end
 
   it "has a surprise route" do
     get "/surprise"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
-  end           
+  end
 
-#  it "has a livesearch route" do
-#    get "/livesearch?q=t"
-#    expect(last_response).to be_ok
-#    expect(last_response.body).to match(/suggestions/)
-#  end           
+  it "has a livesearch route" do
+    track
+    get "/livesearch?q=t"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/suggestions/)
+  end
 
   it "has live searchalbums route" do
     get "/searchalbums"
@@ -161,7 +163,7 @@ describe 'Bemused' do
 
   it "handles bad routes gracefully" do
     get "/foo"
-    expect(last_response.status).to eq(404) 
+    expect(last_response.status).to eq(404)
     expect(last_response.body).to match(/Bemused/)
   end
 
@@ -169,36 +171,38 @@ describe 'Bemused' do
     get "/searchtracks?q=w"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/suggestions/)
-  end           
+  end
 
   it "has a random track route" do
     get "/track/random"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/^\[\{.*\}\]$/)
-  end           
+  end
 
   it "has a tracks route" do
+    track
     get "/tracks"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
-  end           
+  end
 
   it "has a tracks admin route" do
     get "/admin/track/#{track.id}"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
-  end           
+  end
 
   it "has a tracks route with a search" do
+    track
     get "/tracks?q=tes"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
-  end           
+  end
 
   it "streams music" do
     get "/stream/#{track.id}"
     expect(last_response).to be_ok
-  end           
+  end
 
   it "has a search route" do
     Album.new(title: "wax lips").save
@@ -206,19 +210,19 @@ describe 'Bemused' do
     get "/search?q=wax"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
-  end           
+  end
 
   it "has a search route" do
     Album.new(title: "slartibartfast").save
     get "/search?q=bartfas"
     expect(last_response).to be_redirect
-  end           
+  end
 
   it "has a search route" do
     Artist.new(name: "jj mclure").save
     get "/search?q=mclure"
     expect(last_response).to be_redirect
-  end           
+  end
 
   it "redirects for searches with / as first character" do
     get "/search?q=/test"
@@ -229,7 +233,7 @@ describe 'Bemused' do
     get "/admin/playlist/#{playlist.id}"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
-  end           
+  end
 
   it "has a recent albums route" do
     get "/albums/recent"
@@ -315,7 +319,7 @@ describe 'Bemused' do
     expect(last_response).to be_ok
   end
 
-  it "lets you update track metadata" do 
+  it "lets you update track metadata" do
     post "/admin/track/#{track.id}", {title: "new test title"}
     new_track = Track[track.id]
     expect(new_track.title).to eq("new test title")
@@ -338,12 +342,24 @@ describe 'Bemused' do
     expect(Playlist[playlist.id].image_path).to eq("tumblin_dice.jpg")
     expect(last_response).to be_redirect
   end
-  
+
   it "uploads files" do
     test_key = "testbemused:incoming"
     last=redis.llen(test_key).to_i
     post "/upload", {key: test_key, images: [Rack::Test::UploadedFile.new("./spec/fixtures/tumblin_dice.jpg", "image/jpg")]}
     expect(redis.llen(test_key).to_i).to eq(last + 1)
     expect(last_response).to be_redirect
+  end
+
+  it "deletes tracks" do
+    id = track.id
+    delete "/admin/track/#{id}"
+    expect(Track[id]).to be_nil
+  end
+
+  it "administrates album tracks" do
+    get "/admin/album/#{album.id}/tracks"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
   end
 end

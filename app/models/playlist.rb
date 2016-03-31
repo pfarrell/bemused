@@ -3,14 +3,14 @@ class Playlist < Sequel::Model
 
   one_to_many :playlist_tracks
 
-  def track_list 
+  def track_list
     tracks = playlist_tracks.sort_by{|x| x.order}.map{|x| x.track}
     tracks.map.with_index do |track,i|
       next if track.nil?
       artist_name = track.album.nil? || track.album.artist.nil? ? "unknown" : track.album.artist.name
       %Q(
         {
-          title: "#{i+1}. #{track.title}", 
+          title: "#{i+1}. #{track.title}",
           mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
           artist: "#{artist_name}"
         }
@@ -27,7 +27,7 @@ class Playlist < Sequel::Model
     playlist = Playlist.new()
     playlist.name= "Surprise!!"
     playlist.image_path="shells.jpg"
-    Track.order{Sequel.lit('RANDOM()')}.limit(size).each_with_index do |track, i| 
+    Track.order{Sequel.lit('RANDOM()')}.limit(size).each_with_index do |track, i|
       track.track_number = i + 1
       playlist.playlist_tracks << PlaylistTrack.new(track: track)
     end
@@ -54,7 +54,8 @@ class Playlist < Sequel::Model
   end
 
   def random_image
-    playlist_tracks.sample.track.album.image_path 
+    album = playlist_tracks.sample.track.album
+    album.image_path unless album.nil?
   end
 end
 
