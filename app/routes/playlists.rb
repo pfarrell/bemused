@@ -1,6 +1,6 @@
 class Bemused < Sinatra::Application
   get "/playlist/:id" do
-    haml :playlist, locals: {playlist: Playlist[params[:id]]} 
+    haml :playlist, locals: {playlist: Playlist[params[:id]]}
   end
 
   get "/playlists" do
@@ -10,7 +10,7 @@ class Bemused < Sinatra::Application
   get "/top" do
     playlist = Playlist.new
     playlist.name= "Top 20"
-    Log.group_and_count(:track_id).filter('created_at > ?', Date.today - 7).order(Sequel.desc(:count)).limit(20).map do |x| 
+    Log.group_and_count(:track_id).filter('created_at > ?', Date.today - 7).order(Sequel.desc(:count)).limit(20).map do |x|
       track = Track[x.track_id]
       next if track.nil?
       playlist.playlist_tracks << PlaylistTrack.new(track: track)
@@ -46,7 +46,7 @@ class Bemused < Sinatra::Application
     playlist.name = params[:name]
     unless params[:track_name].nil? || params[:track_name] == ""
       pt = PlaylistTrack.new(track: Track.first(title: params[:track_name]))
-      playlist.add_playlist_track(pt) 
+      playlist.add_playlist_track(pt)
     end
     playlist.save
     haml :"admin/playlist", locals: {model: playlist}
@@ -55,7 +55,7 @@ class Bemused < Sinatra::Application
   post "/admin/playlist/:id/image" do
     playlist = Playlist[params[:id]]
     open("#{params[:image_url]}") {|f|
-      File.open("public/images/#{params[:image_name]}", "wb") do |file|
+      File.open("public/images/albums/#{params[:image_name]}", "wb") do |file|
         file.puts f.read
       end
     }

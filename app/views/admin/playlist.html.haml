@@ -12,7 +12,7 @@
     %input.form-control{type:"text", name:"track_name", id:"track"}
   .submit
     %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
-%img{src: "#{url_for("/images/#{model.image_path}")}"}
+%img{src: "#{url_for("/images/albums/#{model.image_path}")}"}
 %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}/image")}"}
   .input-group.input-group-lg
     %span.input-group-addon
