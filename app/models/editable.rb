@@ -4,9 +4,19 @@ module Editable
   end
 
   def merge_params(params)
-    symd = Hash[params.map {|k,v| [k.to_sym, v]}.select{|k,v| ![:id, :splat, :captures, :track_id, :redirect].include? k}]
+    symd = Hash[params.map {|k,v| [k.to_sym, parse(k.to_sym, v)] unless v.empty?}.select{|k,v| ![:id, :splat, :captures, :track_id].include? k}]
     self.values.merge!(symd)
     self
+  end
+
+  def parse(key, value)
+    return if self.db_schema[key].nil?
+    case
+      when self.db_schema[key][:db_type] == 'integer'
+        value.to_i
+      else
+        value
+    end
   end
 
   def log_event(track, album, artist, ip, action, cookie)
