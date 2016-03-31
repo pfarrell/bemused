@@ -1,6 +1,7 @@
 =haml :paging, locals: {model: model, base: "/albums/recent"}
 .albums
   -model[:data].each do |album|
+    -next unless album.tracks.count > 0
     %a.item{href: "#{url_for "/album/#{album.id}"}"}
       %img.album{src: "#{url_for "/images/albums/#{album.image_path}"}", title: "#{album.title}"}
 :javascript
