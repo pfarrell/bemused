@@ -5,18 +5,18 @@
   %a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}"}
     =model.to_s
 .row
-  %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}")}"}
+  %form.model
     -model.editable_attributes.each do |k,v|
       .input-group.input-group-lg
         %span.input-group-addon
           =k
-        %input.form-control{type:"text", name:"#{k}", value: "#{v}"}
+        %input.form-control{type:"text", name:"#{k}", value: "#{v}", onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {update_model(#{model.id})}"} 
     .submit
       %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
 .row
   %img{src: "#{url_for("/images/albums/#{model.image_path}")}"}
 .row
-  %form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}/image")}"}
+  %form.imageform
     .input-group.input-group-lg
       %span.input-group-addon
         Image Url
@@ -24,27 +24,42 @@
     .input-group.input-group-lg
       %span.input-group-addon
         Image Name
-      %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}"}
-    .input-group.input-group-lg
-      %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
+      %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}", onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_image(#{model.id})}"} 
 .row.sp-top-lg.no-pad
   .col-md-1
     TrackNum
   .col-md-6
     Title
 -model.tracks.each do |track|
-  %form{class: "form#{track.id}"}
+  %form{class: "trackform#{track.id}"}
     .row.no-pad
       .col-md-1
-        %input.col-md-4.form-control{type: 'text', name: 'track_number', value: "#{track.track_number}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {post(#{track.id})}"}
+        %input.col-md-4.form-control{type: 'text', name: 'track_number', value: "#{track.track_number}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track(#{track.id})}"}
       .col-md-6
-        %input.form-control{type: 'text', name: 'title', value: "#{track.title}", onFocus: "this.dirty=false;", onChange: "this.dirty = true", onBlur: "if(this.dirty) {post(#{track.id})}"}
+        %input.form-control{type: 'text', name: 'title', value: "#{track.title}", onFocus: "this.dirty=false;", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track(#{track.id})}"}
 :javascript
   keypress_disable=true;
-  function post(id) {
-    var form= $(".form" + id);
+  function save_track(id) {
+    var form= $(".trackform" + id);
+    var url = "#{url_for('/admin/track/')}" + id; 
+    return post(form, url);
+  }
+
+  function save_image(id) {
+    var form= $(".imageform");
+    var url = "#{url_for('/admin/album/')}" + id + "/image";
+    return post(form, url);
+  }
+
+  function update_model(id) {
+    var form=$(".model");
+    var url = "#{url_for('/admin/album/')}" + id;
+    return post(form, url);
+  }
+
+  function post(form, url) {
     $.ajax( {
-        url: "#{url_for('/admin/track/')}" + id, 
+        url: url,
         data: form.serialize(), 
         method: 'post',
     })
