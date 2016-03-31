@@ -2,7 +2,7 @@
 .albums
   -model[:data].each do |album|
     %a.item{href: "#{url_for "/album/#{album.id}"}"}
-      %img.album{src: "#{url_for "/images/#{album.image_path}"}", title: "#{album.title}"}
+      %img.album{src: "#{url_for "/images/albums/#{album.image_path}"}", title: "#{album.title}"}
 :javascript
   var container = document.querySelector('.albums');
   var msnry = new Masonry( container, {
