@@ -35,6 +35,10 @@ class Bemused < Sinatra::Application
     haml :"admin/model", locals: {model: Track[params[:id]]}
   end
 
+  delete "/admin/track/:id" do
+    Track[params[:id]].destroy
+  end
+
   get "/tracks/words" do
     words= params[:size] || 100
     data = Track.words(words, :title)
