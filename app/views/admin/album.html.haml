@@ -25,7 +25,7 @@
       %span.input-group-addon
         Image Name
       %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}", onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_image(#{model.id})}"} 
-.row.sp-top-lg.no-pad
+.row.sp-top-sm.no-pad
   .col-md-1
     TrackNum
   .col-md-6

@@ -55,8 +55,12 @@ body {
   padding: 15px;
 }
 
-.sp-top-lg {
+.sp-top-sm {
   margin-top: 2em;
+}
+
+.sp-bottom-sm {
+  margin-bottom: 2em;
 }
 
 .row.no-pad {
