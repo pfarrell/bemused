@@ -8,14 +8,14 @@ class Bemused < Sinatra::Application
     page = (params[:page] || 1).to_i
     artist = Artist[params[:id]]
     albums = Album.where(:artist => artist).order(:title).paginate(page, 24).to_a.select{|album| album.tracks.size > 0}
-    haml :artist, locals: {artist: artist, albums: albums, nxt: page + 1, prev: page - 1} 
+    haml :artist, locals: {artist: artist, albums: albums, nxt: page + 1, prev: page - 1}
   end
 
   get "/admin/artist/:id" do
     haml :"admin/artist", locals: {model: Artist[params[:id]]}
   end
 
-  get "/artists" do 
+  get "/artists" do
     artists = Artist.where(Sequel.ilike(:name, "%#{params[:q]}")).limit(10).map{|a| a.name}
     respond_to do | wants|
       wants.json { artists.to_json }
@@ -25,7 +25,7 @@ class Bemused < Sinatra::Application
   post "/admin/artist/:id" do
     artist = Artist[params[:id]].merge_params(params)
     artist.save
-    haml :artist, locals: {artist: artist}
+    haml :'admin/artist', locals: {model: artist}
   end
 
   post "/admin/artist/:id/image" do
@@ -44,10 +44,10 @@ class Bemused < Sinatra::Application
     words= params[:size] || 100
     data = Artist.words(words, :name)
     respond_to do |wants|
-      wants.json{ 
+      wants.json{
         data.to_json
       }
-      wants.html{ 
+      wants.html{
         props={}
         props["word"] = {value: lambda{|x| x[0]}}
         props["count"] = {value: lambda{|x| x[1]}}
