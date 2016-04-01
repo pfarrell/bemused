@@ -18,7 +18,7 @@ class AutoComplete
      "/tracks/words",
      "/track_paths",
      "/upload"
-     ].select{|x| x =~ /.*#{query}.*/}.each{|x| res["suggestions"] << {"value" => x}}
+     ].select{|x| x =~ /.*#{query}.*/i}.each{|x| res["suggestions"] << {"value" => x}}
     res
   end
 
