@@ -126,6 +126,3 @@ DEPENDENCIES
   sinatra-presence (~> 0.0.3)
   sinatra-respond_to
   unicorn
-
-BUNDLED WITH
-   1.11.2
