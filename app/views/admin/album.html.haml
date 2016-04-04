@@ -42,7 +42,7 @@
       .col-md-1
         %input.btn.btn-warning{type: 'button', onClick:"if(confirm('delete track?')) {delete_track(#{track.id})}", value: "delete"}
 :javascript
-  keypress_disable=true;
+  keypress_enable=false;
   function save_track(id) {
     var form= $(".trackform" + id);
     var url = "#{url_for('/admin/track/')}" + id; 

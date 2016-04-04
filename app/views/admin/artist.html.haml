@@ -17,7 +17,7 @@
       Image Name
     %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}", onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_image(#{model.id})}"}
 :javascript
-  keypress_disable=true;
+  keypress_enable=false;
   function update_model(id) {
     var form=$(".model");
     var url = "#{url_for('/admin/artist/')}" + id;

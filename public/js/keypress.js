@@ -5,29 +5,30 @@ function toggle_visible(obj) {
 }
 
 $(document).keydown(function(event) {
-  if(keypress_disable || ['q', 'track'].includes(document.activeElement.id)) { return; }
-    switch(event.which) {
-      case 32: //space bar
-        event.preventDefault();
-        $(".jp-state-playing").length == 1 ? myPlaylist.pause() : myPlaylist.play();
-        break;
-      case 63:  //?
-      case 191: // shift+backspace
-        //dialog?
-        break;
-      case 80: //p
-        toggle_visible($('#jp_container_1')); 
-        toggle_visible($('#nav')); 
-        break;
-      case 82: //r
-        myPlaylist.shuffle();
-        break;
-      case 37: //left arrow
-        myPlaylist.previous(); 
-        break;
-      case 39: //right arrow
-        myPlaylist.next();
-        break;
+  if(!keypress_enable || ['q', 'track'].includes(document.activeElement.id)) { return; }
+
+  switch(event.which) {
+    case 32: //space bar
+      event.preventDefault();
+      $(".jp-state-playing").length == 1 ? myPlaylist.pause() : myPlaylist.play();
+      break;
+    case 63:  //?
+    case 191: // shift+backspace
+      //dialog?
+      break;
+    case 80: //p
+      toggle_visible($('#jp_container_1')); 
+      toggle_visible($('#nav')); 
+      break;
+    case 82: //r
+      myPlaylist.shuffle();
+      break;
+    case 37: //left arrow
+      myPlaylist.previous(); 
+      break;
+    case 39: //right arrow
+      myPlaylist.next();
+      break;
   }
 });
 

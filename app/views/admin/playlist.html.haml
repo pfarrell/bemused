@@ -32,6 +32,7 @@
       %span.form-control
         #{playlist_track.track.title unless playlist_track.nil? || playlist_track.track.nil?}
 :javascript
+  keypress_enable=false
   $('#track').autocomplete({
     serviceUrl: '#{url_for "/searchtracks"}',
     paramName: 'q',

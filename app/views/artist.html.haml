@@ -9,7 +9,7 @@
   %a.item{href: "#{url_for("/admin/artist/#{artist.id}")}"}
     Edit
 :javascript
-  keypress_disable=true;
+  keypress_enable=false;
   $(document).attr("title", "#{artist.name}");
   $('.navbar-info').html("<span class='artist-title'>#{artist.name}</span>");
   var container = document.querySelector('.albums');
