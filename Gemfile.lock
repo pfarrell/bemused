@@ -25,10 +25,13 @@ GEM
     id3tag (0.7.0)
     kgio (2.9.2)
     method_source (0.8.2)
+    mini_portile2 (2.0.0)
     multi_json (1.10.1)
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
     net-ssh (2.9.1)
+    nokogiri (1.6.7.2)
+      mini_portile2 (~> 2.0.0.rc2)
     passenger (4.0.44)
       daemon_controller (>= 1.2.0)
       rack
@@ -97,6 +100,7 @@ GEM
       kgio (~> 2.6)
       rack
       raindrops (~> 0.7)
+    wikipedia-client (1.6.1)
 
 PLATFORMS
   ruby
@@ -109,6 +113,7 @@ DEPENDENCIES
   emk-sinatra-url-for
   haml
   id3tag
+  nokogiri
   passenger
   pg
   pry
@@ -126,3 +131,7 @@ DEPENDENCIES
   sinatra-presence (~> 0.0.3)
   sinatra-respond_to
   unicorn
+  wikipedia-client
+
+BUNDLED WITH
+   1.11.2

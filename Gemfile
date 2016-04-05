@@ -18,6 +18,8 @@ gem 'capistrano-bower'
 gem 'passenger'
 gem 'unicorn'
 gem 'sinatra-presence', '~> 0.0.3'
+gem 'wikipedia-client'
+gem 'nokogiri'
 
 group :development do
   gem 'pry'
