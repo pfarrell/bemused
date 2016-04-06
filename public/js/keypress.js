@@ -17,14 +17,15 @@ $(document).keydown(function(event) {
       //dialog?
       break;
     case 80: //p
-      toggle_visible($('#jp_container_1')); 
-      toggle_visible($('#nav')); 
+      toggle_visible($('#jp_container_1'));
+      toggle_visible($('#nav'));
+      toggle_visible($('#summary'));
       break;
     case 82: //r
       myPlaylist.shuffle();
       break;
     case 37: //left arrow
-      myPlaylist.previous(); 
+      myPlaylist.previous();
       break;
     case 39: //right arrow
       myPlaylist.next();
