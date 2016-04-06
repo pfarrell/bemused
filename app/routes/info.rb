@@ -1,7 +1,9 @@
 class Bemused < Sinatra::Application
 
   get "/album/:id/summary" do
-    Info.summary(Album[params[:id]].title)
+    album = Album[params[:id]]
+    title = album.wikipedia || album.title
+    Info.summary(title)
   end
 
   get "/summary/:search" do

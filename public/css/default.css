@@ -71,3 +71,7 @@ body {
     padding-right:0;
       padding-left:0;
 }
+#summary {
+  padding: 1em;
+  background-color:#e7e7e7;
+}
