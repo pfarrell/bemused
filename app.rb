@@ -29,7 +29,7 @@ class Bemused < Sinatra::Application
   set :local_authority, 'http://192.168.0.47' # for Sinatra::LocalApp
 
   configure do
-    klass = ENV['RACK_ENV'] == 'test'? MockWikipedia : ::Wikipedia
+    klass = ['test', 'development'].include?(ENV['RACK_ENV']) ? MockWikipedia : ::Wikipedia
     set :info, Info.new(klass)
   end
 
