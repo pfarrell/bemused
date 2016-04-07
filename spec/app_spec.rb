@@ -362,4 +362,20 @@ describe 'Bemused' do
     expect(last_response).to be_ok
     expect(last_response.body).to match(/Bemused/)
   end
+
+  it "looks up album summaries on wikipedia" do
+    get "/album/#{album.id}/summary"
+    expect(last_response).to match /summary/
+  end
+
+  it "looks up summaries on wikipedia" do
+    get "/summary/test"
+    expect(last_response).to match /summary/
+  end
+
+  it "handles execptions from underlying lookups" do
+    get "/summary/raise"
+    expect(last_response).to be_ok
+  end
+
 end

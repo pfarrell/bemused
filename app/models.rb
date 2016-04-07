@@ -1,7 +1,7 @@
 require 'sequel'
 require 'redis'
 require 'logger'
-  
+
 $console = ENV['RACK_ENV'] == 'development' ? Logger.new(STDOUT) : nil
 DB = Sequel.connect(
   ENV['BEMUSED_DB'] || 'postgres://localhost/bemused',
@@ -29,3 +29,4 @@ require 'models/log'
 require 'models/playlist'
 require 'models/auto_complete'
 require 'models/playlist_track'
+require 'models/mock_wikipedia'
