@@ -20,7 +20,7 @@ class Bemused < Sinatra::Application
   end
 
   def wp_fix(title)
-    [['At', 'at'], ['The', 'the']].each do |arr|
+    [['At', 'at'], ['The', 'the'], ['Of', 'of']].each do |arr|
       title = fix(title, arr[0], arr[1])
     end
     title
