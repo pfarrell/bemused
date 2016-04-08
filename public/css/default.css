@@ -20,7 +20,14 @@ body {
 }
 
 .item {
-<!--  width: 15%;-->
+}
+
+.item-x2 {
+  width: 400px;
+}
+
+.item-x3 {
+  width: 600px;
 }
 
 .item img {
