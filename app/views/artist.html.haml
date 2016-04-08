@@ -1,13 +1,17 @@
-.albums
-  %a.item{href: "#{url_for("/artist/#{artist.id}")}"}
-    %img.artist{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}
-  -artist.albums.each do |album|
-    %a.item{href: "#{url_for("/album/#{album.id}")}"}
-      %img.artist{title: "#{album.title}", src: "#{url_for("/images/albums/#{album.image_path}")}"}
+.row
+  .col-xs-12
+    .albums
+      %a.item{href: "#{url_for("/artist/#{artist.id}")}"}
+        %img.artist{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}
+      -artist.albums.each do |album|
+        %a.item{href: "#{url_for("/album/#{album.id}")}"}
+          %img.artist{title: "#{album.title}", src: "#{url_for("/images/albums/#{album.image_path}")}"}
 
 .edit
   %a.item{href: "#{url_for("/admin/artist/#{artist.id}")}"}
     Edit
+.row
+  .col-xs-12.col-md-offset-2.col-md-7.sp-top-sm#summary
 :javascript
   keypress_enable=false;
   $(document).attr("title", "#{artist.name}");
@@ -21,3 +25,17 @@
   imagesLoaded(container, function() {
     msnry.layout();
   });
+
+  $(document).ready(function() {
+    get_summary(#{artist.id});
+  });
+
+  function get_summary(id) {
+    $.getJSON("#{url_for("/artist/#{artist.id}/summary")}")
+    .done(function(data) {
+        $('#summary').append(data.summary);
+      })
+    .fail(function(data) {
+      $('#summary').fadeOut();
+      });
+  }

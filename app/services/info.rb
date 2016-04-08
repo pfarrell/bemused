@@ -5,17 +5,17 @@ class Info
 
   def initialize(klass)
     @klass = klass
-    @cache = {}
+    @cache = Hash.new{|h,k| h[k] = Hash.new}
   end
 
-  def retrieve(subject)
-    @cache[subject] = @klass.find(subject) unless @cache.has_key?(subject)
-    @cache[subject]
+  def retrieve(category, subject)
+    @cache[category][subject] = @klass.find(subject) unless @cache[category].has_key?(subject)
+    @cache[category][subject]
   end
 
-  def summary(subject)
-    puts "retrieving #{subject}"
-    { summary: retrieve(subject).summary }.to_json
+  def summary(category, subject)
+    puts "retrieving #{category} #{subject}"
+    { summary: retrieve(category, subject).summary }.to_json
   end
 
 end

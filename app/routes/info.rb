@@ -4,16 +4,16 @@ class Bemused < Sinatra::Application
     ["#{title} (#{artist} album)", "#{title} (album)", title]
   end
 
-  def summary(searches)
+  def summary(category, searches)
     searches.each do |search|
-      summary = lookup(search)
+      summary = lookup(category, search)
       return summary unless summary.nil?
     end
   end
 
-  def lookup(search)
+  def lookup(category, search)
     begin
-      settings.info.summary(search)
+      settings.info.summary(category, search)
     rescue Exception => ex
       nil
     end
@@ -35,11 +35,18 @@ class Bemused < Sinatra::Application
     artist = album.artist.wikipedia || album.artist.name
     title = album.wikipedia || wp_fix(album.title)
 
-    summary(possible_titles(artist, title))
+    summary('albums', possible_titles(artist, title))
   end
 
-  get "/summary/:search" do
-    lookup(params[:search])
+  get "/artist/:id/summary" do
+    artist = Artist[params[:id]]
+    name = artist.wikipedia || wp_fix(artist.name)
+
+    lookup('artists', name)
+  end
+
+  get "/summary/:category/:search" do
+    lookup(params[:category], params[:search])
   end
 
 end
