@@ -5,7 +5,7 @@ class Bemused < Sinatra::Application
   end
 
   def possible_names(name)
-    ["#{name} (band)", name]
+    ["#{name} (band)", "#{name} (singer)", name]
   end
 
   def summary(category, searches)
