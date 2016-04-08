@@ -12,6 +12,8 @@
     Edit
 :javascript
   keypress_enable=false;
+  summary_loaded=false;
+  images_loaded=false;
   $(document).attr("title", "#{artist.name}");
   $('.navbar-info').html("<span class='artist-title'>#{artist.name}</span>");
   var container = document.querySelector('.albums');
@@ -21,19 +23,30 @@
     itemSelector: '.item'
   });
   imagesLoaded(container, function() {
-    msnry.layout();
+    images_loaded = true;
+    masonrize();
   });
 
   $(document).ready(function() {
     get_summary(#{artist.id});
   });
 
+  function masonrize() {
+    if(images_loaded && summary_loaded) {
+      msnry.layout();
+    }
+  }
+
   function get_summary(id) {
     $.getJSON("#{url_for("/artist/#{artist.id}/summary")}")
     .done(function(data) {
         $('#summary').append(data.summary);
+        summary_loaded = true;
+        masonrize();
       })
     .fail(function(data) {
       $('#summary').fadeOut();
+      summary_loaded = true;
+      masonrize();
       });
   }
