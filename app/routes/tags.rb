@@ -1,4 +1,4 @@
-class Bemused < Sinatra::Applicaion
+class Bemused < Sinatra::Application
   get '/album/:id/tags' do
     Album[params[:id]].tags.to_json
   end
