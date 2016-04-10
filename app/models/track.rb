@@ -5,6 +5,7 @@ class Track < Sequel::Model
   one_to_one  :media_file
   many_to_one :artist
   one_to_many :logs
+  many_to_many :tracks
 
   def self.random(n=1)
     Track.order{Sequel.lit('RANDOM()')}.limit(n)
@@ -14,7 +15,7 @@ class Track < Sequel::Model
     Log.group_and_count(:track_id)
        .filter('created_at > ?', Date.today - 7)
        .order{Sequel.lit('RANDOM()')}
-       .limit(n).map do |x| 
+       .limit(n).map do |x|
       Track[x.track_id]
     end.select{ |x| !x.nil? }
   end

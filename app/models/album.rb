@@ -4,6 +4,7 @@ class Album < Sequel::Model
   many_to_one :artist
   one_to_many :tracks, order: :track_number
   one_to_many :logs
+  many_to_many :tags
 
   # returns tracks formatted as string of form
   # {title: "${track_number}. ${track_title}", mp3: "${path to mp3 (in public folder}"}, ...
