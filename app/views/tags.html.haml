@@ -1,0 +1,11 @@
+.row
+  %form.usertags{action: "#{url_for('/tags/set')}", method: 'POST'}
+    -tags.each do |tag|
+      .checkbox
+        %label
+          %input{ name: "tag_#{tag.id}", type: "checkbox", value: tag.id, checked: set.include?(tag.id)}
+            =tag.name
+    %input.btn.btn-primary{ value: "Save", type: 'submit'}
+  %form.usertags{action: "#{url_for('/tags')}", method: 'POST'}
+    %input{ name: "name", type: "text"}
+    %input.btn.btn-primary{ value: "Save", type: 'submit'}

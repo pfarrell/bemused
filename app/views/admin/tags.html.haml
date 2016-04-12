@@ -1,0 +1,40 @@
+.row
+  -model.each do |tag|
+    %form.model{class: "tagform#{tag.id}"}
+      -tag.editable_attributes.each do |k,v|
+        .input-group.input-group-lg
+          %span.input-group-addon
+            =k
+          %input.form-control{type:"text", name:"#{k}", value: "#{v}", onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_tag(#{tag.id})}"} 
+
+:javascript
+  keypress_enable=false;
+  function save_tag(id) {
+    var form= $(".tagform" + id);
+    var url = "#{url_for('/admin/tag/')}" + id; 
+    return post(form, url);
+  }
+
+  function delete_track(id) {
+    var url = "#{url_for('/admin/track/')}" + id;
+    $('.trackform' + id).remove();
+    return del(url);
+  }
+
+  function post(form, url) {
+    $.ajax( {
+        url: url,
+        data: form.serialize(), 
+        method: 'post',
+    })
+    .done(function(msg) {
+    });
+  }
+
+  function del(url) {
+    $.ajax({
+      url: url,
+      method: 'delete'
+    });
+  }
+                  

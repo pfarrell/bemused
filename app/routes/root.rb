@@ -1,7 +1,5 @@
 class Bemused < Sinatra::Application
   get "/" do
-    require 'byebug'
-    byebug;1
     tag = nil
     context = params[:tag]
     if(params[:tag])

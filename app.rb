@@ -28,6 +28,10 @@ class Bemused < Sinatra::Application
   set :views, Proc.new { File.join(root, "app/views") }
   set :local_authority, 'http://192.168.0.47' # for Sinatra::LocalApp
 
+  def user_tags
+    request.cookies['tags'].nil? ? [] : request.cookies['tags'].split('&').map(&:to_i)
+  end
+
   configure do
     klass = ['test', 'development'].include?(ENV['RACK_ENV']) ? MockWikipedia : ::Wikipedia
     set :info, Info.new(klass)
@@ -35,6 +39,7 @@ class Bemused < Sinatra::Application
 
   before do
     response.set_cookie(:bmc, value: SecureRandom.uuid, expires: Time.now + 3600 * 24 * 365 * 10) if request.cookies["bmc"].nil?
+    @tags = user_tags
   end
 
   not_found do
