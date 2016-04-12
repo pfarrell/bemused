@@ -1,5 +1,5 @@
 class AutoComplete
- 
+
   def self.lookup(query)
     res = {"suggestions"=> Artist.where(Sequel.ilike(:name, "%#{query}%")).all.select{|x| x.albums.count > 0}.map{|x| {"value"=>"#{x.name}"}}}
     Album.where(Sequel.ilike(:title, "%#{query}%")).all.select{|x| x.tracks.count > 0}.each {|x| res["suggestions"] << {"value"=>"#{x.title}"}}
@@ -13,6 +13,7 @@ class AutoComplete
      "/radio",
      "/random",
      "/surprise",
+     "/tags",
      "/top",
      "/tracks",
      "/tracks/words",
@@ -24,13 +25,13 @@ class AutoComplete
 
   def self.translate(query)
     lkup={"t"=>"/tracks",
-     "p"=>"playlists", 
-     "u"=>"upload", 
-     "r"=>"random", 
-     "l"=>"logs", 
-     "s"=>"surprise", 
-     "a"=>"active", 
-     "n"=>"newborns"} 
+     "p"=>"playlists",
+     "u"=>"upload",
+     "r"=>"random",
+     "l"=>"logs",
+     "s"=>"surprise",
+     "a"=>"active",
+     "n"=>"newborns"}
      return lkup[query].nil? ? query : lkup[query]
    end
 
