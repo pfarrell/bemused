@@ -29,7 +29,11 @@ class Bemused < Sinatra::Application
   set :local_authority, 'http://192.168.0.47' # for Sinatra::LocalApp
 
   def user_tags
-    request.cookies['tags'].nil? ? [] : request.cookies['tags'].split('&').map(&:to_i)
+    request.cookies['tags'].nil? ? [] : request.cookies['tags'].split('&').map{|id| Tag[id] }
+  end
+
+  def context?
+    !user_tags.empty?
   end
 
   configure do

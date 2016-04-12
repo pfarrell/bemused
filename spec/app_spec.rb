@@ -1,20 +1,13 @@
 require 'spec_helper'
 
 describe 'Bemused' do
-  let(:redis) {
-    Redis.new
-  }
-  let(:playlist) {
-    Playlist.find_or_create(name:"test_generated_playlist")
-  }
-
-  let(:artist) {
-    Artist.find_or_create(name: "test_generated_artist")
-  }
-
-  let(:media_file) {
-    MediaFile.find_or_create(absolute_path: "./spec/fixtures/test.mp3")
-  }
+  let(:tag1) { Tag.find_or_create(name: "test_tag_1") }
+  let(:tag2) { Tag.find_or_create(name: "test_tag_2") }
+  let(:tag3) { Tag.find_or_create(name: "test_tag_3") }
+  let(:redis) { Redis.new }
+  let(:playlist) { Playlist.find_or_create(name:"test_generated_playlist") }
+  let(:artist) { Artist.find_or_create(name: "test_generated_artist") }
+  let(:media_file) { MediaFile.find_or_create(absolute_path: "./spec/fixtures/test.mp3") }
 
   let(:track) {
     track=Track.find_or_create(title: "test_generated_track")
@@ -383,4 +376,41 @@ describe 'Bemused' do
     expect(last_response).to be_ok
   end
 
+  it "handles redirects for paginated tags" do
+    get "/admin/tags"
+    expect(last_response).to be_redirect
+  end
+
+  it "has an admin page for all tags" do
+    get "/admin/tags/1"
+    expect(last_response).to be_ok
+  end
+
+  it "has an admin page for all tags in json" do
+    get "/admin/tags/1.json"
+    expect(last_response).to be_ok
+  end
+
+  it "allows users to control tags for their browser" do
+    get "/tags"
+    expect(last_response).to be_ok
+  end
+
+  it "allows tags to be created" do
+    expect(Tag.where(name: "new_tag").count).to eq(0)
+    post "/tags", {name: "new_tag"}
+    tags = Tag.where(name: "new_tag")
+    expect(tags.count).to eq 1
+  end
+
+  it "allows tags to be updated" do
+    post "/admin/tag/#{tag1.id}", {name: "updated_tag"}
+    t = Tag[tag1.id]
+    expect(t.name).to eq ("updated_tag")
+  end
+
+  it "allows tags to be set on cookies" do
+    post '/tags/set', {"tag_#{tag1.id}" => tag1.id}
+    expect(rack_mock_session.cookie_jar["tags"]).to match(/#{tag1.id}/)
+  end
 end

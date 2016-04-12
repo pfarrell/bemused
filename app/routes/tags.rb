@@ -12,14 +12,6 @@ class Bemused < Sinatra::Application
     end
   end
 
-  get '/artist/:id/tags' do
-    Artist[params[:id]].tags.to_json
-  end
-
-  get '/tag/:id' do
-    Tag[params[:id]]
-  end
-
   get '/tags' do
     haml :tags, locals: { tags: Tag.all, set: @tags }
   end

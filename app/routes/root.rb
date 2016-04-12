@@ -1,11 +1,7 @@
+require 'helpers/root_helper'
 class Bemused < Sinatra::Application
+  include RootHelper
   get "/" do
-    tag = nil
-    context = params[:tag]
-    if(params[:tag])
-      tag = Tag.find(name: params[:tag])
-    end
-    artists = context ? Artist.where(tags: tag) : Artist
-    haml :index, locals: {artists: artists.exclude(image_path: nil).order(Sequel.lit('RANDOM()')).limit(25)}
+    haml :index, locals: {artists: random_artists(25)}
   end
 end

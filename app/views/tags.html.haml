@@ -3,7 +3,7 @@
     -tags.each do |tag|
       .checkbox
         %label
-          %input{ name: "tag_#{tag.id}", type: "checkbox", value: tag.id, checked: set.include?(tag.id)}
+          %input{ name: "tag_#{tag.id}", type: "checkbox", value: tag.id, checked: (set.select{|t| t.id == tag.id}.size > 0)}
             =tag.name
     %input.btn.btn-primary{ value: "Save", type: 'submit'}
   %form.usertags{action: "#{url_for('/tags')}", method: 'POST'}
