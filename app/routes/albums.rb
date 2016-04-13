@@ -14,10 +14,6 @@ class Bemused < Sinatra::Application
     haml :"admin/album", locals: {model: Album[params[:id]]}
   end
 
-  get "/admin/album/:id/tracks" do
-    haml :"admin/album_tracks", locals: {model: Album[params[:id]]}
-  end
-
   post "/admin/album/:id" do
     album = Album[params[:id]].merge_params(params)
     album.save

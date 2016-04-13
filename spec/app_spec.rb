@@ -350,12 +350,6 @@ describe 'Bemused' do
     expect(Track[id]).to be_nil
   end
 
-  it "administrates album tracks" do
-    get "/admin/album/#{album.id}/tracks"
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/Bemused/)
-  end
-
   it "looks up album summaries on wikipedia" do
     get "/album/#{album.id}/summary"
     expect(last_response).to match /summary/
