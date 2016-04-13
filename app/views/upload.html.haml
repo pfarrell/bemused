@@ -12,6 +12,10 @@
       Album
     %input#album.form-control{type:"text", name: "album_name"}
   .input-group
+    %span.input-group-addon
+      Genre
+    %input#album.form-control{type:"text", name: "genre"}
+  .input-group
     %input.btn.btn-default.btn-lg{type:"submit", value:"upload"}
 
 -unless params["info"].nil?

@@ -11,12 +11,13 @@ class Bemused < Sinatra::Application
     redis = Redis.new
     key=params[:key] || "bemused:incoming"
 
-    params['images'].map do |f| 
+    params['images'].map do |f|
       FileUtils.mv(f[:tempfile], "public/tmp/uploads/#{f[:filename]}")
       hsh={}
       hsh["artist_name"] = params["artist_name"]
       hsh["album_name"] = params["album_name"]
       hsh["file_name"] = File.absolute_path("public/tmp/uploads/#{f[:filename]}")
+      hsh["genre"] = params["genre"] unless params["genre"].nil?
       redis.rpush(key, hsh.to_json )
     end
 

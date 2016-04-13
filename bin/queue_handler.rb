@@ -23,8 +23,9 @@ while(true)
   track_artist_name = coalesce tags.artist.strip, hsh["artist_name"]
   album_artist_name = coalesce hsh["artist_name"], tags.artist.strip
   album_name = coalesce hsh["album_name"], tags.album.strip
+  genre = hsh["genre"]
   src= hsh["file_name"]
-  
+
   # mv to error dir if no tags, add to error queue
 
   # mv to nas if tagged
@@ -36,7 +37,7 @@ while(true)
   rescue Exception
   end
 
-  
+
   track_artist = Artist.find_or_create(name: track_artist_name)
   album_artist = Artist.find_or_create(name: album_artist_name)
   album = Album.find_or_create(artist: album_artist, title: album_name)
@@ -48,4 +49,16 @@ while(true)
   file.save
   track.media_file = file
   track.save
+
+  unless(genre.nil? || genre == '')
+    tag = Tag.find_or_create(name: genre)
+    unless(album.tags.include? tag)
+      album.add_tag tag
+      album.save
+    end
+    unless(album_artist.tags.include? tag)
+      album_artist.add_tag tag
+      album_artist.save
+    end
+  end
 end
