@@ -1,102 +1,50 @@
-#jquery_jplayer_1.jp-jplayer
-#jp_container_1.jp-audio
-  .jp-type-playlist
-    .jp-gui.jp-interface
-      %ul.jp-controls
-        %li
-          %a.jp-previous{:href=>'javascript:;', :tabindex => '1'}
-            previous
-        %li
-          %a.jp-play{:href=>'javascript:;', :tabindex => '1'}
-            play
-        %li
-          %a.jp-pause{:href=>'javascript:;', :tabindex => '1'}
-            pause
-        %li
-          %a.jp-next{:href=>'javascript:;', :tabindex => '1'}
-            next
-        %li
-          %a.jp-stop{:href=>'javascript:;', :tabindex => '1'}
-            stop
-        %li
-          %a.jp-mute{:href=>'javascript:;', :tabindex => '1'}
-            mute
-        %li
-          %a.jp-unmute{:href=>'javascript:;', :tabindex => '1'}
-            unmute
-        %li
-          %a.jp-volume-max{:href=>'javascript:;', :tabindex=>'1'}
-            max volume
-      %div.jp-progress
-        %div.jp-seek-bar
-          %div.jp-play-bar
-      %div.jp-volume-bar
-        %div.jp-volume-bar-value
-      %div.jp-current-time
-      %div.jp-duration
-      %ul.jp-toggles
-        %li
-          %a.jp-repeat{:href=>"javascript:;", :tabindex=>'1'}
-            repeat
-        %li
-          %a.jp-repeat-off{:href=>"javascript:;", :tabindex=>'1'}
-            repeat-off
-    %div.jp-playlist
-      %ul
-        %li
-    %div.jp-no-solution
-      %span
-        Update Required
-      To play the media you will need to either update your browser to a recent version
-  .edit
-    %a.item{href: "#{url_for("/admin/playlist/#{playlist.id}")}"}
-      Edit
+=haml :"partials/player", locals: { admin_url: "#{url_for("/admin/playlist/#{playlist.id}")}" }
 :javascript
-        document.getElementById("content").style.background="url('#{url_for "/images/albums/" + (playlist.image_path || "")}')";
-        document.getElementById("content").style.backgroundPosition="0px 0px";
-        document.getElementById("content").style.backgroundSize="contain";
-        document.getElementById("content").style.backgroundRepeat="no-repeat";
-        //document.getElementById("content").style.minHeight="900px";
+  document.getElementById("content").style.background="url('#{url_for "/images/albums/" + (playlist.image_path || "")}')";
+  document.getElementById("content").style.backgroundPosition="0px 0px";
+  document.getElementById("content").style.backgroundSize="contain";
+  document.getElementById("content").style.backgroundRepeat="no-repeat";
+  //document.getElementById("content").style.minHeight="900px";
 
-    var myPlaylist
+  var myPlaylist
 
-    $(document).ready(function() {
-      document.title = "#{playlist.name}";
-      myPlaylist = new jPlayerPlaylist({
-        jPlayer: "#jquery_jplayer_1",
-        cssSelectorAncestor: "#jp_container_1"
-      }, 
-      [
-        #{ playlist.track_list }
-      ], 
-      {
-        swfPath: "http://patf.net/js",
-        supplied: "mp3",
-        wmode: "window"
-      });  
-    });
+  $(document).ready(function() {
+    document.title = "#{playlist.name}";
+    myPlaylist = new jPlayerPlaylist({
+      jPlayer: "#jquery_jplayer_1",
+      cssSelectorAncestor: "#jp_container_1"
+    }, 
+    [
+      #{ playlist.track_list }
+    ], 
+    {
+      swfPath: "http://patf.net/js",
+      supplied: "mp3",
+      wmode: "window"
+    });  
+  });
 
-    $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
-        var current = myPlaylist.current,
-            playlist = myPlaylist.playlist;
-        $.each(playlist, function (index, obj) {
-            if (index == current) {
-              $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
-              $('.navbar-info').html("                                   \
-                <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \
-                <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}' title='#{playlist.name}'>      \
-                  <span class='album-title'>#{playlist.name}</span> \
-                </a> >                                                    \
-                <span class='track-title'>" + obj.title + "</span>");
-              $(document).prop("title", obj.title);
-            }
-        });
-    });
+  $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
+      var current = myPlaylist.current,
+          playlist = myPlaylist.playlist;
+      $.each(playlist, function (index, obj) {
+          if (index == current) {
+            $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
+            $('.navbar-info').html("                                   \
+              <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \
+              <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}' title='#{playlist.name}'>      \
+                <span class='album-title'>#{playlist.name}</span> \
+              </a> >                                                    \
+              <span class='track-title'>" + obj.title + "</span>");
+            $(document).prop("title", obj.title);
+          }
+      });
+  });
 
-    $(document).ready(function() {
-      $('.navbar-info').html("                        \
-        <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \
-        <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}' title='#{playlist.name}'>      \
-          <span class='album-title'>#{playlist.name}</span> \
-        </a>");
-    });
+  $(document).ready(function() {
+    $('.navbar-info').html("                        \
+      <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \
+      <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}' title='#{playlist.name}'>      \
+        <span class='album-title'>#{playlist.name}</span> \
+      </a>");
+  });

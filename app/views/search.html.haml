@@ -1,8 +1,7 @@
 %h3
   Artists
 -artists.to_a.select{|artist| artist.albums.size > 0}.each do |artist|
-  %a.item{href: "#{url_for "/artist/#{artist.id}"}"}
-    %img.artist{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}
+  =haml :"partials/artist", locals: {artist: artist}
 %h3
   Albums
 -albums.to_a.select{|album| album.tracks.size > 0}.each do |album|

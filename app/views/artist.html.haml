@@ -1,12 +1,9 @@
 .row
   .col-xs-12.albums
-    %a.item{href: "#{url_for("/artist/#{artist.id}")}"}
-      %img.artist{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}
+    =haml :"partials/artist", locals: { artist: artist }
     .item.item-x3#summary
     -artist.albums.each do |album|
-      %a.item{href: "#{url_for("/album/#{album.id}")}"}
-        %img.artist{title: "#{album.title}", src: "#{url_for("/images/albums/#{album.image_path}")}"}
-
+      =haml :"partials/album", locals: { album: album}
 .edit
   %a.item{href: "#{url_for("/admin/artist/#{artist.id}")}"}
     Edit
