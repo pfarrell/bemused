@@ -30,6 +30,10 @@ class Bemused < Sinatra::Application
     AutoComplete.artists(params["q"]).to_json
   end
 
+  get '/searchtags' do
+    AutoComplete.tags(params["q"]).to_json
+  end
+
   get "/random" do
     haml :album, locals: {album: Album.order{Sequel.lit('RANDOM()')}.first}
   end

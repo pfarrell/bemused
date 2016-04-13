@@ -47,5 +47,8 @@ class AutoComplete
     {"suggestions"=> Artist.where(Sequel.ilike(:name, "%#{query}%")).all.map{|x| {"value"=>"#{x.name}"}}}
   end
 
+  def self.tags(query)
+    {"suggestions"=> Tag.where(Sequel.ilike(:name, "%#{query}%")).all.map{|x| {"value"=>"#{x.name}", "data" => x.id}}}
+  end
 end
 

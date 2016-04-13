@@ -154,6 +154,16 @@ describe 'Bemused' do
     expect(last_response).to be_ok
   end
 
+  it "has live searchtags route" do
+    get "/searchtags"
+    expect(last_response).to be_ok
+  end
+
+  it "suggests tags" do
+    get "/searchtags?q=#{tag1.name}"
+    expect(last_response).to be_ok
+  end
+
   it "handles bad routes gracefully" do
     get "/foo"
     expect(last_response.status).to eq(404)
