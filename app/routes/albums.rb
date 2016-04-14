@@ -21,8 +21,6 @@ class Bemused < Sinatra::Application
   end
 
   delete "/album/:id/tag/:tag_id" do
-    require 'byebug'
-    byebug
     album = Album[params[:id]]
     tag = Tag[params[:tag_id]]
     album.remove_tag(tag)
@@ -33,8 +31,6 @@ class Bemused < Sinatra::Application
   end
 
   put "/album/:id/tags" do
-    require 'byebug'
-    byebug
     tag = Tag.find(name: params[:tag])
     album = Album[params[:id]]
     unless album.tags.include?(tag)
