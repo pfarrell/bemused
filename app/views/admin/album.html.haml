@@ -24,6 +24,17 @@
         Image Name
       %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}", onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_image(#{model.id})}"} 
 .row.sp-top-sm.no-pad
+  -model.tags.each do |tag|
+    %form{class: "tagform#{tag.id}"}
+      %input.form-control{type:"text", name:"name", value: "#{tag.name}", onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {update_tag(#{tag.id})}"} 
+      %input.btn.btn-warning{type: 'button', onClick:"if(confirm('remove tag?')) { remove_tag(#{model.id}, #{tag.id})}", value: "X"}
+  %form.form{id: "newtag"}
+    .form-group
+      %input.form-control#tag{type: "text", name: "tag", placeholder: "Add Tag"}
+      .submit
+        %input.btn.btn-default.btn-lg{type:"Submit", value:"Add Tag", onClick: "add_tag(#{model.id})"}
+    
+.row.sp-top-sm.no-pad
   .col-md-1
     TrackNum
   .col-md-1
@@ -43,6 +54,29 @@
         %input.btn.btn-warning{type: 'button', onClick:"if(confirm('delete track?')) {delete_track(#{track.id})}", value: "delete"}
 :javascript
   keypress_enable=false;
+
+  $(document).ready(function() {
+    $('#tag').autocomplete({
+      serviceUrl: '#{url_for "/searchtags"}',
+      paramName: 'q',
+      minChars: 1,
+      lookupLimit: 50,
+      autoSelectFirst: true,
+    });
+  });
+
+  function remove_tag(album_id, tag_id) {
+    var url = "#{url_for('/album/')}" + album_id + '/tag/' + tag_id; 
+    $('.tagform' + tag_id).remove();
+    return del(url);
+  }
+
+  function add_tag(album_id, tag_id) {
+    var url = "#{url_for('/album/')}" + album_id + '/tags'; 
+    var form= $("#newtag");
+    return put(form, url);
+  }
+
   function save_track(id) {
     var form= $(".trackform" + id);
     var url = "#{url_for('/admin/track/')}" + id; 
@@ -81,6 +115,16 @@
     $.ajax({
       url: url,
       method: 'delete'
+    });
+  }
+
+  function put(form, url) {
+    $.ajax( {
+      url: url,
+      data: form.serialize(),
+      method: 'put',
+    })
+    .done(function(msg) {
     });
   }
                   

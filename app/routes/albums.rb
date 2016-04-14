@@ -20,6 +20,29 @@ class Bemused < Sinatra::Application
     haml :album, locals: {album: album}
   end
 
+  delete "/album/:id/tag/:tag_id" do
+    require 'byebug'
+    byebug
+    album = Album[params[:id]]
+    tag = Tag[params[:tag_id]]
+    album.remove_tag(tag)
+    respond_to do |wants|
+     wants.json{ {"status" => "OK"}.to_json }
+     wants.js{ } #AJAX calls
+    end
+  end
+
+  put "/album/:id/tags" do
+    require 'byebug'
+    byebug
+    tag = Tag.find(name: params[:tag])
+    album = Album[params[:id]]
+    unless album.tags.include?(tag)
+      album.add_tag(tag)
+      album.save
+    end
+  end
+
   post "/admin/album/:id/image" do
     album = Album[params[:id]]
     open("#{params[:image_url]}") {|f|
