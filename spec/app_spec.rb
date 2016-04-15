@@ -417,4 +417,20 @@ describe 'Bemused' do
     post '/tags/set', {"tag_#{tag1.id}" => tag1.id}
     expect(rack_mock_session.cookie_jar["tags"]).to match(/#{tag1.id}/)
   end
+
+  it "allows tags to be added to albums" do
+    expect(album.tags.size).to eq(0)
+    put "/album/#{album.id}/tags", {tag: "#{tag1.name}"}
+    expect(last_response).to be_ok
+    a = Album[album.id]
+    expect(Album[album.id].tags.size).to eq(1)
+  end
+
+  it "allows tags to be removed from albums" do
+    expect(album.tags.size).to eq(0)
+    album.add_tag(tag1)
+    expect(Album[album.id].tags.size).to eq(1)
+    delete "/album/#{album.id}/tag/#{tag1.id}"
+    expect(Album[album.id].tags.size).to eq(0)
+  end
 end
