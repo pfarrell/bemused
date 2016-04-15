@@ -9,3 +9,5 @@
   %form.usertags{action: "#{url_for('/tags')}", method: 'POST'}
     %input{ name: "name", type: "text"}
     %input.btn.btn-primary{ value: "Save", type: 'submit'}
+:javascript
+  keypress_enable=false;
