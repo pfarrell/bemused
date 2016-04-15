@@ -1,0 +1,6 @@
+-tags.each do |tag|
+  %form{class: "tagform#{tag.id}"}
+    .input-group.input-group-lg
+      %input.form-control{type:"text", name:"name", value: "#{tag.name}"} 
+    .input-group.input-group-lg
+      %input.btn.btn-warning{type: 'button', onClick:"if(confirm('remove tag?')) { remove_tag(#{owner_id}, #{tag.id})}", value: "X"}

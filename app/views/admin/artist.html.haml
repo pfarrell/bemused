@@ -16,8 +16,36 @@
     %span.input-group-addon
       Image Name
     %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}", onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_image(#{model.id})}"}
+.row.sp-top-sm.no-pad
+  =haml :'partials/tags', locals: { owner_id: model.id, tags: model.tags }
+.row
+  .col-xs-12
+    =haml :'partials/newtag', locals: { owner_id: model.id, tags: model.tags }
 :javascript
   keypress_enable=false;
+
+  $(document).ready(function() {
+    $('#tag').autocomplete({
+      serviceUrl: '#{url_for "/searchtags"}',
+      paramName: 'q',
+      minChars: 1,
+      lookupLimit: 50,
+      autoSelectFirst: true,
+    });
+  });
+
+  function add_tag(owner_id) {
+    var url = "#{url_for('/artist/')}" + owner_id + '/tags'; 
+    var form= $("#newtag");
+    return put(form, url);
+  }
+
+  function remove_tag(owner_id, tag_id) {
+    var url = "#{url_for('/artist/')}" + owner_id + '/tag/' + tag_id; 
+    $('.tagform' + tag_id).remove();
+    return del(url);
+  }
+
   function update_model(id) {
     var form=$(".model");
     var url = "#{url_for('/admin/artist/')}" + id;
@@ -35,6 +63,23 @@
         url: url,
         data: form.serialize(),
         method: 'post',
+    })
+    .done(function(msg) {
+    });
+  }
+
+  function del(url) {
+    $.ajax({
+      url: url,
+      method: 'delete'
+    });
+  }
+
+  function put(form, url) {
+    $.ajax( {
+      url: url,
+      data: form.serialize(),
+      method: 'put',
     })
     .done(function(msg) {
     });
