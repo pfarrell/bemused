@@ -20,7 +20,7 @@
   =haml :'partials/tags', locals: { owner_id: model.id, tags: model.tags }
 .row
   .col-xs-12
-    =haml :'partials/newtag', locals: { owner_id: model.id, tags: model.tags }
+    =haml :'partials/newtag', locals: { owner_id: model.id }
 :javascript
   keypress_enable=false;
 
