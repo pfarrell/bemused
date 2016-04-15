@@ -24,19 +24,10 @@
         Image Name
       %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}", onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_image(#{model.id})}"} 
 .row.sp-top-sm.no-pad
-  -model.tags.each do |tag|
-    %form{class: "tagform#{tag.id}"}
-      .input-group.input-group-lg
-        %input.form-control{type:"text", name:"name", value: "#{tag.name}"} 
-      .input-group.input-group-lg
-        %input.btn.btn-warning{type: 'button', onClick:"if(confirm('remove tag?')) { remove_tag(#{model.id}, #{tag.id})}", value: "X"}
+  =haml :'partials/tags', locals: { owner_id: model.id, tags: model.tags }
 .row
   .col-xs-12
-    %form.form{id: "newtag"}
-      .form-group
-        %input.form-control{id: "tag", type: "text", name: "tag", placeholder: "Add Tag"}
-        .submit
-          %input.btn.btn-default.btn-md{type:"Submit", value:"Add Tag", onClick: "add_tag(#{model.id})"}
+    =haml :'partials/newtag', locals: { owner_id: model.id }
     
 .row.sp-top-sm.no-pad
   .col-md-1
