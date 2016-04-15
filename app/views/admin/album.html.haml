@@ -75,7 +75,7 @@
     return del(url);
   }
 
-  function add_tag(album_id, tag_id) {
+  function add_tag(album_id) {
     var url = "#{url_for('/album/')}" + album_id + '/tags'; 
     var form= $("#newtag");
     return put(form, url);
