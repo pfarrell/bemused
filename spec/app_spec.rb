@@ -433,4 +433,19 @@ describe 'Bemused' do
     delete "/album/#{album.id}/tag/#{tag1.id}"
     expect(Album[album.id].tags.size).to eq(0)
   end
+
+  it "allows tags to be added to artists" do
+    expect(artist.tags.size).to eq(0)
+    put "/artist/#{artist.id}/tags", {tag: "#{tag1.name}"}
+    expect(last_response).to be_ok
+    expect(Artist[artist.id].tags.size).to eq(1)
+  end
+
+  it "allows tags to be removed from artists" do
+    expect(artist.tags.size).to eq(0)
+    artist.add_tag(tag1)
+    expect(Artist[artist.id].tags.size).to eq(1)
+    delete "/artist/#{artist.id}/tag/#{tag1.id}"
+    expect(Artist[artist.id].tags.size).to eq(0)
+  end
 end
