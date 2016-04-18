@@ -1,5 +1,24 @@
 require 'spec_helper'
 
+shared_examples "a taggable object" do |obj|
+  let(:tag1) { Tag.find_or_create(name: "test_tag_1") }
+
+  it "allows tags to be added" do
+    expect(obj.tags.size).to eq(0)
+    put "/#{obj.class.to_s.downcase}/#{obj.id}/tags", {tag: "#{tag1.name}"}
+    expect(last_response).to be_ok
+    expect(obj.class[obj.id].tags.size).to eq(1)
+  end
+
+  it "allows tags to be removed" do
+    expect(obj.tags.size).to eq(0)
+    obj.add_tag(tag1)
+    expect(obj.class[obj.id].tags.size).to eq(1)
+    delete "/#{obj.class.to_s.downcase}/#{obj.id}/tag/#{tag1.id}"
+    expect(obj.class[obj.id].tags.size).to eq(0)
+  end
+end
+
 describe 'Bemused' do
   let(:tag1) { Tag.find_or_create(name: "test_tag_1") }
   let(:tag2) { Tag.find_or_create(name: "test_tag_2") }
@@ -418,34 +437,8 @@ describe 'Bemused' do
     expect(rack_mock_session.cookie_jar["tags"]).to match(/#{tag1.id}/)
   end
 
-  it "allows tags to be added to albums" do
-    expect(album.tags.size).to eq(0)
-    put "/album/#{album.id}/tags", {tag: "#{tag1.name}"}
-    expect(last_response).to be_ok
-    a = Album[album.id]
-    expect(Album[album.id].tags.size).to eq(1)
-  end
+  it_should_behave_like "a taggable object", Artist.find_or_create(name: "test_generated_artist")
 
-  it "allows tags to be removed from albums" do
-    expect(album.tags.size).to eq(0)
-    album.add_tag(tag1)
-    expect(Album[album.id].tags.size).to eq(1)
-    delete "/album/#{album.id}/tag/#{tag1.id}"
-    expect(Album[album.id].tags.size).to eq(0)
-  end
+  it_should_behave_like "a taggable object", Album.find_or_create(title: "test_generated_album")
 
-  it "allows tags to be added to artists" do
-    expect(artist.tags.size).to eq(0)
-    put "/artist/#{artist.id}/tags", {tag: "#{tag1.name}"}
-    expect(last_response).to be_ok
-    expect(Artist[artist.id].tags.size).to eq(1)
-  end
-
-  it "allows tags to be removed from artists" do
-    expect(artist.tags.size).to eq(0)
-    artist.add_tag(tag1)
-    expect(Artist[artist.id].tags.size).to eq(1)
-    delete "/artist/#{artist.id}/tag/#{tag1.id}"
-    expect(Artist[artist.id].tags.size).to eq(0)
-  end
 end
