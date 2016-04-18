@@ -1,5 +1,22 @@
 require 'spec_helper'
 
+shared_examples "a gettable route" do |path|
+  it "should allow access to #{path}" do
+    get path
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+  end
+end
+
+shared_examples 'a redirected route' do |path|
+  it "should redirect" do
+    get path
+    expect(last_response).to be_redirect
+    follow_redirect!
+    expect(last_response.body).to match(/Bemused/)
+  end
+end
+
 shared_examples "a taggable object" do |obj|
   let(:tag1) { Tag.find_or_create(name: "test_tag_1") }
 
@@ -47,29 +64,11 @@ describe 'Bemused' do
     album
   }
 
-  it "should allow access to the home page" do
-    get "/"
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/Bemused/)
-  end
-
-  it "has a radio route" do
-    get "/radio"
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/Bemused/)
-  end
-
-  it "has an upload route" do
-    get "/upload"
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/Bemused/)
-  end
-
-  it "has a playlists route" do
-    get "/playlists"
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/Bemused/)
-  end
+  it_should_behave_like "a gettable route", "/"
+  it_should_behave_like "a gettable route", "/radio"
+  it_should_behave_like "a gettable route", "/upload"
+  it_should_behave_like "a gettable route", "/playlists"
+  it_should_behave_like 'a redirected route', '/logs'
 
   it "has a playlist route" do
     get "/playlist/#{playlist.id}"
@@ -110,12 +109,6 @@ describe 'Bemused' do
     expect(ar.name).to eq("artist_name_updated")
   end
 
-  it "has a logs route" do
-    get "/logs"
-    expect(last_response).to be_redirect
-    follow_redirect!
-    expect(last_response.body).to match(/Bemused/)
-  end
 
   it "has a log route" do
     get "/log/#{Track.first.id}"
@@ -438,7 +431,11 @@ describe 'Bemused' do
   end
 
   it_should_behave_like "a taggable object", Artist.find_or_create(name: "test_generated_artist")
-
   it_should_behave_like "a taggable object", Album.find_or_create(title: "test_generated_album")
+
+  after(:all) do
+    artist.destroy
+    album.destroy
+  end
 
 end
