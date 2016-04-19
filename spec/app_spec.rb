@@ -1,19 +1,45 @@
 require 'spec_helper'
 
 shared_examples "a gettable route" do |path|
-  it "should allow access to #{path}" do
+  before do
     get path
+  end
+
+  it "should allow access to #{path}" do
     expect(last_response).to be_ok
+  end
+
+  it "should have Bemused in the body" do
     expect(last_response.body).to match(/Bemused/)
   end
 end
 
 shared_examples 'a redirected route' do |path|
-  it "should redirect" do
+  before do
     get path
+  end
+
+  it "should redirect" do
     expect(last_response).to be_redirect
+  end
+
+  it "should redirect only once" do
     follow_redirect!
     expect(last_response.body).to match(/Bemused/)
+  end
+end
+
+shared_examples "a gettable json route" do |path|
+  before do
+    get path
+  end
+
+  it "returns ok" do
+    expect(last_response).to be_ok
+  end
+
+  it "has json header" do
+    expect(last_response.headers["Content-Type"]).to eq("application/json")
   end
 end
 
@@ -121,18 +147,6 @@ describe 'Bemused' do
     expect(playlist.playlist_tracks.size).to eq(1)
   end
 
-  it "updates artists" do
-    post "/admin/artist/#{artist.id}",
-    {
-      name: "artist_name_updated"
-    }
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/Bemused/)
-    ar=Artist[artist.id]
-    expect(ar.name).to eq("artist_name_updated")
-  end
-
-
   it "has a log route" do
     get "/log/#{Track.first.id}"
     expect(last_response.body).to be_empty
@@ -227,34 +241,6 @@ describe 'Bemused' do
     expect(last_response).to be_ok
   end
 
-  it "has a words route for artists" do
-    get "/artists/words"
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/Bemused/)
-  end
-
-  it "has a words.json route for artists" do
-    get "/artists/words.json"
-    expect(last_response).to be_ok
-  end
-
-  it "has an artists json route" do
-    get "/artists.json?q=wax"
-    expect(last_response).to be_ok
-  end
-
-  it "has an artist route" do
-    get "/artist/#{artist.id}"
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/Bemused/)
-  end
-
-  it "has an artist admin route" do
-    get "/admin/artist/#{artist.id}"
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/Bemused/)
-  end
-
   it "has an album route" do
     get "/album/#{album.id}"
     expect(last_response).to be_ok
@@ -292,12 +278,6 @@ describe 'Bemused' do
   it "saves images from urls for albums" do
     post "/admin/album/#{album.id}/image", {image_url: "./spec/fixtures/tumblin_dice.jpg", image_name: "tumblin_dice.jpg"}
     expect(Album[album.id].image_path).to eq("tumblin_dice.jpg")
-    expect(last_response).to be_redirect
-  end
-
-  it "saves images from urls for artists" do
-    post "/admin/artist/#{artist.id}/image", {image_url: "./spec/fixtures/tumblin_dice.jpg", image_name: "tumblin_dice.jpg"}
-    expect(Artist[artist.id].image_path).to eq("tumblin_dice.jpg")
     expect(last_response).to be_redirect
   end
 
@@ -379,7 +359,6 @@ describe 'Bemused' do
     expect(rack_mock_session.cookie_jar["tags"]).to match(/#{tag1.id}/)
   end
 
-
   it_behaves_like "a taggable object" do
     let(:tag1) { Tag.find_or_create(name: "test_tag_1") }
     let(:obj) { Artist.find_or_create(name: "test_generated_artist") }
@@ -389,6 +368,5 @@ describe 'Bemused' do
     let(:tag1) { Tag.find_or_create(name: "test_tag_1") }
     let(:obj) {Album.find_or_create(title: "test_generated_album") }
   end
-
 
 end
