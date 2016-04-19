@@ -35,6 +35,14 @@ shared_examples "a taggable object" do
   end
 end
 
+shared_examples 'a search route' do |path|
+  it "returns data" do
+    get path
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/suggestions/)
+  end
+end
+
 describe 'Bemused' do
   let(:tag1) { Tag.find_or_create(name: "test_tag_1") }
   let(:tag2) { Tag.find_or_create(name: "test_tag_2") }
@@ -73,27 +81,17 @@ describe 'Bemused' do
     it_should_behave_like "a gettable route", "/random"
     it_should_behave_like "a gettable route", "/surprise"
     it_should_behave_like "a gettable route", "/active"
-    it_should_behave_like 'a redirected route', '/logs'
-  end
+    it_should_behave_like "a gettable route", "/tracks"
 
-#  context do
-#    before do
-#      #get "/log/#{track.id}"
-#    end
-#
-#    it "has a top route" do
-#      get "/top"
-#      expect(last_response).to be_ok
-#      expect(last_response.body).to match(/Bemused/)
-#    end
-#
-#    it "has an active route" do
-#      get "/active"
-#      expect(last_response).to be_ok
-#      expect(last_response.body).to match(/Bemused/)
-#    end
-#
-#  end
+    it_should_behave_like 'a redirected route', '/logs'
+
+    it_behaves_like "a search route", "/livesearch?q=t"
+    it_behaves_like "a search route", "/searchalbums"
+    it_behaves_like "a search route", "/searchtags"
+    it_behaves_like "a search route", "/searchtags?q=test"
+    it_behaves_like "a search route", "/searchartists"
+    it_behaves_like "a search route", "/searchtracks"
+  end
 
   it "has a playlist route" do
     get "/playlist/#{playlist.id}"
@@ -140,57 +138,16 @@ describe 'Bemused' do
     expect(last_response.body).to be_empty
   end
 
-
-  it "has a livesearch route" do
-    track
-    get "/livesearch?q=t"
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/suggestions/)
-  end
-
-  it "has live searchalbums route" do
-    get "/searchalbums"
-    expect(last_response).to be_ok
-  end
-
-  it "has live searchartists route" do
-    get "/searchartists"
-    expect(last_response).to be_ok
-  end
-
-  it "has live searchtags route" do
-    get "/searchtags"
-    expect(last_response).to be_ok
-  end
-
-  it "suggests tags" do
-    get "/searchtags?q=#{tag1.name}"
-    expect(last_response).to be_ok
-  end
-
   it "handles bad routes gracefully" do
     get "/foo"
     expect(last_response.status).to eq(404)
     expect(last_response.body).to match(/Bemused/)
   end
 
-  it "has a searchtracks route" do
-    get "/searchtracks?q=w"
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/suggestions/)
-  end
-
   it "has a random track route" do
     get "/track/random"
     expect(last_response).to be_ok
     expect(last_response.body).to match(/^\[\{.*\}\]$/)
-  end
-
-  it "has a tracks route" do
-    track
-    get "/tracks"
-    expect(last_response).to be_ok
-    expect(last_response.body).to match(/Bemused/)
   end
 
   it "has a tracks admin route" do
@@ -422,12 +379,13 @@ describe 'Bemused' do
     expect(rack_mock_session.cookie_jar["tags"]).to match(/#{tag1.id}/)
   end
 
+
   it_behaves_like "a taggable object" do
     let(:tag1) { Tag.find_or_create(name: "test_tag_1") }
     let(:obj) { Artist.find_or_create(name: "test_generated_artist") }
   end
 
-  it_should_behave_like "a taggable object" do
+  it_behaves_like "a taggable object" do
     let(:tag1) { Tag.find_or_create(name: "test_tag_1") }
     let(:obj) {Album.find_or_create(title: "test_generated_album") }
   end
