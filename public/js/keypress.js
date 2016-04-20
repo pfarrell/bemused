@@ -19,7 +19,9 @@ $(document).keydown(function(event) {
     case 80: //p
       toggle_visible($('#jp_container_1'));
       toggle_visible($('#nav'));
-      toggle_visible($('#summary'));
+      if(summary_available) {
+        toggle_visible($('#summary'));
+      }
       break;
     case 82: //r
       myPlaylist.shuffle();
