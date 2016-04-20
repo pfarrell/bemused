@@ -14,6 +14,7 @@ describe Artist do
   it_behaves_like "a gettable route", "/admin/artist/#{artist.id}"
 
   it_behaves_like "a gettable json route", "/artists.json?q=wax"
+  it_behaves_like "a gettable json route", "/artists/words.json"
 
   it "updates via POST" do
     post "/admin/#{klass}/#{subject.id}",

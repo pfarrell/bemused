@@ -119,6 +119,15 @@ describe 'Bemused' do
     it_behaves_like "a search route", "/searchtracks"
   end
 
+  it "has a logs route" do
+    30.times do 
+      get "/log/#{track.id}"
+    end
+    get "/logs/1"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+  end
+
   it "has a playlist route" do
     get "/playlist/#{playlist.id}"
     expect(last_response).to be_ok
