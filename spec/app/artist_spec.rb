@@ -8,14 +8,26 @@ describe Artist do
   subject(:artist) { Artist.find_or_create(name: "test_generated_artist") }
   let(:klass) { described_class.to_s.downcase }
 
-  it_behaves_like "a search route", "/searchartists"
-  it_behaves_like "a gettable route", "/artists/words"
-  it_behaves_like "a gettable route", "/artist/#{artist.id}"
-  it_behaves_like "a gettable route", "/admin/artist/#{artist.id}"
+  context do
 
-  it_behaves_like "a gettable json route", "/artists.json?q=wax"
-  it_behaves_like "a gettable json route", "/artists/words.json"
+    it_behaves_like "a search route", "/searchartists"
+    it_behaves_like "a gettable route", "/artists/words"
 
+    it_behaves_like "a gettable json route", "/artists.json?q=t"
+    it_behaves_like "a gettable json route", "/artists/words.json"
+  end
+
+  it "gets artist by id" do
+    get "/artist/#{artist.id}"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+  end
+
+  it "administrates artists by id" do
+    get "/admin/artist/#{artist.id}"
+    expect(last_response).to be_ok
+    expect(last_response.body).to match(/Bemused/)
+  end
   it "updates via POST" do
     post "/admin/#{klass}/#{subject.id}",
     {

@@ -9,7 +9,7 @@ shared_examples "a gettable route" do |path|
     expect(last_response).to be_ok
   end
 
-  it "should have Bemused in the body" do
+  it "#{path} should have Bemused in the body" do
     expect(last_response.body).to match(/Bemused/)
   end
 end
@@ -98,16 +98,30 @@ describe 'Bemused' do
   }
 
   context do
-    it_should_behave_like "a gettable route", "/"
-    it_should_behave_like "a gettable route", "/radio"
-    it_should_behave_like "a gettable route", "/upload"
-    it_should_behave_like "a gettable route", "/playlists"
-    it_should_behave_like "a gettable route", "/newborns"
-    it_should_behave_like "a gettable route", "/top"
-    it_should_behave_like "a gettable route", "/random"
-    it_should_behave_like "a gettable route", "/surprise"
-    it_should_behave_like "a gettable route", "/active"
-    it_should_behave_like "a gettable route", "/tracks"
+    before(:all) do
+      track  =Track.find_or_create(title: "test_generated_track")
+      album  =Album.find_or_create(title: "test_generated_album")
+      artist =Artist.find_or_create(name: "test_generated_artist")
+      album.add_track(track)
+      album.artist = artist
+      album.save
+      get "log/#{track.id}"
+    end
+
+    after(:all) do
+      Track.find(title: "test_generated_track").destroy
+      Album.find(title: "test_generated_album").destroy
+      Artist.find(name: "test_generated_artist").destroy
+    end
+
+    it_behaves_like "a gettable route", "/"
+    it_behaves_like "a gettable route", "/radio"
+    it_behaves_like "a gettable route", "/upload"
+    it_behaves_like "a gettable route", "/playlists"
+    it_behaves_like "a gettable route", "/newborns"
+    it_behaves_like "a gettable route", "/random"
+    it_behaves_like "a gettable route", "/surprise"
+    it_behaves_like "a gettable route", "/tracks"
 
     it_should_behave_like 'a redirected route', '/logs'
 
@@ -117,10 +131,11 @@ describe 'Bemused' do
     it_behaves_like "a search route", "/searchtags?q=test"
     it_behaves_like "a search route", "/searchartists"
     it_behaves_like "a search route", "/searchtracks"
+
   end
 
   it "has a logs route" do
-    30.times do 
+    30.times do
       get "/log/#{track.id}"
     end
     get "/logs/1"
