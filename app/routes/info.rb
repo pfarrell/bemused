@@ -34,10 +34,14 @@ class Bemused < Sinatra::Application
     string.gsub(/\b#{match}\b/, replace)
   end
 
+  def coalesce(str)
+    (str.nil? || str.empty?) ? nil : str
+  end
+
   get "/album/:id/summary" do
     album = Album[params[:id]]
-    artist = album.artist.wikipedia || album.artist.name
-    title = album.wikipedia || wp_fix(album.title)
+    artist = coalesce(album.artist.wikipedia) || album.artist.name
+    title = coalesce(album.wikipedia) || wp_fix(album.title)
 
     summary('albums', possible_titles(artist, title))
   end
