@@ -54,8 +54,9 @@ class Playlist < Sequel::Model
   end
 
   def random_image
-    album = playlist_tracks.sample.track.album
-    album.image_path unless album.nil?
+    return if playlist_tracks.empty?
+    t = playlist_tracks.sample.track
+    (t.nil? || t.album.nil?) ? "" : t.album.image_path
   end
 end
 
