@@ -17,7 +17,11 @@ class Bemused < Sinatra::Application
   post "/admin/album/:id" do
     album = Album[params[:id]].merge_params(params)
     album.save
-    haml :album, locals: {album: album}
+
+    respond_to do |wants|
+      wants.js { album.to_json }
+      wants.html { haml :album, locals: {album: album} }
+    end
   end
 
   delete "/album/:id/tag/:tag_id" do
