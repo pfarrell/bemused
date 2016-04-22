@@ -1,6 +1,7 @@
 vendor
 public/mp3s
-public/images
+public/images/*
+!public/images/broken_boombox.jpg
 public/tmp
 public/share
 public/libs
