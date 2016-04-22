@@ -47,6 +47,7 @@ class Bemused < Sinatra::Application
   end
 
   not_found do
+    puts "#{request.request_method} #{request.path}"
     haml :hunh
   end
 end
