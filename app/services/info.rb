@@ -15,7 +15,8 @@ class Info
 
   def summary(category, subject)
     puts "retrieving #{category} #{subject}"
-    { summary: retrieve(category, subject).summary }.to_json
+    s = retrieve(category, subject)
+    { summary: s.summary, url: s.fullurl }.to_json
   end
 
 end

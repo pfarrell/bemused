@@ -327,17 +327,17 @@ describe 'Bemused' do
 
   it "looks up album summaries on wikipedia" do
     get "/album/#{album.id}/summary"
-    expect(last_response).to match /summary/
+    expect(last_response).to be_ok
   end
 
   it "looks up album summaries on wikipedia" do
     get "/artist/#{artist.id}/summary"
-    expect(last_response).to match /summary/
+    expect(last_response).to be_ok
   end
 
   it "looks up summaries on wikipedia" do
     get "/summary/test/test"
-    expect(last_response).to match /summary/
+    expect(last_response).to be_ok
   end
 
   it "handles execptions from underlying lookups" do

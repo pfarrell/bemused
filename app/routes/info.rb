@@ -13,6 +13,7 @@ class Bemused < Sinatra::Application
       summary = lookup(category, search)
       return summary unless summary.nil?
     end
+    return ''
   end
 
   def lookup(category, search)

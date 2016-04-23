@@ -63,7 +63,8 @@
     function get_summary(id) {
       $.getJSON("#{url_for("/album/#{album.id}/summary")}")
       .done(function(data) {
-          $('#summary').append(data.summary);
+          $('#summary').append("<div class='summary'><p class='text'>" + data.summary + "</p>");
+          $('#summary').append("<div class='links'><a target='_' href='" + data.url + "'>wikipedia</a></div></div>");
         })
       .fail(function(data) {
         summary_available=false;
