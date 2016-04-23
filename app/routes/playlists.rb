@@ -37,6 +37,19 @@ class Bemused < Sinatra::Application
     redirect url_for("/admin/playlist/#{playlist.id}")
   end
 
+  delete "/playlist_track/:id" do
+    playlist_track = PlaylistTrack[params[:id]]
+    playlist_track.destroy
+  end
+
+  post "/playlist_track/:id" do
+    playlist_track = PlaylistTrack[params[:id]].merge_params(params)
+    playlist_track.save
+    respond_to do |wants|
+      wants.js { playlist_track.to_json }
+    end
+  end
+
   get "/admin/playlist/:id" do
     haml :"admin/playlist", locals: {model: Playlist[params[:id]]}
   end
