@@ -43,6 +43,7 @@
     %div.sp-bottom-sm.row#footer
       %div.container.footer
 %script{:type => "text/javascript", :src => "#{url_for '/js/keypress.js'}"}
+%script{:type => "text/javascript", :src => "#{url_for '/js/form_actions.js'}"}
 :javascript
   $('#q').autocomplete({
     serviceUrl: '#{url_for "/livesearch"}',
