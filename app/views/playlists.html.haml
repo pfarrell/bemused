@@ -2,7 +2,7 @@
   .playlist
     %a.item{href: "#{url_for("/playlist/#{playlist.id}")}"}
       %div
-        %img{title: "#{playlist.name}", src: "#{url_for "/images/albums/#{playlist.image_path}"}"}
+        %img{title: "#{playlist.name}", src: "#{url_for "/images/albums/sm/#{playlist.image_path}"}"}
 %form{method: "POST", action:"#{url_for("/playlists/new")}"}
   .input-group.input-group-lg
     %span.input-group-addon
