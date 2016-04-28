@@ -1,12 +1,17 @@
 var scrubbing, scrubaction, wasplaying = null;
 
+$(document).ready(function() {
+  $('.collapse').on('show.bs.collapse', function() {
+    $("#q").focus();
+  });
+});
+
 function toggle_visible(obj) {
   obj.is(':visible') ?  obj.fadeOut() : obj.fadeIn();
 }
 
 $(document).keydown(function(event) {
   if(!keypress_enable || ['q', 'track'].includes(document.activeElement.id)) { return; }
-
   switch(event.which) {
     case 32: //space bar
       event.preventDefault();
@@ -22,6 +27,9 @@ $(document).keydown(function(event) {
       if(summary_available) {
         toggle_visible($('#summary'));
       }
+      break;
+    case 83: //s
+      $("#navbar-collapse").collapse("toggle");
       break;
     case 82: //r
       myPlaylist.shuffle();
