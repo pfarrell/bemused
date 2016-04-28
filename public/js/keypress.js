@@ -1,5 +1,23 @@
 var scrubbing, scrubaction, wasplaying = null;
 
+function findBootstrapEnvironment() {
+    var envs = ["ExtraSmall", "Small", "Medium", "Large"];
+    var envValues = ["xs", "sm", "md", "lg"];
+
+    var $el = $('<div>');
+    $el.appendTo($('body'));
+
+    for (var i = envValues.length - 1; i >= 0; i--) {
+        var envVal = envValues[i];
+
+        $el.addClass('hidden-'+envVal);
+        if ($el.is(':hidden')) {
+            $el.remove();
+            return envs[i]
+        }
+    };
+}
+
 $(document).ready(function() {
   $('.collapse').on('show.bs.collapse', function() {
     $("#q").focus();
@@ -29,7 +47,9 @@ $(document).keydown(function(event) {
       }
       break;
     case 83: //s
-      $("#navbar-collapse").collapse("toggle");
+      if(findBootstrapEnvironment() == "ExtraSmall") {
+        $("#navbar-collapse").collapse("toggle");
+      }
       break;
     case 82: //r
       myPlaylist.shuffle();
