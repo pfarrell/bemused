@@ -1,9 +1,10 @@
 .row
-  .col-xs-12.albums
+  .col-xs-7.albums
     =haml :"partials/artist", locals: { artist: artist, admin: true}
-    .item.item-x3#summary
     -artist.albums.each do |album|
       =haml :"partials/album", locals: { album: album}
+  .col-xs-5
+    #summary
 :javascript
   keypress_enable=false;
   summary_loaded=false;
