@@ -1,5 +1,5 @@
 -artists.to_a.select{|artist| artist.albums.size > 0}.each do |artist|
-  =haml :"partials/artist", locals: {artist: artist}
+  =haml :"partials/artist", locals: {artist: artist, admin: false}
 :javascript
   var container = document.querySelector('.container');
   var msnry = new Masonry( container, {

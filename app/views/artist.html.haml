@@ -1,12 +1,9 @@
 .row
   .col-xs-12.albums
-    =haml :"partials/artist", locals: { artist: artist }
+    =haml :"partials/artist", locals: { artist: artist, admin: true}
     .item.item-x3#summary
     -artist.albums.each do |album|
       =haml :"partials/album", locals: { album: album}
-    .item
-      %a{href: "#{url_for("/admin/artist/#{artist.id}")}"}
-        Edit
 :javascript
   keypress_enable=false;
   summary_loaded=false;
