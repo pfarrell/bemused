@@ -4,9 +4,9 @@
     .item.item-x3#summary
     -artist.albums.each do |album|
       =haml :"partials/album", locals: { album: album}
-.edit
-  %a.item{href: "#{url_for("/admin/artist/#{artist.id}")}"}
-    Edit
+    .item
+      %a{href: "#{url_for("/admin/artist/#{artist.id}")}"}
+        Edit
 :javascript
   keypress_enable=false;
   summary_loaded=false;
@@ -25,7 +25,9 @@
   });
 
   $(document).ready(function() {
-    get_summary(#{artist.id});
+    get_summary("#{url_for("/artist/#{artist.id}/summary")}");
+    summary_loaded = true;
+    masonrize();
   });
 
   function masonrize() {
@@ -34,17 +36,3 @@
     }
   }
 
-  function get_summary(id) {
-    $.getJSON("#{url_for("/artist/#{artist.id}/summary")}")
-    .done(function(data) {
-        $('#summary').append("<div class='summary'><p class='text'>" + data.summary + "</p>");
-        $('#summary').append("<div class='links'><a target='_' href='" + data.url + "'>wikipedia</a></div></div>");
-        summary_loaded = true;
-        masonrize();
-      })
-    .fail(function(data) {
-      $('#summary').fadeOut();
-      summary_loaded = true;
-      masonrize();
-      });
-  }

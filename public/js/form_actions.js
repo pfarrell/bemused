@@ -24,3 +24,15 @@ function put(form, url) {
   .done(function(msg) {
   });
 }
+
+function get_summary(url) {
+  $.getJSON(url)
+  .done(function(data) {
+      $('#summary').append("<div class='summary'><p class='text'>" + data.summary + "</p>");
+      $('#summary').append("<div class='links'><a target='_' href='" + data.url + "'>wikipedia</a></div></div>");
+  })
+  .fail(function(data) {
+    summary_available=false;
+    $('#summary').fadeOut();
+    });
+}

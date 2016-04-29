@@ -19,7 +19,10 @@ body {
   height: 100%;
 }
 
-.item {
+.item img{
+}
+
+.item a{
 }
 
 .item-x2 {
