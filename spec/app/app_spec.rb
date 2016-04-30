@@ -77,6 +77,7 @@ describe 'Bemused' do
   let(:playlist) { Playlist.find_or_create(name:"test_generated_playlist") }
   let(:artist) { Artist.find_or_create(name: "test_generated_artist") }
   let(:media_file) { MediaFile.find_or_create(absolute_path: "./spec/fixtures/test.mp3") }
+  let(:nothing_album) {Album.new(title: "return nothing", artist: artist).save}
 
   let(:track) {
     track=Track.find_or_create(title: "test_generated_track")
@@ -345,6 +346,11 @@ describe 'Bemused' do
     expect(last_response).to be_ok
   end
 
+  it "handles empty responses from underlying lookups" do
+    get "/summary/test/return+nothing"
+    expect(last_response).to be_ok
+  end
+
   it "handles redirects for paginated tags" do
     get "/admin/tags"
     expect(last_response).to be_redirect
@@ -393,4 +399,8 @@ describe 'Bemused' do
     let(:obj) {Album.find_or_create(title: "test_generated_album") }
   end
 
+  it 'handles wikipeda lookups that return nothing' do
+    get "/album/#{nothing_album.id}/summary"
+    expect(last_response).to be_ok
+  end
 end
