@@ -25,9 +25,18 @@
   .input-group.input-group-lg
     %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
 .tracks
+  .row.sp-top-sm.no-pad
+    .col-md-1
+      TrackId
+    .col-md-3
+      Title
+    .col-md-4
+      Order
   -model.playlist_tracks.each do |playlist_track|
     %form{class: "playlist_trackform#{playlist_track.id}"}
       .row.no-pad
+        .col-md-1
+          %input.col-md-4.form-control{type: 'text', name: 'track_id', value: "#{playlist_track.track_id}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_playlist_track(#{playlist_track.id})}"}
         .col-md-3
           %span
             #{playlist_track.track.title unless playlist_track.nil? || playlist_track.track.nil?}
