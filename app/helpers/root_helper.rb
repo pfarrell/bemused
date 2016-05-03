@@ -4,6 +4,6 @@ module RootHelper
     artists
       .exclude(image_path: nil)
       .order(Sequel.lit('RANDOM()'))
-      .limit(25)
+      .limit(size)
   end
 end
