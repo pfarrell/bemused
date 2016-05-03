@@ -8,6 +8,7 @@ class AutoComplete
      "/albums/recent",
      "/albums/words",
      "/logs",
+     "/meta",
      "/newborns",
      "/playlists",
      "/radio",

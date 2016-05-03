@@ -1,0 +1,84 @@
+.col-md-6
+  %h3
+    Artists
+  %table.table.table-condensed.table-hover
+    %thead
+      %tr
+        %td
+          Artist Name
+        %td
+          Artist Id
+    %tbody
+      -artists.each do |artist|
+        %tr
+          %td
+            =artist.name
+          %td
+            =artist.id
+.col-md-6
+  %h3
+    Albums
+  %table.table.table-condensed.table-hover
+    %thead
+      %tr
+        %td
+          Album Title
+        %td
+          Album Id
+        %td
+          Artist Name
+        %td
+          Artist Id
+    %tbody
+      -albums.each do |album|
+        %tr
+          %td
+            =album.title
+          %td
+            =album.id
+          %td
+            =album.artist.name
+          %td
+            =album.artist.id
+.col-md-12
+  %h3
+    Tracks
+  %table.table.table-condensed.table-hover
+    %thead
+      %tr
+        %td
+          Track Id
+        %td
+          Title
+        %td
+          Album Title
+        %td
+          Album Id
+        %td
+          Artist Name
+        %td
+          Artist Id
+        %td
+          Path
+    %tbody
+      -tracks.each do |track|
+        %tr
+          %td
+            =track.id
+          %td
+            =track.title
+          %td
+            =track.album.title
+          %td
+            =track.album.id
+          %td
+            =track.artist.name
+          %td
+            =track.artist.id
+          %td
+            =track.media_file.absolute_path
+:javascript
+  $('#search').prop('action', "#{url_for('/meta')}");
+  $(document).ready(function() {
+    $('#q').autocomplete('disable');
+  });

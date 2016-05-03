@@ -57,4 +57,12 @@ class Bemused < Sinatra::Application
     lookup(params[:category], params[:search])
   end
 
+  get "/meta" do
+    query = params[:q] || ""
+    tracks = query.length >= 2 ? Track.where(Sequel.ilike(:title, "%#{query}%")) : []
+    albums = query.length >= 2 ? Album.where(Sequel.ilike(:title, "%#{query}%")) : []
+    artists = query.length >= 2 ? Artist.where(Sequel.ilike(:name, "%#{query}%")) : []
+    haml :meta, locals: { tracks: tracks, albums: albums, artists: artists }
+  end
+
 end
