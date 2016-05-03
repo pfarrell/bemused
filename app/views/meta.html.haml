@@ -37,9 +37,9 @@
           %td
             =album.id
           %td
-            =album.artist.name
+            =album.artist.name unless album.artist.nil?
           %td
-            =album.artist.id
+            =album.artist.id unless album.artist.nil?
 .col-md-12
   %h3
     Tracks
@@ -68,15 +68,15 @@
           %td
             =track.title
           %td
-            =track.album.title
+            =track.album.title unless track.album.nil?
           %td
-            =track.album.id
+            =track.album.id unless track.album.nil?
           %td
-            =track.artist.name
+            =track.artist.name unless track.artist.nil?
           %td
-            =track.artist.id
+            =track.artist.id  unless track.artist.nil?
           %td
-            =track.media_file.absolute_path
+            =track.media_file.absolute_path unless track.media_file.nil?
 :javascript
   $('#search').prop('action', "#{url_for('/meta')}");
   $(document).ready(function() {
