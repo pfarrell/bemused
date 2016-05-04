@@ -5,10 +5,10 @@
   .col-xs-12.col-md-offset-2.col-md-7.sp-top-sm#summary
 
 :javascript
-    document.getElementById("content").style.background="url('#{url_for "/images/albums/" + (album.image || "")}')";
-    document.getElementById("content").style.backgroundPosition="0px 0px";
-    document.getElementById("content").style.backgroundSize="contain";
-    document.getElementById("content").style.backgroundRepeat="no-repeat";
+    document.getElementById("image").style.background="url('#{url_for "/images/albums/" + (album.image || "")}')";
+    document.getElementById("image").style.backgroundPosition="center";
+    document.getElementById("image").style.backgroundSize="contain";
+    document.getElementById("image").style.backgroundRepeat="no-repeat";
     //document.getElementById("content").style.minHeight="900px";
 
     var myPlaylist;
