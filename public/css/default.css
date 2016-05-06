@@ -87,3 +87,18 @@ body {
   background-color:#e7e7e7;
   border-radius: 1em;
 }
+
+svg .chart {
+  background-color: white;
+}
+
+.chart rect {
+  fill: steelblue;
+}
+
+.chart text {
+  fill: white;
+  font: 19px sans-serif;
+  text-anchor: end;
+}
+
