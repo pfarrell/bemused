@@ -31,7 +31,7 @@ this project supports many keyboard shortcuts for controlling the app.
 |f|scrub track forward|
 |p|show/hide the playlist|
 |r|randomize the playlist|
-|s|search|
+|s|search (on mobile sized screen)|
 |:space|play/pause|
 |←|previous track|
 |→|next track|
