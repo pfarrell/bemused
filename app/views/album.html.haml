@@ -51,7 +51,7 @@
 
     $(document).ready(function() {
       $('.navbar-info').html("                        \
-        <a href='#{url_for("/admin/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
+        <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
           <span class='artist-title'>#{shorten album.artist.name, 20}</span> \
         </a>>                                                    \
         <a href='#{url_for("/album/#{album.id}")}' title='#{album.title}'>      \
