@@ -36,7 +36,7 @@
     AlbumId
   .col-md-6
     Title
--model.tracks.each do |track|
+-model.tracks.sort_by{|x| x.track_number.to_i}.each do |track|
   %form{class: "trackform#{track.id}"}
     .row.no-pad
       .col-md-1
