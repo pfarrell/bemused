@@ -19,7 +19,7 @@ Visualizations!!
     var data = new Uint8Array(analyser.frequencyBinCount);
     var chart = d3.select(".chart")
         .attr("width", 420)
-        .attr("height", 20 * 1024);
+        .attr("height", 2 * 1024);
    
     // we're ready to receive some data!
     // loop
@@ -29,27 +29,25 @@ Visualizations!!
       //var data = [4, 8, 15, 16, 23, 42];
 
       var width = 420,
-          barHeight = 20;
+          barHeight = 2;
 
       var x = d3.scale.linear()
           .domain([0, d3.max(data)])
           .range([0, width]);
+
+      chart.selectAll("g").remove();
 
       var bar = chart.selectAll("g")
           .data(data)
         .enter().append("g")
           .attr("transform", function(d, i) { return "translate(0," + i * barHeight + ")"; });
 
+
       bar.append("rect")
           .attr("width", x)
-          .attr("height", barHeight - 1);
+          .attr("height", barHeight);
 
-      bar.append("text")
-          .attr("x", function(d) { return x(d) - 3; })
-          .attr("y", barHeight / 2)
-          .attr("dy", ".35em")
-          .text(function(d) { return d; });
-      //window.setTimeout(function() {requestAnimationFrame(renderFrame);}, 1000);
+      window.setTimeout(function() {requestAnimationFrame(renderFrame);}, 50);
 
        // update data in frequencyData
        // render frame based on values in frequencyData
@@ -57,5 +55,5 @@ Visualizations!!
     }
     audio.play();
     //renderFrame();
-    window.setTimeout(function() {requestAnimationFrame(renderFrame);}, 1000);
+    window.setTimeout(function() {requestAnimationFrame(renderFrame);}, 50);
   };
