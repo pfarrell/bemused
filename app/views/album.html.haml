@@ -1,10 +1,10 @@
 .row
-  .col-xs-12.col-md-offset-3.col-md-9.sp-top-sm#player
+  .col-xs-12.col-sm-offset-2.col-sm-4.sp-top-sm#player
     =haml :"partials/player", locals: { admin_url: "#{url_for("/admin/album/#{album.id}")}" }
+  .col-xs-12.col-sm-3.sp-top-xl
+    =haml :"partials/visualizer"
 .row
   .col-xs-12.col-md-offset-2.col-md-7.sp-top-sm#summary
-  .col-xs-12.col-md-offset-3.col-md-9.sp-top-sm#player
-    =haml :"partials/visualizer"
 
 :javascript
     document.getElementById("image").style.background="url('#{url_for "/images/albums/" + (album.image || "")}')";
