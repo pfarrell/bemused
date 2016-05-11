@@ -88,17 +88,11 @@ body {
   border-radius: 1em;
 }
 
-svg .chart {
-  background-color: white;
-}
-
-.chart rect {
-  fill: steelblue;
-}
-
-.chart text {
-  fill: white;
-  font: 19px sans-serif;
-  text-anchor: end;
+canvas {
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  margin-bottom: -3px;
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.7),
+              0 3px 4px rgba(0,0,0,0.7);
 }
 

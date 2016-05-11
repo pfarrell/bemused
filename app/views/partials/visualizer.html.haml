@@ -1,59 +1,82 @@
-Visualizations!!
-%svg.chart
-%audio#jp_audio_i{src:"http://localhost:9292/stream/22"}
+%row
+  .col-xs-12
+    Visualizations!!
+    .section
+      .item
+        %canvas.visualizer
+      .item
+        %input#refresh{type:"TEXT", value: "10"}
+    %audio#jp_audio_i{src:"http://localhost:9292/stream/10"}
  
 :javascript
-  window.onload = function() {
-    var w=10, barHeight=20, h=100;
-    
+  var visualization_enabled = true;
+  $("#jquery_jplayer_1").bind($.jPlayer.event.loadstart, function (event) {
+    visualization_enabled = false;
+    console.log("setMedia");
+    var audio = event.currentTarget.childNodes[1];
+    visualize(audio);
+  });
+
+  function visualize(audio) {
+    visualization_enabled = true;
     var ctx = new AudioContext();
-    var audio = $("audio#jp_audio_i")[0];
+    //var audio = $("audio#jp_audio_i")[0];
     var audioSrc = ctx.createMediaElementSource(audio);
     var analyser = ctx.createAnalyser();
+
+    var canvas = document.querySelector('.visualizer');
+    var canvasCtx = canvas.getContext("2d");
+    var drawVisual;
+
+    var WIDTH = canvas.width;
+    var HEIGHT = canvas.height;
+
+    analyser.fftSize = 2048;
+
     // we have to connect the MediaElementSource with the analyser 
     audioSrc.connect(analyser);
     audioSrc.connect(ctx.destination);
     // we could configure the analyser: e.g. analyser.fftSize (for further infos read the spec)
    
     // frequencyBinCount tells you how many values you'll receive from the analyser
-    var data = new Uint8Array(analyser.frequencyBinCount);
-    var chart = d3.select(".chart")
-        .attr("width", 420)
-        .attr("height", 2 * 1024);
-   
-    // we're ready to receive some data!
-    // loop
-    function renderFrame() {
-      analyser.getByteFrequencyData(data);
+    var bufferLength = analyser.frequencyBinCount;
+    var dataArray = new Uint8Array(bufferLength);
+  //  audio.play();
+    canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
 
-      //var data = [4, 8, 15, 16, 23, 42];
-
-      var width = 420,
-          barHeight = 2;
-
-      var x = d3.scale.linear()
-          .domain([0, d3.max(data)])
-          .range([0, width]);
-
-      chart.selectAll("g").remove();
-
-      var bar = chart.selectAll("g")
-          .data(data)
-        .enter().append("g")
-          .attr("transform", function(d, i) { return "translate(0," + i * barHeight + ")"; });
-
-
-      bar.append("rect")
-          .attr("width", x)
-          .attr("height", barHeight);
-
-      window.setTimeout(function() {requestAnimationFrame(renderFrame);}, 50);
-
-       // update data in frequencyData
-       // render frame based on values in frequencyData
-       // console.log(frequencyData)
-    }
-    audio.play();
     //renderFrame();
-    window.setTimeout(function() {requestAnimationFrame(renderFrame);}, 50);
-  };
+    function draw() {
+      //drawVisual = requestAnimationFrame(draw);
+      var refresh = document.getElementById("refresh").value;
+      analyser.getByteTimeDomainData(dataArray);
+      canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+        canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+      canvasCtx.lineWidth = 2;
+        canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+
+      canvasCtx.beginPath();
+
+      var sliceWidth = WIDTH * 1.0 / bufferLength;
+      var x = 0;
+      for(var i = 0; i < bufferLength; i++) {
+   
+        var v = dataArray[i] / 128.0;
+        var y = v * HEIGHT/2;
+
+        if(i === 0) {
+          canvasCtx.moveTo(x, y);
+        } else {
+          canvasCtx.lineTo(x, y);
+        }
+
+        x += sliceWidth;
+      }
+      canvasCtx.lineTo(canvas.width, canvas.height/2);
+      canvasCtx.stroke();
+      //draw();
+      if(visualization_enabled) {
+        window.setTimeout(function() {requestAnimationFrame(draw);}, refresh);
+      }
+    }
+    window.setTimeout(function() {requestAnimationFrame(draw);}, 10);
+  }
