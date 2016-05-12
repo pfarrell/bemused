@@ -1,0 +1,83 @@
+%row
+  .col-xs-12
+    #visualization
+      .item-x3
+        %canvas.visualizer
+      .item
+        %input#refresh{type:"TEXT", value: "10"}
+    %audio#jp_audio_i{src:"http://localhost:9292/stream/10"}
+ 
+:javascript
+  var visualization_enabled = true;
+  $(document).ready(function() {
+    $("#jquery_jplayer_1").bind($.jPlayer.event.loadstart, function (event) {
+      visualization_enabled = false;
+      console.log("setMedia");
+      var audio = event.currentTarget.childNodes[1];
+      visualize(audio);
+    });
+  });
+
+  function visualize(audio) {
+    visualization_enabled = true;
+    var ctx = new AudioContext();
+    //var audio = $("audio#jp_audio_i")[0];
+    var audioSrc = ctx.createMediaElementSource(audio);
+    var analyser = ctx.createAnalyser();
+
+    var canvas = document.querySelector('.visualizer');
+    var canvasCtx = canvas.getContext("2d");
+    var drawVisual;
+
+    var WIDTH = canvas.width;
+    var HEIGHT = canvas.height;
+
+    analyser.fftSize = 2048;
+
+    // we have to connect the MediaElementSource with the analyser 
+    audioSrc.connect(analyser);
+    audioSrc.connect(ctx.destination);
+    // we could configure the analyser: e.g. analyser.fftSize (for further infos read the spec)
+   
+    // frequencyBinCount tells you how many values you'll receive from the analyser
+    var bufferLength = analyser.frequencyBinCount;
+    var dataArray = new Uint8Array(bufferLength);
+  //  audio.play();
+    canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
+
+    //renderFrame();
+    function draw() {
+      //drawVisual = requestAnimationFrame(draw);
+      var refresh = document.getElementById("refresh").value;
+      analyser.getByteTimeDomainData(dataArray);
+      canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+        canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+      canvasCtx.lineWidth = 2;
+        canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+
+      canvasCtx.beginPath();
+
+      var sliceWidth = WIDTH * 1.0 / bufferLength;
+      var x = 0;
+      for(var i = 0; i < bufferLength; i++) {
+   
+        var v = dataArray[i] / 128.0;
+        var y = v * HEIGHT/2;
+
+        if(i === 0) {
+          canvasCtx.moveTo(x, y);
+        } else {
+          canvasCtx.lineTo(x, y);
+        }
+
+        x += sliceWidth;
+      }
+      canvasCtx.lineTo(canvas.width, canvas.height/2);
+      canvasCtx.stroke();
+      //draw();
+      if(visualization_enabled) {
+        window.setTimeout(function() {requestAnimationFrame(draw);}, refresh);
+      }
+    }
+    window.setTimeout(function() {requestAnimationFrame(draw);}, 10);
+  }

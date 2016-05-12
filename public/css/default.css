@@ -70,6 +70,10 @@ body {
   margin-top: 2em;
 }
 
+.sp-top-xl {
+  margin-top: 6em;
+}
+
 .sp-bottom-sm {
   margin-bottom: 2em;
 }
@@ -86,4 +90,21 @@ body {
   padding: 1em;
   background-color:#e7e7e7;
   border-radius: 1em;
+}
+
+canvas {
+  width: 420px;
+  height: 260px;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  margin-left: -15px;
+  margin-bottom: -3px;
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.7),
+              0 3px 4px rgba(0,0,0,0.7);
+}
+
+.vcenter {
+  display: inline-block;
+  vertical-align: middle;
+  float: none;
 }

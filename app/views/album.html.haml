@@ -1,6 +1,9 @@
 .row
-  .col-xs-12.col-md-offset-3.col-md-9.sp-top-sm#player
+  .col-xs-12.col-md-offset-2.col-sm-6.col-lg-4.sp-top-sm#player
     =haml :"partials/player", locals: { admin_url: "#{url_for("/admin/album/#{album.id}")}" }
+.row
+  .col-xs-12.col-md-offset-2.col-sm-6.col-lg-4.sp-top-sm
+    =haml :"partials/visualizer"
 .row
   .col-xs-12.col-md-offset-2.col-md-7.sp-top-sm#summary
 
@@ -28,6 +31,7 @@
         wmode: "window"
       });
     });
+
     $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
         var current = myPlaylist.current,
             playlist = myPlaylist.playlist;
