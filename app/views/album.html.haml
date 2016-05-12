@@ -1,9 +1,9 @@
 .row
-  .col-xs-12.col-md-offset-2.col-sm-6.col-lg-4.sp-top-sm
-    =haml :"partials/visualizer"
-.row
   .col-xs-12.col-md-offset-2.col-sm-6.col-lg-4.sp-top-sm#player
     =haml :"partials/player", locals: { admin_url: "#{url_for("/admin/album/#{album.id}")}" }
+.row
+  .col-xs-12.col-md-offset-2.col-sm-6.col-lg-4.sp-top-sm
+    =haml :"partials/visualizer"
 .row
   .col-xs-12.col-md-offset-2.col-md-7.sp-top-sm#summary
 
