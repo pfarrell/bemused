@@ -9,11 +9,13 @@
  
 :javascript
   var visualization_enabled = true;
-  $("#jquery_jplayer_1").bind($.jPlayer.event.loadstart, function (event) {
-    visualization_enabled = false;
-    console.log("setMedia");
-    var audio = event.currentTarget.childNodes[1];
-    visualize(audio);
+  $(document).ready(function() {
+    $("#jquery_jplayer_1").bind($.jPlayer.event.loadstart, function (event) {
+      visualization_enabled = false;
+      console.log("setMedia");
+      var audio = event.currentTarget.childNodes[1];
+      visualize(audio);
+    });
   });
 
   function visualize(audio) {
