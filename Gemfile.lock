@@ -132,6 +132,3 @@ DEPENDENCIES
   sinatra-respond_to
   unicorn
   wikipedia-client
-
-BUNDLED WITH
-   1.11.2

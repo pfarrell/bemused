@@ -1,4 +1,9 @@
-=haml :"partials/player", locals: { admin_url: "#{url_for("/admin/playlist/#{playlist.id}")}" }
+.row
+  .col-xs-12.col-md-offset-2.col-sm-6.col-lg-4.sp-top-sm#player
+    =haml :"partials/player", locals: { admin_url: "#{url_for("/admin/playlist/#{playlist.id}")}" }
+.row
+  .col-xs-12.col-md-offset-2.col-sm-6.col-lg-4.sp-top-sm
+    =haml :"partials/visualizer"
 :javascript
   document.getElementById("content").style.background="url('#{url_for "/images/albums/" + (playlist.image_path || "")}')";
   document.getElementById("content").style.backgroundPosition="0px 0px";
