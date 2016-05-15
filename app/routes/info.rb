@@ -57,6 +57,22 @@ class Bemused < Sinatra::Application
     lookup(params[:category], params[:search])
   end
 
+  get "/stats" do
+    haml :stats
+  end
+
+  get "/stats/albums" do
+    {stats: {tracks: {count: Album.count}}}.to_json
+  end
+
+  get "/stats/artists" do
+    {stats: {tracks: {count: Artist.count}}}.to_json
+  end
+
+  get "/stats/tracks" do
+    {stats: {tracks: {count: Track.count}}}.to_json
+  end
+
   get "/meta" do
     query = params[:q] || ""
     redirect(url_for("/#{AutoComplete.translate(query[1..-1])}")) if query =~ /^\//
