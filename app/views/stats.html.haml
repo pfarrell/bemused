@@ -34,7 +34,7 @@
   }
 
   $(document).ready(function() {
-    get("/stats/albums", set_albums, null);
-    get("/stats/artists", set_artists, null);
-    get("/stats/tracks", set_tracks, null);
+    get("#{url_for('/stats/albums')}", set_albums, null);
+    get("#{url_for('/stats/artists')}", set_artists, null);
+    get("#{url_for('/stats/tracks')}", set_tracks, null);
   });
