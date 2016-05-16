@@ -16,17 +16,17 @@
           %td
             Albums
           %td#albums_count
-        %tr
-          %td
-            Tracks
-          %td#tracks_count
+        %tr#tracks
+          %td.name
+          %td.count
 :javascript
   function set_albums(data) {
     $("#albums_count")[0].innerHTML= data.stats.albums.count;
   }
 
   function set_tracks(data) {
-    $("#tracks_count")[0].innerHTML= data.stats.tracks.count;
+    $("#tracks").find($(".name")).text(data.type);
+    $("#tracks").find($(".count")).text(data.count);
   }
 
   function set_artists(data) {

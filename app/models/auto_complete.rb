@@ -13,6 +13,7 @@ class AutoComplete
      "/playlists",
      "/radio",
      "/random",
+     "/stats",
      "/surprise",
      "/tags",
      "/top",

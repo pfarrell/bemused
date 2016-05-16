@@ -41,4 +41,10 @@ class Track < Sequel::Model
     return "artists/#{self.artist.image_path}" unless self.artist.nil?
   end
 
+  def self.stats
+    stats = Stat.new(self)
+    stats.count = Track.count
+    stats.most_recent = Track.last
+    stats
+  end
 end

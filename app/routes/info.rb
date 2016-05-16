@@ -70,7 +70,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/stats/tracks" do
-    {stats: {tracks: {count: Track.count}}}.to_json
+    Track.stats.to_json
   end
 
   get "/meta" do
