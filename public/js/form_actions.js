@@ -25,6 +25,13 @@ function put(form, url) {
   });
 }
 
+function get(url, success, failure) {
+  $.getJSON(url)
+    .done(success)
+    .fail(failure);
+}
+
+
 function get_summary(url) {
   $.getJSON(url)
   .done(function(data) {

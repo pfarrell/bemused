@@ -11,16 +11,30 @@
         %tr
           %td
             Artists
-          %td
-            =Artist.count
+          %td#artists_count
         %tr
           %td
             Albums
-          %td
-            =Album.count
+          %td#albums_count
         %tr
           %td
             Tracks
-          %td
-            =Track.count
+          %td#tracks_count
+:javascript
+  function set_albums(data) {
+    $("#albums_count")[0].innerHTML= data.stats.albums.count;
+  }
 
+  function set_tracks(data) {
+    $("#tracks_count")[0].innerHTML= data.stats.tracks.count;
+  }
+
+  function set_artists(data) {
+    $("#artists_count")[0].innerHTML= data.stats.artists.count;
+  }
+
+  $(document).ready(function() {
+    get("/stats/albums", set_albums, null);
+    get("/stats/artists", set_artists, null);
+    get("/stats/tracks", set_tracks, null);
+  });
