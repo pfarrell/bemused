@@ -1,10 +1,11 @@
 class Stat
-  attr_accessor :type, :count, :most_recent, :popular
+  attr_accessor :type, :values
   def initialize(obj)
     @type = obj.name
+    @values = {}
   end
 
   def to_json(opts={})
-    {type: @type, count: @count, most_recent: @most_recent}.to_json(opts)
+    {type: @type, props: @values}.to_json(opts)
   end
 end

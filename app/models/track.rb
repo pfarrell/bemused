@@ -43,8 +43,8 @@ class Track < Sequel::Model
 
   def self.stats
     stats = Stat.new(self)
-    stats.count = Track.count
-    stats.most_recent = Track.last
+    stats.values["count"] = Track.count
+    stats.values["most_recent"] = Track.last
     stats
   end
 end

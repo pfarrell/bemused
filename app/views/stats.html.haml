@@ -33,12 +33,14 @@
   }
 
   function set_tracks(data) {
+    var props = data.props;
     $("#tracks").find($(".name")).text(data.type);
-    $("#tracks").find($(".count")).text(data.count);
+    $("#tracks").find($(".count")).text(props.count);
   }
 
   function set_logs(data) {
-    $("#logs").find($(".count")).text(data.count);
+    var props = data.props;
+    $("#logs").find($(".count")).text(props.count);
   }
 
   function set_artists(data) {
