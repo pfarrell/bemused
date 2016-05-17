@@ -30,5 +30,11 @@ class Album < Sequel::Model
   def image
     self.image_path == "" ? "artists/#{self.artist.image_path}" : self.image_path
   end
+
+  def self.stats
+    stats = Stat.new(self)
+    stats.values[:count] = Album.count
+    stats
+  end
 end
 

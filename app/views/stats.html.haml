@@ -8,14 +8,12 @@
           %th
             Count
       %tbody
-        %tr
-          %td
-            Artists
-          %td#artists_count
-        %tr
-          %td
-            Albums
-          %td#albums_count
+        %tr#artists
+          %td.name
+          %td.count
+        %tr#albums
+          %td.name
+          %td.count
         %tr#tracks
           %td.name
           %td.count
@@ -29,7 +27,9 @@
 
 :javascript
   function set_albums(data) {
-    $("#albums_count")[0].innerHTML= data.stats.albums.count;
+    var props = data.props;
+    $("#albums").find($(".name")).text(data.type);
+    $("#albums").find($(".count")).text(props.count);
   }
 
   function set_tracks(data) {
@@ -44,7 +44,9 @@
   }
 
   function set_artists(data) {
-    $("#artists_count")[0].innerHTML= data.stats.artists.count;
+    var props = data.props;
+    $("#artists").find($(".name")).text(data.type);
+    $("#artists").find($(".count")).text(props.count);
   }
 
   $(document).ready(function() {

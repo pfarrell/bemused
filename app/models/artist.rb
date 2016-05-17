@@ -9,5 +9,11 @@ class Artist < Sequel::Model
   def to_s
     self.name
   end
+
+  def self.stats
+    stats = Stat.new(self)
+    stats.values[:count] = Artist.count
+    stats
+  end
 end
 

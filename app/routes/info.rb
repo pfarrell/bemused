@@ -62,11 +62,11 @@ class Bemused < Sinatra::Application
   end
 
   get "/stats/albums" do
-    {stats: {albums: {count: Album.count}}}.to_json
+    Album.stats.to_json
   end
 
   get "/stats/artists" do
-    {stats: {artists: {count: Artist.count}}}.to_json
+    Artist.stats.to_json
   end
 
   get "/stats/tracks" do
