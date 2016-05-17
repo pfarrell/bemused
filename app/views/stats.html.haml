@@ -19,6 +19,14 @@
         %tr#tracks
           %td.name
           %td.count
+.row
+  .col-xs-12#logs
+    %h2
+      Last 6 months
+    #logs
+      plays
+      %span.count
+
 :javascript
   function set_albums(data) {
     $("#albums_count")[0].innerHTML= data.stats.albums.count;
@@ -29,6 +37,10 @@
     $("#tracks").find($(".count")).text(data.count);
   }
 
+  function set_logs(data) {
+    $("#logs").find($(".count")).text(data.count);
+  }
+
   function set_artists(data) {
     $("#artists_count")[0].innerHTML= data.stats.artists.count;
   }
@@ -37,4 +49,5 @@
     get("#{url_for('/stats/albums')}", set_albums, null);
     get("#{url_for('/stats/artists')}", set_artists, null);
     get("#{url_for('/stats/tracks')}", set_tracks, null);
+    get("#{url_for('/stats/logs')}", set_logs, null);
   });

@@ -73,6 +73,10 @@ class Bemused < Sinatra::Application
     Track.stats.to_json
   end
 
+  get "/stats/logs" do
+    Log.stats.to_json
+  end
+
   get "/meta" do
     query = params[:q] || ""
     redirect(url_for("/#{AutoComplete.translate(query[1..-1])}")) if query =~ /^\//

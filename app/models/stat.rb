@@ -1,5 +1,5 @@
 class Stat
-  attr_accessor :type, :count, :most_recent
+  attr_accessor :type, :count, :most_recent, :popular
   def initialize(obj)
     @type = obj.name
   end
