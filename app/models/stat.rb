@@ -1,7 +1,7 @@
 class Stat
   attr_accessor :type, :values
   def initialize(obj)
-    @type = obj.name
+    @type = (obj.is_a? Class) ? obj.name : obj.class.name
     @values = {}
   end
 

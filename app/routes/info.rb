@@ -62,18 +62,22 @@ class Bemused < Sinatra::Application
   end
 
   get "/stats/albums" do
+    content_type :json
     Album.stats.to_json
   end
 
   get "/stats/artists" do
+    content_type :json
     Artist.stats.to_json
   end
 
   get "/stats/tracks" do
+    content_type :json
     Track.stats.to_json
   end
 
   get "/stats/logs" do
+    content_type :json
     Log.stats.to_json
   end
 

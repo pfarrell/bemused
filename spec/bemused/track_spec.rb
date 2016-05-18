@@ -23,6 +23,12 @@ describe Track do
     log
     expect(Track.active(1)).to_not be_nil
   end
+
+  context '#to_json' do
+    it 'has a stats class method' do
+      expect(Track.stats).to_not be_nil
+    end
+  end
 end
 
 

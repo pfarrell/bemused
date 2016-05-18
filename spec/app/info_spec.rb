@@ -33,5 +33,42 @@ describe Info do
       get '/meta'
       expect(last_response).to be_ok
     end
+
+    context '/stats' do
+      shared_examples "a stats json route" do |path, type|
+        before do
+          get path
+        end
+
+        it 'returns ok' do
+          expect(last_response).to be_ok
+        end
+
+        it 'includes type' do
+          json = JSON.parse(last_response.body)
+          expect(json['type']).to eq(type)
+        end
+
+        it 'includes props' do
+          json = JSON.parse(last_response.body)
+          expect(json['props']).to be_a Hash
+        end
+
+        it "has json header" do
+          expect(last_response.headers["Content-Type"]).to eq("application/json")
+        end
+      end
+
+      it 'has a stats page' do
+        get '/stats'
+        expect(last_response).to be_ok
+      end
+
+      it_behaves_like 'a stats json route', '/stats/artists', 'Artist'
+      it_behaves_like 'a stats json route', '/stats/albums', 'Album'
+      it_behaves_like 'a stats json route', '/stats/tracks', 'Track'
+      it_behaves_like 'a stats json route', '/stats/logs', 'Log'
+
+    end
   end
 end

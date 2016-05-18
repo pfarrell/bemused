@@ -21,8 +21,14 @@ describe Album do
     album.save
     album
   }
-  
+
   it "to_s returns album title" do
     expect(album.to_s).to eq(album.title)
+  end
+
+  context '#json' do
+    it 'has a class method for stats' do
+      expect(Album.stats).to_not be_nil
+    end
   end
 end
