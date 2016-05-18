@@ -24,8 +24,25 @@
     #logs
       plays
       %span.count
+    Popular Tracks
+    %table.table.table-condensed#popular_tracks
+      %thead
+        %tr
+          %th
+            Track
+          %th
+            Plays
+      %tbody#tracks
 
 :javascript
+  function populate_table(table, data) {
+    for(i in data) {
+      var track = data[i][0]; 
+      var plays = data[i][1];
+      table.append("<tr><td>" + track.title + "</td><td>" + plays + "</td></tr>");
+    }
+  }
+
   function set_albums(data) {
     var props = data.props;
     $("#albums").find($(".name")).text(data.type);
@@ -41,6 +58,7 @@
   function set_logs(data) {
     var props = data.props;
     $("#logs").find($(".count")).text(props.count);
+    populate_table($("#popular_tracks").find("#tracks"), props["popular"])
   }
 
   function set_artists(data) {
@@ -48,7 +66,7 @@
     $("#artists").find($(".name")).text(data.type);
     $("#artists").find($(".count")).text(props.count);
   }
-
+                          
   $(document).ready(function() {
     get("#{url_for('/stats/albums')}", set_albums, null);
     get("#{url_for('/stats/artists')}", set_artists, null);
