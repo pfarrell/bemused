@@ -19,22 +19,35 @@
           %td.count
 .row
   .col-xs-12#logs
-    %h2
+    %h3
       Last 6 months
     #logs
       plays
       %span.count
-    Popular Tracks
-    %table.table.table-condensed#popular_tracks
-      %thead
-        %tr
-          %th
-            Track
-          %th
-            Plays
-      %tbody#tracks
+    %h4
+      6 months Popular Tracks
+    
+    %div#tabs
+      %ul.nav.nav-tabs{role: "tablist"}
+        %li.active{role: "presentation"}
+          %a{href: "#all_time", role: "tab", data: {toggle: "tag"}, aria: {controls: "all_time"}}
+            All Time
+        %li{role: "presentation"}
+          %a{href: "#one_month", role: "tab", data: {toggle: "tag"}, aria: {controls: "one_month"}}
+            One Month
+
+      .tab-content
+        .tab-pane.active#all_time{role: "tabpanel"}
+          =haml :'partials/track_table', locals: {section: "all_time"}
+        .tab-pane#one_month{role: "tabpanel"}
+          =haml :'partials/track_table', locals: {section: "one_month"}
 
 :javascript
+  $('#tabs a').click(function (e) {
+    e.preventDefault()
+    $(this).tab('show')
+  });
+
   function populate_table(table, data) {
     for(i in data) {
       var track = data[i][0]; 
@@ -58,7 +71,8 @@
   function set_logs(data) {
     var props = data.props;
     $("#logs").find($(".count")).text(props.count);
-    populate_table($("#popular_tracks").find("#tracks"), props["popular"])
+    populate_table($("#all_time").find("#tracks"), props["all_time"]["popular"])
+    populate_table($("#one_month").find("#tracks"), props["one_month"]["popular"])
   }
 
   function set_artists(data) {
