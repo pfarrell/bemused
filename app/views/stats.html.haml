@@ -17,16 +17,12 @@
         %tr#tracks
           %td.name
           %td.count
+        %tr#plays
+          %td.name
+          %td.count
 .row
   .col-xs-12#logs
-    %h3
-      Last 6 months
-    #logs
-      plays
-      %span.count
-    %h4
-      6 months Popular Tracks
-    
+    %h2 Popular Tracks
     %div#tabs
       %ul.nav.nav-tabs{role: "tablist"}
         %li.active{role: "presentation"}
@@ -35,12 +31,17 @@
         %li{role: "presentation"}
           %a{href: "#one_month", role: "tab", data: {toggle: "tag"}, aria: {controls: "one_month"}}
             One Month
+        %li{role: "presentation"}
+          %a{href: "#one_week", role: "tab", data: {toggle: "tag"}, aria: {controls: "one_week"}}
+            One Week
 
       .tab-content
         .tab-pane.active#all_time{role: "tabpanel"}
           =haml :'partials/track_table', locals: {section: "all_time"}
         .tab-pane#one_month{role: "tabpanel"}
           =haml :'partials/track_table', locals: {section: "one_month"}
+        .tab-pane#one_week{role: "tabpanel"}
+          =haml :'partials/track_table', locals: {section: "one_week"}
 
 :javascript
   $('#tabs a').click(function (e) {
@@ -51,8 +52,9 @@
   function populate_table(table, data) {
     for(i in data) {
       var track = data[i][0]; 
-      var plays = data[i][1];
-      table.append("<tr><td>" + track.title + "</td><td>" + plays + "</td></tr>");
+      var artist = data[i][1]; 
+      var plays = data[i][2];
+      table.append("<tr><td>" + track.title + "</td><td>" + artist.name + "</td><td>" + plays + "</td></tr>");
     }
   }
 
@@ -70,9 +72,11 @@
 
   function set_logs(data) {
     var props = data.props;
-    $("#logs").find($(".count")).text(props.count);
+    $("#plays").find($(".name")).text("Plays");
+    $("#plays").find($(".count")).text(props["all_time"].count);
     populate_table($("#all_time").find("#tracks"), props["all_time"]["popular"])
     populate_table($("#one_month").find("#tracks"), props["one_month"]["popular"])
+    populate_table($("#one_week").find("#tracks"), props["one_week"]["popular"])
   }
 
   function set_artists(data) {
