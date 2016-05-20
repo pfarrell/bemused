@@ -49,12 +49,13 @@
     $(this).tab('show')
   });
 
-  function populate_table(table, data) {
+  function populate_table(table, data, baseUrl) {
     for(i in data) {
       var track = data[i][0]; 
-      var artist = data[i][1]; 
-      var plays = data[i][2];
-      table.append("<tr><td>" + track.title + "</td><td>" + artist.name + "</td><td>" + plays + "</td></tr>");
+      var album = data[i][1]; 
+      var artist = data[i][2]; 
+      var plays = data[i][3];
+      table.append("<tr><td><a href='" + baseUrl + "album/" + album.id + "'>" + track.title + "</a></td><td><a href='" + baseUrl + "artist/" + artist.id + "'>" + artist.name + "</td><td>" + plays + "</td></tr>");
     }
   }
 
@@ -71,12 +72,13 @@
   }
 
   function set_logs(data) {
+    var baseUrl = "#{url_for('/')}";
     var props = data.props;
     $("#plays").find($(".name")).text("Plays");
     $("#plays").find($(".count")).text(props["all_time"].count);
-    populate_table($("#all_time").find("#tracks"), props["all_time"]["popular"])
-    populate_table($("#one_month").find("#tracks"), props["one_month"]["popular"])
-    populate_table($("#one_week").find("#tracks"), props["one_week"]["popular"])
+    populate_table($("#all_time").find("#tracks"), props["all_time"]["popular"], baseUrl);
+    populate_table($("#one_month").find("#tracks"), props["one_month"]["popular"], baseUrl);
+    populate_table($("#one_week").find("#tracks"), props["one_week"]["popular"], baseUrl);
   }
 
   function set_artists(data) {
