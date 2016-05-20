@@ -26,22 +26,22 @@
     %div#tabs
       %ul.nav.nav-tabs{role: "tablist"}
         %li.active{role: "presentation"}
-          %a{href: "#all_time", role: "tab", data: {toggle: "tag"}, aria: {controls: "all_time"}}
-            All Time
+          %a{href: "#one_week", role: "tab", data: {toggle: "tag"}, aria: {controls: "one_week"}}
+            One Week
         %li{role: "presentation"}
           %a{href: "#one_month", role: "tab", data: {toggle: "tag"}, aria: {controls: "one_month"}}
             One Month
         %li{role: "presentation"}
-          %a{href: "#one_week", role: "tab", data: {toggle: "tag"}, aria: {controls: "one_week"}}
-            One Week
+          %a{href: "#all_time", role: "tab", data: {toggle: "tag"}, aria: {controls: "all_time"}}
+            All Time
 
       .tab-content
-        .tab-pane.active#all_time{role: "tabpanel"}
-          =haml :'partials/track_table', locals: {section: "all_time"}
+        .tab-pane.active#one_week{role: "tabpanel"}
+          =haml :'partials/track_table', locals: {section: "one_week"}
         .tab-pane#one_month{role: "tabpanel"}
           =haml :'partials/track_table', locals: {section: "one_month"}
-        .tab-pane#one_week{role: "tabpanel"}
-          =haml :'partials/track_table', locals: {section: "one_week"}
+        .tab-pane#all_time{role: "tabpanel"}
+          =haml :'partials/track_table', locals: {section: "all_time"}
 
 :javascript
   $('#tabs a').click(function (e) {
