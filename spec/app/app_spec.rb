@@ -113,6 +113,7 @@ describe 'Bemused' do
       Track.find(title: "test_generated_track").destroy
       Album.find(title: "test_generated_album").destroy
       Artist.find(name: "test_generated_artist").destroy
+      Log.all.select{|log| Track[log.track_id].nil?}.each{|log| log.destroy}
     end
 
     it_behaves_like "a gettable route", "/"
