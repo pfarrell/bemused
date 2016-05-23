@@ -9,5 +9,13 @@ Sequel.migration do
       DateTime :created_at
       DateTime :updated_at
     end
+
+    create_table(:tokens) do
+      primary_key :id
+      Integer :user_id
+      String :token
+      DateTime :expires_at
+      DateTime :created_at
+      DateTime :updated_at
   end
 end
