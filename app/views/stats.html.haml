@@ -51,10 +51,10 @@
 
   function populate_table(table, data, baseUrl) {
     for(i in data) {
-      var track = data[i][0]; 
-      var album = data[i][1]; 
-      var artist = data[i][2]; 
-      var plays = data[i][3];
+      var track = data[i][0] || {}; 
+      var album = data[i][1] || {}; 
+      var artist = data[i][2] || {}; 
+      var plays = data[i][3] || {};
       table.append("<tr><td><a href='" + baseUrl + "album/" + album.id + "'>" + track.title + "</a></td><td><a href='" + baseUrl + "artist/" + artist.id + "'>" + artist.name + "</td><td>" + plays + "</td></tr>");
     }
   }
