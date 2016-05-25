@@ -17,5 +17,6 @@ Sequel.migration do
       DateTime :expires_at
       DateTime :created_at
       DateTime :updated_at
+    end
   end
 end
