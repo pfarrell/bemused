@@ -29,4 +29,5 @@ group :development do
   gem 'rspec'
   gem 'simplecov-badge'
   gem 'byebug'
+  gem 'test-unit'
 end
