@@ -28,7 +28,7 @@ class Bemused < Sinatra::Application
   get "/user/login/:token" do
     t = Token.where(token: params[:token])
     if(t.count > 0)
-      response.set_cookie(:bmc, value: params[:token], expires: Time.now + 3600 * 24 * 365 * 10)
+      response.set_cookie(:bmc, value: params[:token], path: "/", expires: Time.now + 3600 * 24 * 365 * 10)
       haml :index, locals: {artists: random_artists(66)}
     else
       raise "Token not found #{token.token}"

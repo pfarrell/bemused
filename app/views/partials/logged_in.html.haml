@@ -1,2 +1,4 @@
-%li
-  logged in as #{user.username}
+%li.hidden-xs.hidden-sm
+  %img{src: "//www.gravatar.com/avatar/#{gravatar_hash(user.email)}"}
+%li.visible-xs.visible-sm
+  #{user.username}

@@ -41,8 +41,8 @@ class Bemused < Sinatra::Application
     request.cookies['bmc'].nil? ? nil : Token.find(token: request.cookies['bmc']).user
   end
 
-  def gravatar(email)
-
+  def gravatar_hash(email)
+     Digest::MD5.hexdigest email.downcase.strip
   end
 
   def authed?
