@@ -1,0 +1,20 @@
+.container
+  .row
+    %form{method: "post", action: "#{url_for('/user')}"}
+      .form-group.row
+        %label.form-control-label.col-sm-2{for: "username"}
+          Username
+        .col-sm-10
+          %input.form-control#username{name: "username", type: "text", placeholder: "username"}
+      .form-group.row
+        %label.form-control-label.col-sm-2{for: "email"}
+          Email
+        .col-sm-10
+          %input.form-control#email{name: "email", type: "email", placeholder: "email"}
+      .form-group.row
+        .col-sm-offset-2.col-sm-10
+          %button.btn.btn-secondary{type: "submit"}
+            Create User
+:javascript
+  keypress_enable = false;
+

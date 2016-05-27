@@ -17,7 +17,7 @@
     %script{type: "text/javascript", src: "#{url_for "/libs/masonry/dist/masonry.pkgd.js"}"}
     %script{type: "text/javascript", src: "#{url_for "/libs/imagesloaded/imagesloaded.pkgd.min.js"}"}
     %script{type: "text/javascript", src: "#{url_for "/libs/devbridge-autocomplete/dist/jquery.autocomplete.min.js"}"}
-    %script{type: "text/javascript", src: "#{url_for "/libs/d3/d3.min.js"}"}
+    %script{:type => "text/javascript", :src => "#{url_for '/js/form_actions.js'}"}
     %script
       //default is to enable keypress functions unless page opts out
       var keypress_enable=true;
@@ -36,15 +36,17 @@
         %form.navbar-form.navbar-left{id: "search", action: "#{url_for("/search")}", method: "GET"}
           .form-group
             %input.form-control{type: "TEXT", id: "q", name: "q", autofocus: true, placeholder: "Search"}
-        %ul.nav.navbar-brand
+        %ul.nav.navbar-nav
           %li
             %span.navbar-info
+        %ul.nav.navbar-nav.pull-right
+          = haml :'partials/logged_in', locals: {user: current_user}  if current_user
+          = haml :'partials/not_logged_in' if !current_user
     .container-fluid#content
       =yield
     %div.sp-bottom-sm.row#footer
       %div.container.footer
 %script{:type => "text/javascript", :src => "#{url_for '/js/keypress.js'}"}
-%script{:type => "text/javascript", :src => "#{url_for '/js/form_actions.js'}"}
 :javascript
   $('#q').autocomplete({
     serviceUrl: '#{url_for "/livesearch"}',

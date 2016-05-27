@@ -10,6 +10,7 @@ require 'securerandom'
 require 'haml'
 require 'logger'
 require 'wikipedia'
+require 'digest'
 
 
 require 'models'
@@ -36,13 +37,27 @@ class Bemused < Sinatra::Application
     !user_tags.empty?
   end
 
+  def current_user
+    request.cookies['bmc'].nil? ? nil : Token.find(token: request.cookies['bmc']).user
+  end
+
+  def gravatar(email)
+
+  end
+
+  def authed?
+    return false
+  end
+
   configure do
-    klass = ['test', 'development'].include?(ENV['RACK_ENV']) ? MockWikipedia : ::Wikipedia
-    set :info, Info.new(klass)
+    info = development? || test? ? MockWikipedia : ::Wikipedia
+    email = development? || test? ? MockGmail : ::Gmail
+    set :info, Info.new(info)
+    set :email, Email.new(email)
   end
 
   before do
-    response.set_cookie(:bmc, value: SecureRandom.uuid, expires: Time.now + 3600 * 24 * 365 * 10) if request.cookies["bmc"].nil?
+    #response.set_cookie(:bmc, value: SecureRandom.uuid, expires: Time.now + 3600 * 24 * 365 * 10) if request.cookies["bmc"].nil?
     @tags = user_tags
   end
 

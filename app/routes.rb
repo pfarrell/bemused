@@ -1,3 +1,5 @@
+require 'securerandom'
+
 require 'routes/root'
 require 'routes/tracks'
 require 'routes/albums'
@@ -10,3 +12,4 @@ require 'routes/logs'
 require 'routes/radio'
 require 'routes/info'
 require 'routes/tags'
+require 'routes/user'

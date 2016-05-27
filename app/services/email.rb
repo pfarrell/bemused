@@ -1,6 +1,11 @@
 class Email
+  attr_accessor :klass
 
-  def self.send_login(email, token_link)
+  def initialize(klass)
+    @klass = klass
+  end
+
+  def send_login(email, token_link)
     connect do |gmail|
       gmail.deliver do
         to email
@@ -16,10 +21,10 @@ class Email
     end
   end
 
-  def self.connect(&block)
+  def connect(&block)
     gmail_user = ENV["GMAIL_USER"]
     gmail_pass = ENV["GMAIL_PASS"]
-    Gmail.connect(gmail_user, gmail_pass) do |gmail|
+    @klass.connect(gmail_user, gmail_pass) do |gmail|
       yield gmail
     end
   end
