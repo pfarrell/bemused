@@ -14,6 +14,7 @@ search bar is a command bar
 |/playlists, /p|User created playlists|
 |/radio|Comin' up, a lifetime of commercial free|
 |/random, /r|Load a random album|
+|/stats | load site statistics|
 |/top|Playlist of most played tunes|
 |/tracks, /t|Changes search to be for track names, not album/artist names|
 |/tracks/words|Top words used in track titles|
