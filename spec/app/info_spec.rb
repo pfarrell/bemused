@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Info do
   let(:artist) {Artist.new(name:"test_name")}
   let(:album) { Album.new(title:"test_title") }
-  let(:track) { Track.new(title:"test_track_title") }
+  let(:track) { Track.new(title:"test_track_title_5") }
 
   before do
     artist.save
@@ -44,7 +44,10 @@ describe Info do
           get path
         end
 
+
+
         it 'returns ok' do
+          byebug if Log.count > 1
           expect(last_response).to be_ok
         end
 
