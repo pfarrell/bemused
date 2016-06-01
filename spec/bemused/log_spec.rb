@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'byebug'
 
 describe Log do
 
@@ -19,7 +18,6 @@ describe Log do
 
   context '#stats' do
     it 'has a stats class method' do
-      byebug
       expect(Log.stats).to_not be_nil
     end
   end
