@@ -15,6 +15,16 @@ function del(url) {
   });
 }
 
+function patch(form, url) {
+  $.ajax( {
+    url: url,
+    data: form.serialize(),
+    method: 'patch'
+  })
+  .done(function(msg) {
+  });
+}
+
 function put(form, url) {
   $.ajax( {
     url: url,

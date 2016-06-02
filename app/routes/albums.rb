@@ -43,6 +43,16 @@ class Bemused < Sinatra::Application
     end
   end
 
+  patch "/admin/album/:id/tracks" do
+    content_type :json
+    album = Album[params[:id]]
+    album.tracks.each do |track|
+      track.merge_params(params)
+      track.save
+    end
+    Album[params[:id]].to_json
+  end
+
   post "/admin/album/:id/image" do
     album = Album[params[:id]]
     open("#{params[:image_url]}") {|f|

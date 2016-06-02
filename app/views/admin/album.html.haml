@@ -28,12 +28,28 @@
 .row
   .col-xs-12
     =haml :'partials/newtag', locals: { owner_id: model.id }
-    
+
+.row.sp-top-sm.no-pad
+  .h4 
+    Update on all tracks
+  .col-md-1
+    AlbumId
+  .col-md-1
+    ArtistId
+%form{class: "globalform"}
+  .row.no-pad
+    .col-md-1
+      %input.col-md-4.form-control{type: 'text', name: 'album_id', value: "#{model.id}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {update_all_tracks(#{model.id})}"}
+    .col-md-1
+      %input.col-md-4.form-control{type: 'text', name: 'artist_id', value: "#{model.artist.id}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {update_all_tracks(#{model.id})}"}
+
 .row.sp-top-sm.no-pad
   .col-md-1
     TrackNum
   .col-md-1
     AlbumId
+  .col-md-1
+    ArtistId
   .col-md-6
     Title
 -model.tracks.sort_by{|x| x.track_number.to_i}.each do |track|
@@ -43,6 +59,8 @@
         %input.col-md-4.form-control{type: 'text', name: 'track_number', value: "#{track.track_number}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track(#{track.id})}"}
       .col-md-1
         %input.col-md-4.form-control{type: 'text', name: 'album_id', value: "#{track.album_id}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track(#{track.id})}"}
+      .col-md-1
+        %input.col-md-4.form-control{type: 'text', name: 'artist_id', value: "#{track.artist_id}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track(#{track.id})}"}
       .col-md-6
         %input.form-control{type: 'text', name: 'title', value: "#{track.title}", onFocus: "this.dirty=false;", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track(#{track.id})}"}
       .col-md-1
@@ -88,6 +106,12 @@
     var form=$(".model");
     var url = "#{url_for('/admin/album/')}" + id;
     return post(form, url);
+  }
+
+  function update_all_tracks(id) {
+    var form=$(".globalform");
+    var url = "#{url_for('/admin/album/')}" + id + "/tracks";
+    return patch(form, url);
   }
 
   function delete_track(id) {
