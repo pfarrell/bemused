@@ -12,6 +12,9 @@ GEM
     capistrano-bundler (1.1.2)
       capistrano (~> 3.0)
       sshkit (~> 1.2)
+    capistrano-rvm (0.1.2)
+      capistrano (~> 3.0)
+      sshkit (~> 1.2)
     coderay (1.1.1)
     colorize (0.7.3)
     daemon_controller (1.2.0)
@@ -124,6 +127,7 @@ DEPENDENCIES
   capistrano (~> 3.2.0)
   capistrano-bower
   capistrano-bundler (~> 1.1.2)
+  capistrano-rvm
   emk-sinatra-url-for
   gmail
   haml

@@ -1,6 +1,4 @@
 source "https://rubygems.org"
-ruby "2.2.1"
-
 gem 'sinatra'
 gem 'sinatra-contrib'
 gem 'rack-mobile-detect'
@@ -16,6 +14,7 @@ gem 'sinatra-respond_to'
 gem 'capistrano', '~> 3.2.0'
 gem 'capistrano-bundler', '~> 1.1.2'
 gem 'capistrano-bower'
+gem 'capistrano-rvm', require: false
 gem 'passenger'
 gem 'unicorn'
 gem 'sinatra-presence', '~> 0.0.3'
