@@ -47,7 +47,7 @@ describe Info do
 
 
         it 'returns ok' do
-          byebug if Log.count > 1
+          #byebug if Log.count > 1
           expect(last_response).to be_ok
         end
 

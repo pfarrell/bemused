@@ -1,5 +1,10 @@
 require 'spec_helper'
 
+after do
+  #byebug if Log.count > 0
+end
+
+
 shared_examples "a gettable route" do |path|
   before do
     get path
@@ -100,7 +105,7 @@ describe 'Bemused' do
 
   context do
     before(:all) do
-      track  =Track.find_or_create(title: "test_generated_track")
+      track  =Track.find_or_create(title: "test_generated_track_4")
       album  =Album.find_or_create(title: "test_generated_album")
       artist =Artist.find_or_create(name: "test_generated_artist")
       album.add_track(track)
@@ -110,7 +115,7 @@ describe 'Bemused' do
     end
 
     after(:all) do
-      Track.find(title: "test_generated_track").destroy
+      Track.find(title: "test_generated_track_4").destroy
       Album.find(title: "test_generated_album").destroy
       Artist.find(name: "test_generated_artist").destroy
       Log.all.select{|log| Track[log.track_id].nil?}.each{|log| log.destroy}
