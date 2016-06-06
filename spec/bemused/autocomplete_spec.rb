@@ -6,7 +6,7 @@ describe AutoComplete do
   }
 
   let(:track) {
-    track=Track.find_or_create(title: "test_generated_track")
+    track=Track.find_or_create(title: "test_generated_track_2")
     track.save
     track
   }
@@ -47,12 +47,12 @@ describe AutoComplete do
 
   context do
     before(:all) do
-      track  =Track.find_or_create(title: "test_generated_track")
+      track  =Track.find_or_create(title: "test_generated_track_3")
       get "/log/#{track.id}"
     end
 
     after(:all) do
-      Track.find(title: "test_generated_track").destroy
+      Track.find(title: "test_generated_track_3").destroy
     end
 
     it_behaves_like 'it autocompletes', 'a', "/active"

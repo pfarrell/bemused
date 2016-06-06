@@ -16,8 +16,13 @@ describe Log do
     get "/log/#{track.id}"
   end
 
+  after do
+    Log.all.select{|log| Track[log.track_id].nil?}.each{|log| log.destroy}
+  end
+
   context '#stats' do
     it 'has a stats class method' do
+      #byebug if Log.count > 0
       expect(Log.stats).to_not be_nil
     end
   end

@@ -6,7 +6,7 @@ describe Album do
   }
 
   let(:track) {
-    track=Track.find_or_create(title: "test_generated_track")
+    track=Track.find_or_create(title: "test_generated_track_1")
     track.save
     track
   }

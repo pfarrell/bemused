@@ -1,6 +1,7 @@
 require 'simplecov'
 require 'test/unit'
 require 'rack/test'
+#require 'byebug'
 
 SimpleCov.start do
   require 'simplecov-badge'
