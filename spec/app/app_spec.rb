@@ -1,10 +1,5 @@
 require 'spec_helper'
 
-after do
-  #byebug if Log.count > 0
-end
-
-
 shared_examples "a gettable route" do |path|
   before do
     get path

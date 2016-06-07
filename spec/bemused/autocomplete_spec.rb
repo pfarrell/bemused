@@ -46,12 +46,12 @@ describe AutoComplete do
   end
 
   context do
-    before(:all) do
+    before do
       track  =Track.find_or_create(title: "test_generated_track_3")
       get "/log/#{track.id}"
     end
 
-    after(:all) do
+    after do
       Track.find(title: "test_generated_track_3").destroy
     end
 
