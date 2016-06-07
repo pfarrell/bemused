@@ -1,8 +1,6 @@
 class Bemused < Sinatra::Application
   get "/stream/:id" do
-    #puts "stream_request: #{params[:id]}"
     track = Track[params[:id]]
-    #puts "retrieved/sending #{track.title}"
     response.headers['Content-Type'] = 'audio/mpeg'
     send_file "#{track.media_file.absolute_path}"
   end
