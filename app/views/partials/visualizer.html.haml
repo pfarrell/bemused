@@ -4,7 +4,7 @@
       .item-x3
         %canvas.visualizer
       .item
-        %input#refresh{type:"TEXT", value: "10", hidden: true}
+        %input#refresh{type:"TEXT", value: "10", }
     %audio#jp_audio_i{src:"http://localhost:9292/stream/10"}
  
 :javascript
@@ -45,15 +45,28 @@
   //  audio.play();
     canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
 
+    function randomNumber(limit) {
+      return Math.ceil(Math.random() * limit);
+    }
+
+    function randomColor(num) {
+      return 'rgb(' + randomNumber(255) + ',' + randomNumber(255) + ',' + randomNumber(255) + ')';
+    }
+
     //renderFrame();
-    function draw() {
+    function draw(iter) {
       //drawVisual = requestAnimationFrame(draw);
       var refresh = document.getElementById("refresh").value;
       analyser.getByteTimeDomainData(dataArray);
-      canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+      //canvasCtx.fillStyle = 'rgb(0, 0, 20)';
+      if(iter%100 == 0) {
+        canvasCtx.fillStyle = randomColor(iter);
+      }
         canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
-      canvasCtx.lineWidth = 2;
-        canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+      canvasCtx.lineWidth = 1.8;
+      if(iter%1==0) {
+        canvasCtx.strokeStyle = randomColor(iter);
+      }
 
       canvasCtx.beginPath();
 
@@ -76,8 +89,9 @@
       canvasCtx.stroke();
       //draw();
       if(visualization_enabled) {
-        window.setTimeout(function() {requestAnimationFrame(draw);}, refresh);
+        window.setTimeout( function() { requestAnimationFrame( function() { draw(++iter); })}, refresh );
       }
     }
-    window.setTimeout(function() {requestAnimationFrame(draw);}, 10);
+    
+      window.setTimeout( function() { requestAnimationFrame( function() { draw(0); })}, refresh);
   }
