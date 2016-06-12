@@ -59,7 +59,7 @@
       var refresh = document.getElementById("refresh").value;
       analyser.getByteTimeDomainData(dataArray);
       //canvasCtx.fillStyle = 'rgb(0, 0, 20)';
-      if(iter%100 == 0) {
+      if(iter%250 == 0) {
         canvasCtx.fillStyle = randomColor(iter);
       }
         canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);

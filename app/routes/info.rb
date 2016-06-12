@@ -53,6 +53,13 @@ class Bemused < Sinatra::Application
     summary('artists', possible_names(name))
   end
 
+  get '/track/:id/summary' do
+    track = Track[params[:id]]
+    title = track.wikipedia || wp_fix(track.title)
+    summary('tracks', title)
+  end
+
+
   get "/summary/:category/:search" do
     lookup(params[:category], params[:search])
   end

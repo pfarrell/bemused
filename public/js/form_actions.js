@@ -42,11 +42,10 @@ function get(url, success, failure) {
 }
 
 
-function get_summary(url) {
+function get_summary(url, done) {
   $.getJSON(url)
   .done(function(data) {
-      $('#summary').append("<div class='summary'><p class='text'>" + data.summary + "</p>");
-      $('#summary').append("<div class='links'><a target='_' href='" + data.url + "'>wikipedia</a></div></div>");
+    done(data);
   })
   .fail(function(data) {
     summary_available=false;

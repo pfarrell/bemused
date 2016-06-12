@@ -16,6 +16,12 @@
 
     var myPlaylist;
     var summary_available=true;
+
+    function album_summary(data) {
+      $('#summary').append("<div class='summary'><p class='text'>" + data.summary + "</p>");
+      $('#summary').append("<div class='links'><a target='_' href='" + data.url + "'>wikipedia</a></div></div>");
+    }
+
     $(document).ready(function() {
       document.title = "#{album.title}";
       myPlaylist = new jPlayerPlaylist({
@@ -39,6 +45,7 @@
             if (index == current) {
               if(!scrubbing) {
                 $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
+                get_summary("#{url_for("/tracks")}" + get_id(obj.mp3) + 'summary');
               }
               $('.navbar-info').html("                                   \
                 <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
@@ -61,7 +68,7 @@
         <a href='#{url_for("/album/#{album.id}")}' title='#{album.title}'>      \
           <span class='album-title'>#{shorten album.title, 20}</span> \
         </a>");
-      get_summary("#{url_for("/album/#{album.id}/summary")}");
+      get_summary("#{url_for("/album/#{album.id}/summary")}", album_summary);
     });
 
 
