@@ -22,6 +22,10 @@
       $('#summary').append("<div class='links'><a target='_' href='" + data.url + "'>wikipedia</a></div></div>");
     }
 
+    function get_id(str) {
+      return str.substring(str.lastIndexOf('/'));
+    }
+
     $(document).ready(function() {
       document.title = "#{album.title}";
       myPlaylist = new jPlayerPlaylist({
@@ -45,7 +49,7 @@
             if (index == current) {
               if(!scrubbing) {
                 $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
-                get_summary("#{url_for("/tracks")}" + get_id(obj.mp3) + 'summary');
+                get_summary("#{url_for("/track")}" + get_id(obj.mp3) + '/summary');
               }
               $('.navbar-info').html("                                   \
                 <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
