@@ -8,6 +8,10 @@ class Bemused < Sinatra::Application
     ["#{name} (band)", "#{name} (singer)", name]
   end
 
+  def possible_songs(title)
+    [title]
+  end
+
   def summary(category, searches)
     searches.each do |search|
       summary = lookup(category, search)
@@ -56,7 +60,7 @@ class Bemused < Sinatra::Application
   get '/track/:id/summary' do
     track = Track[params[:id]]
     title = track.wikipedia || wp_fix(track.title)
-    summary('tracks', title)
+    summary('tracks', possible_songs(title))
   end
 
 
