@@ -9,6 +9,14 @@
   keypress_enable=false;
   summary_loaded=false;
   images_loaded=false;
+
+  function summary_done(data) {
+    $('#summary').append("<div class='summary'><p class='text'>" + data.summary + "</p>");
+    $('#summary').append("<div class='links'><a target='_' href='" + data.url + "'>wikipedia</a></div></div>");
+    summary_loaded = true;
+    masonrize();
+  }
+
   $(document).attr("title", "#{artist.name}");
   $('.navbar-info').html("<span class='artist-title'>#{artist.name}</span>");
   var container = document.querySelector('.albums');
@@ -23,7 +31,7 @@
   });
 
   $(document).ready(function() {
-    get_summary("#{url_for("/artist/#{artist.id}/summary")}");
+    get_summary("#{url_for("/artist/#{artist.id}/summary")}", summary_done);
     summary_loaded = true;
     masonrize();
   });
