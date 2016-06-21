@@ -43,8 +43,11 @@ $(document).keydown(function(event) {
       toggle_visible($('#jp_container_1'));
       toggle_visible($('#nav'));
       toggle_visible($('#visualization'));
-      if(summary_available) {
+      if(albums_summary_available) {
         toggle_visible($('#summary'));
+      }
+      if(track_summary_available) {
+        toggle_visible($('#track_summary'));
       }
       break;
     case 83: //s

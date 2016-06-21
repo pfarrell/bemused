@@ -42,13 +42,14 @@ function get(url, success, failure) {
 }
 
 
-function get_summary(url, done) {
+function get_summary(url, done, indicator, summary_elem) {
   $.getJSON(url)
   .done(function(data) {
+    $(summary_elem).fadeIn();
     done(data);
   })
   .fail(function(data) {
-    summary_available=false;
-    $('#summary').fadeOut();
+    indicator=false;
+    $(summary_elem).fadeOut();
     });
 }

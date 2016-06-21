@@ -93,10 +93,11 @@
       //canvasCtx.fillStyle = 'rgb(0, 0, 20)';
 
       //mutate background color
-      var next = formatColor(mutateColor(canvas.fillStyle));
+      //var next = formatColor(mutateColor(canvas.fillStyle));
+      var next = canvasCtx.fillStyle;
 
       if(nextColor == canvasCtx.fillStyle) {
-        nextColor = formatColor(randomNumbers(3, 255));
+        //nextColor = formatColor(randomNumbers(3, 255));
       }else {
         canvasCtx.fillStyle = next;
       }
@@ -104,7 +105,7 @@
       canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
       canvasCtx.lineWidth = 1.8;
       if(iter%1==0) {
-        canvasCtx.strokeStyle = randomColor(iter);
+        //canvasCtx.strokeStyle = randomColor(iter);
       }
 
       canvasCtx.beginPath();

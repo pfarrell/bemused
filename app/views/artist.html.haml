@@ -31,7 +31,7 @@
   });
 
   $(document).ready(function() {
-    get_summary("#{url_for("/artist/#{artist.id}/summary")}", summary_done);
+    get_summary("#{url_for("/artist/#{artist.id}/summary")}", summary_done, summary_loaded, "#summary");
     summary_loaded = true;
     masonrize();
   });

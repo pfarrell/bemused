@@ -86,7 +86,8 @@ body {
     padding-right:0;
       padding-left:0;
 }
-#summary {
+
+.summary {
   padding: 1em;
   background-color:#e7e7e7;
   border-radius: 1em;
