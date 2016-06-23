@@ -44,69 +44,17 @@
     var dataArray = new Uint8Array(bufferLength);
     var nextColor = null;
     
-    canvasCtx.fillStyle = 'rgb(20,20,20)';
+    canvasCtx.fillStyle = 'rgb(255,255,120)';
     canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
-
-    function randomNumber(limit) {
-      return Math.ceil(Math.random() * limit);
-    }
-
-    function randomNumbers(count, limit) {
-      var ret = new Array();
-      for(var i = 0; i<count; i++) {
-        ret.push(randomNumber(limit));
-      }
-
-    function formatColor(nums) {
-      return 'rgb(' + nums[0] + ',' + nums[1] + ',' + nums[2] + ')';
-    }
-
-    function parseColor(color) {
-      var regex = 'rgb\(([0-9]*),([0-9]*),([0-9]*)\)'
-      var matches = regex.exec(color);
-      var ret = new Array();
-      for(var i = 0; i<matches.length; i++) {
-        ret.push(matches[i]);
-      }
-      return ret;
-    }
-
-    function mutateColor(currentColor, target) {
-      var current = parseColor(currentColor);
-      for(var i = 0; i<current.length; i++) {
-        if(current[i] == target[i]) {
-          continue;
-        }else if(current[i] < target[i]) { 
-          current[i] += 1; 
-        }else
-          current[i] -= 1;
-        }
-      }
-      return current;
-    }
 
     //renderFrame();
     function draw(iter) {
       //drawVisual = requestAnimationFrame(draw);
       var refresh = document.getElementById("refresh").value;
       analyser.getByteTimeDomainData(dataArray);
-      //canvasCtx.fillStyle = 'rgb(0, 0, 20)';
 
-      //mutate background color
-      //var next = formatColor(mutateColor(canvas.fillStyle));
-      var next = canvasCtx.fillStyle;
-
-      if(nextColor == canvasCtx.fillStyle) {
-        //nextColor = formatColor(randomNumbers(3, 255));
-      }else {
-        canvasCtx.fillStyle = next;
-      }
-        
       canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
-      canvasCtx.lineWidth = 1.8;
-      if(iter%1==0) {
-        //canvasCtx.strokeStyle = randomColor(iter);
-      }
+      canvasCtx.lineWidth = 2;
 
       canvasCtx.beginPath();
 
@@ -133,5 +81,5 @@
       }
     }
     
-      window.setTimeout( function() { requestAnimationFrame( function() { draw(0); })}, refresh);
+    window.setTimeout( function() { requestAnimationFrame( function() { draw(0); })}, refresh);
   }
