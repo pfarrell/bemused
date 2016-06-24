@@ -404,4 +404,8 @@ describe 'Bemused' do
     get "/album/#{nothing_album.id}/summary"
     expect(last_response).to be_ok
   end
+
+  it 'updates album tracks wholesale' do
+    patch "/admin/album/#{album.id}/tracks"
+  end
 end
