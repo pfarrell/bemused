@@ -50,10 +50,6 @@ class Bemused < Sinatra::Application
      Digest::MD5.hexdigest email.downcase.strip
   end
 
-  def authed?
-    return false
-  end
-
   configure do
     info = development? || test? ? MockWikipedia : ::Wikipedia
     email = development? || test? ? MockGmail : ::Gmail

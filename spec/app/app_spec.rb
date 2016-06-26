@@ -78,7 +78,8 @@ describe 'Bemused' do
   let(:artist) { Artist.find_or_create(name: "test_generated_artist") }
   let(:media_file) { MediaFile.find_or_create(absolute_path: "./spec/fixtures/test.mp3") }
   let(:nothing_album) {Album.new(title: "return nothing", artist: artist).save}
-
+  let(:user) {User.new(email: 'test@example.com').save}
+  let(:token) {Token.new(user: user, token: SecureRandom.hex).save}
   let(:track) {
     track=Track.find_or_create(title: "test_generated_track")
     track.media_file = media_file
@@ -124,6 +125,7 @@ describe 'Bemused' do
     it_behaves_like "a gettable route", "/random"
     it_behaves_like "a gettable route", "/surprise"
     it_behaves_like "a gettable route", "/tracks"
+    it_behaves_like "a gettable route", "/user/login"
 
     it_should_behave_like 'a redirected route', '/logs'
 
@@ -337,6 +339,11 @@ describe 'Bemused' do
     expect(last_response).to be_ok
   end
 
+  it "lookup up track summaries on wikipedia" do
+    get "/track/#{track.id}/summary"
+    expect(last_response).to be_ok
+  end
+
   it "looks up summaries on wikipedia" do
     get "/summary/test/test"
     expect(last_response).to be_ok
@@ -407,5 +414,10 @@ describe 'Bemused' do
 
   it 'updates album tracks wholesale' do
     patch "/admin/album/#{album.id}/tracks"
+  end
+
+  it 'authenticates from a token' do
+    rack_mock_session.cookie_jar['bmc'] = token.token
+    get '/'
   end
 end
