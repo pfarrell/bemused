@@ -9,7 +9,7 @@ describe MockWikipedia do
 end
 
 describe MockPage do
-  let(:page) { Mockpage.new }
+  let(:page) { MockPage.new }
   context "#summary" do
     it "has a summary"do
       expect(page.summary).to eq("page summary")
@@ -18,7 +18,7 @@ describe MockPage do
 
   context "#fullurl" do
     it "has a url"do
-      expect(page.fullurl).to eq("https://example.com")
+      expect(page.fullurl).to eq("http://example.com")
     end
   end
 end
