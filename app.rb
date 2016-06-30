@@ -54,7 +54,7 @@ class Bemused < Sinatra::Application
     info = development? || test? ? MockWikipedia : ::Wikipedia
     email = development? || test? ? MockGmail : ::Gmail
     set :info, Info.new(info)
-    set :email, Email.new(email)
+    set :email, Messaging.new(email)
   end
 
   before do

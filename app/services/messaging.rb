@@ -1,4 +1,4 @@
-class Email
+class Messaging
   attr_accessor :klass
 
   def initialize(klass)

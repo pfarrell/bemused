@@ -3,5 +3,5 @@ require 'nokogiri'
 require 'gmail'
 
 require 'services/info'
-require 'services/messaging'
+require './app/services/messaging'
 
