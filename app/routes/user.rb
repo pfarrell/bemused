@@ -31,7 +31,7 @@ class Bemused < Sinatra::Application
       response.set_cookie(:bmc, value: params[:token], path: "/", expires: Time.now + 3600 * 24 * 365 * 10)
       haml :index, locals: {artists: random_artists(66)}
     else
-      raise "Token not found #{token.token}"
+      raise "Token not found #{params[:token]}"
     end
   end
 
@@ -43,6 +43,6 @@ class Bemused < Sinatra::Application
     user.add_token(token)
     user.save
     settings.email.send_login(user.email, get_token_url(request, token.token))
-    user.to_json
+    {user: user, token: token}.to_json
   end
 end
