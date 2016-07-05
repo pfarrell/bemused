@@ -8,6 +8,8 @@ describe User do
     post "/user", {email: email, username: username}
   end
 
+  it_behaves_like "a gettable route", "/user/new"
+
   it "creates users" do
     json= JSON.parse(last_response.body)
     user = json['user']
@@ -18,11 +20,19 @@ describe User do
     expect(token['token']).to_not be_nil
   end
 
-  context "#login" do
+  it "logs in via post" do
+    post "/user/login", {email: email}
+  end
 
-    before do
-      post "/user", {email: email, username: username}
+  it "fails logins via post" do
+    begin
+      post "/user/login", {email: "#{email}blah"}
+    rescue Exception=>ex
+      expect(ex).to be_a(RuntimeError)
     end
+  end
+
+  context "#login" do
 
     it "logs in users with valid tokens" do
       json= JSON.parse(last_response.body)
