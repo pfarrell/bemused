@@ -23,6 +23,8 @@ search bar is a command bar
 
 works on mobile, built on bootstrap
 
+Clicking on images takes you to admin pages
+
 #KeyBindings
 this project supports many keyboard shortcuts for controlling the app.
 
