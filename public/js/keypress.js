@@ -42,7 +42,6 @@ $(document).keydown(function(event) {
     case 80: //p
       toggle_visible($('#jp_container_1'));
       toggle_visible($('#nav'));
-      toggle_visible($('#visualization'));
       if(albums_summary_available) {
         toggle_visible($('#summary'));
       }
@@ -57,6 +56,9 @@ $(document).keydown(function(event) {
       break;
     case 82: //r
       myPlaylist.shuffle();
+      break;
+    case 86: //v
+      toggle_visible($('#visualization'));
       break;
     case 37: //left arrow
       myPlaylist.previous();
