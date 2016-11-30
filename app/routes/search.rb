@@ -13,10 +13,10 @@ class Bemused < Sinatra::Application
 
   %w(get post).each do |meth|
     send meth, "/search" do
-      redirect handle_direct unless params[:lookup_type].nil? || params[:lookup_type].empty?
       query = params[:q]
       redirect(url_for("/#{AutoComplete.translate(query[1..-1])}")) if query =~ /^\//
       redirect(url_for("/")) if query.nil? || query.length < 2
+      redirect handle_direct unless params[:lookup_type].nil? || params[:lookup_type].empty?
       albums = Album.where(Sequel.ilike(:title, "%#{query}%"))
       artists = Artist.where(Sequel.ilike(:name, "%#{query}%"))
       playlists = Playlist.where(Sequel.ilike(:name, "%#{query}%"))
