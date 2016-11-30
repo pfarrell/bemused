@@ -63,6 +63,7 @@
     onSelect: function (suggestion) {
       $('#lookup_type')[0].value = suggestion.type;
       $('#lookup_id')[0].value = suggestion.data;
+      $('#search')[0].submit();
     }
   });
 
