@@ -33,7 +33,9 @@
         %a.navbar-brand{href:"#{url_for("/")}"}
           Bemused
       .collapse.navbar-collapse#navbar-collapse
-        %form.navbar-form.navbar-left{id: "search", action: "#{url_for("/search")}", method: "GET"}
+        %form.navbar-form.navbar-left{id: "search", action: "#{url_for("/search")}", method: "POST"}
+          %input{type:"Hidden", id: "lookup_type", name: "lookup_type"}
+          %input{type:"Hidden", id: "lookup_id", name: "lookup_id"}
           .form-group
             %input.form-control{type: "TEXT", id: "q", name: "q", autofocus: true, placeholder: "Search"}
         %ul.nav.navbar-nav
@@ -53,6 +55,14 @@
     paramName: 'q',
     minChars: 3,
     lookupLimit: 50,
+    deferRequestBy: 100,
     autoSelectFirst: true,
+    beforeRender: function(container, suggestions) {
+      var i = 1;
+    },
+    onSelect: function (suggestion) {
+      $('#lookup_type')[0].value = suggestion.type;
+      $('#lookup_id')[0].value = suggestion.data;
+    }
   });
 
