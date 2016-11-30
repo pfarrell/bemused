@@ -31,22 +31,27 @@ class Bemused < Sinatra::Application
   end
 
   get "/livesearch" do
+    content_type :json
     AutoComplete.lookup(params["q"]).to_json
   end
 
   get "/searchtracks" do
+    content_type :json
     AutoComplete.tracks(params["q"]).to_json
   end
 
   get "/searchalbums" do
+    content_type :json
     AutoComplete.albums(params["q"]).to_json
   end
 
   get "/searchartists" do
+    content_type :json
     AutoComplete.artists(params["q"]).to_json
   end
 
   get '/searchtags' do
+    content_type :json
     AutoComplete.tags(params["q"]).to_json
   end
 
