@@ -3,7 +3,7 @@ class AutoComplete
   def self.lookup(query)
     res = {"suggestions"=> Artist.where(Sequel.ilike(:name, "%#{query}%")).all.select{|x| x.albums.count > 0}.map{|x| {"value"=>"😯  #{x.name}", "data"=> "#{x.id}", "type"=>"artist"}}}
     Album.where(Sequel.ilike(:title, "%#{query}%")).all.select{|x| x.tracks.count > 0}.each {|x| res["suggestions"] << {"value"=>"⨀  #{x.title}", "data"=> "#{x.id}", "type"=>"album"}}
-    Playlist.where(Sequel.ilike(:name, "%#{query}%")).all.each {|x| res["suggestions"] << {"value"=>"#{x.name}", "data"=> "#{x.id}", "type"=>"playlist"}}
+    Playlist.where(Sequel.ilike(:name, "%#{query}%")).all.each {|x| res["suggestions"] << {"value"=>"⁂  {x.name}", "data"=> "#{x.id}", "type"=>"playlist"}}
     ["/active",
      "/albums/recent",
      "/albums/words",
