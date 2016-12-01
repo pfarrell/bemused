@@ -17,8 +17,6 @@
     //document.getElementById("content").style.minHeight="900px";
 
     var myPlaylist;
-    var album_summary_available=true;
-    var track_summary_available=true;
 
     function album_summary(data) {
       $('#album_summary').append("<div class='summary'><p class='text'>" + data.summary + "</p>");
@@ -58,7 +56,7 @@
             if (index == current) {
               if(!scrubbing) {
                 $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
-                get_summary("#{url_for("/track")}" + get_id(obj.mp3) + '/summary', track_summary, track_summary_available, "#track_summary");
+                get_summary("#{url_for("/track")}" + get_id(obj.mp3) + '/summary', track_summary, "track_summary_available", "#track_summary");
               }
               $('.navbar-info').html("                                   \
                 <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
@@ -81,7 +79,7 @@
         <a href='#{url_for("/album/#{album.id}")}' title='#{album.title}'>      \
           <span class='album-title'>#{shorten album.title, 30}</span> \
         </a>");
-      get_summary("#{url_for("/album/#{album.id}/summary")}", album_summary, album_summary_available, "#album_summary");
+      get_summary("#{url_for("/album/#{album.id}/summary")}", album_summary, "album_summary_available", "#album_summary");
     });
 
 

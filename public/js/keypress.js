@@ -39,17 +39,10 @@ $(document).keydown(function(event) {
     case 191: // shift+backspace
       //dialog?
       break;
-    case 73: //i
-      if(album_summary_available) {
-        toggle_visible($('#album_summary'));
-      }
-      if(track_summary_available) {
-        toggle_visible($('#track_summary'));
-      }
-      break;
     case 80: //p
       toggle_visible($('#jp_container_1'));
       toggle_visible($('#nav'));
+      toggle_visible($('#visualization'));
       if(album_summary_available) {
         toggle_visible($('#album_summary'));
       }

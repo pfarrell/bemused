@@ -45,11 +45,12 @@ function get(url, success, failure) {
 function get_summary(url, done, indicator, summary_elem) {
   $.getJSON(url)
   .done(function(data) {
+    window[indicator]=true;
     $(summary_elem).fadeIn();
     done(data);
   })
   .fail(function(data) {
-    indicator=false;
+    window[indicator=false];
     $(summary_elem).fadeOut();
     });
 }
