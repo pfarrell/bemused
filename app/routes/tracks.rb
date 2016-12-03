@@ -6,23 +6,25 @@ class Bemused < Sinatra::Application
   get "/track/active" do
   end
 
-  get "/tracks" do
-    query = params[:q]
-    redirect(url_for("/#{query[1..-1]}")) if query =~ /^\//
-    redirect(url_for("/")) if query == ""
-    tracks = Track.where(Sequel.ilike(:title, "%#{query}%")) if !query.nil? && query.length > 1
-    album = Album.new
-    unless tracks.nil?
-      album.title = query
-      tracks.each_with_index do |track, i|
-        track.track_number = i + 1
-        album.tracks << track
+  %w(get post).each do |meth|
+    send meth, "/tracks" do
+      query = params[:q]
+      redirect(url_for("/#{query[1..-1]}")) if query =~ /^\//
+      redirect(url_for("/")) if query == ""
+      tracks = Track.where(Sequel.ilike(:title, "%#{query}%")) if !query.nil? && query.length > 1
+      album = Album.new
+      unless tracks.nil?
+        album.title = query
+        tracks.each_with_index do |track, i|
+          track.track_number = i + 1
+          album.tracks << track
+        end
       end
+      haml :tracks, locals: {
+        :tracks => tracks || [],
+        :album => album
+      }
     end
-    haml :tracks, locals: {
-      :tracks => tracks || [],
-      :album => album
-    }
   end
 
   get "/admin/track/:id" do
