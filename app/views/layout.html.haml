@@ -41,12 +41,6 @@
           %input{type:"Hidden", id: "lookup_id", name: "lookup_id"}
           .form-group
             %input.form-control{type: "TEXT", id: "q", name: "q", autofocus: true, placeholder: "Search"}
-        %ul.nav.navbar-nav
-          %li
-            %span.navbar-text.navbar-info
-        %ul.nav.navbar-nav.pull-right
-          = haml :'partials/logged_in', locals: {user: current_user}  if current_user
-          = haml :'partials/not_logged_in' if !current_user
     .container-fluid#content
       =yield
     %div.sp-bottom-sm.row#footer

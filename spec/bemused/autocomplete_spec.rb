@@ -32,17 +32,17 @@ describe AutoComplete do
 
   it 'returns albums' do
     album
-    expect(AutoComplete.lookup('t')['suggestions'].select{|x| x == {'value'=> 'test_generated_album'}}.size).to eq(1)
+    expect(AutoComplete.lookup('t')['suggestions'].select{|x| x['value'] == '⨀  test_generated_album'}.size).to eq(1)
   end
 
   it 'returns artists' do
     album
-    expect(AutoComplete.lookup('t')['suggestions'].select{|x| x == {'value'=> 'test_generated_artist'}}.size).to eq(1)
+    expect(AutoComplete.lookup('t')['suggestions'].select{|x| x['value'] == '😯  test_generated_artist'}.size).to eq(1)
   end
 
   it 'ignores artists without albums' do
     expect(Artist[artist.id].name).to eq(artist.name)
-    expect(AutoComplete.lookup('t')['suggestions'].select{|x| x == {'value'=> 'test_generated_artist'}}.size).to eq(0)
+    expect(AutoComplete.lookup('t')['suggestions'].select{|x| x['value'] == '😯  test_generated_artist'}.size).to eq(0)
   end
 
   context do
