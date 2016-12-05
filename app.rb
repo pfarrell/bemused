@@ -29,21 +29,33 @@ class Bemused < Sinatra::Application
   set :views, Proc.new { File.join(root, "app/views") }
   set :local_authority, 'http://192.168.0.47' # for Sinatra::LocalApp
 
-  def user_tags
-    request.cookies['tags'].nil? ? [] : request.cookies['tags'].split('&').map{|id| Tag[id] }
-  end
+  helpers do
+    def login_location
+      case ENV["RACK_ENV"] || "development"
+      when "development"
+        "http://localhost:9292/application/3/login"
+      when "production"
+        "https://patf.net/moth/application/3/login"
+      end
+    end
 
-  def context?
-    !user_tags.empty?
-  end
+    def user_tags
+      request.cookies['tags'].nil? ? [] : request.cookies['tags'].split('&').map{|id| Tag[id] }
+    end
 
-  def current_user
-    cookie = request.cookies["auth"]
-    cookie ? User.new(cookie) : nil
-  end
+    def context?
+      !user_tags.empty?
+    end
 
-  def gravatar_hash(email)
-     Digest::MD5.hexdigest email.downcase.strip
+    def current_user
+      cookie = request.cookies["auth"]
+      cookie ? User.new(cookie) : nil
+    end
+
+    def gravatar_hash(email)
+       Digest::MD5.hexdigest email.downcase.strip
+    end
+
   end
 
   configure do

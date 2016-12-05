@@ -1,6 +1,7 @@
 require 'sequel'
 require 'redis'
 require 'logger'
+require 'base64'
 
 $console = ENV['RACK_ENV'] == 'development' ? Logger.new(STDOUT) : nil
 DB = Sequel.connect(
@@ -33,3 +34,4 @@ require 'models/mock_wikipedia'
 require 'models/tag'
 require 'models/stat'
 require 'models/opinion'
+require 'models/user'
