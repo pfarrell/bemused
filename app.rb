@@ -38,12 +38,8 @@ class Bemused < Sinatra::Application
   end
 
   def current_user
-    if request.cookies['bmc'].nil?
-       nil
-    else
-      token = Token.find(token: request.cookies['bmc'])
-      token.nil? ? nil : token.user
-    end
+    cookie = request.cookies["auth"]
+    cookie ? User.new(cookie) : nil
   end
 
   def gravatar_hash(email)
@@ -52,9 +48,7 @@ class Bemused < Sinatra::Application
 
   configure do
     info = development? || test? ? MockWikipedia : ::Wikipedia
-    email = development? || test? ? MockGmail : ::Gmail
     set :info, Info.new(info)
-    set :email, Messaging.new(email)
   end
 
   before do
