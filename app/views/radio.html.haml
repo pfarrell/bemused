@@ -19,10 +19,10 @@
     {
       jPlayer: "#jquery_jplayer_1",
       cssSelectorAncestor: "#jp_container_1"
-    }, 
+    },
     [
       #{ playlist.track_list}
-    ], 
+    ],
     {
       swfPath: "http://patf.net/js",
       supplied: "mp3",
@@ -30,7 +30,7 @@
       playlistOptions: {
         enableRemoveControls: true
       }
-    });  
+    });
   });
 
   $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
@@ -39,6 +39,7 @@
       $.each(playlist, function (index, obj) {
           if (index == current) {
             $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
+            notify(obj);
             $('.navbar-info').html("                                   \
               <span class='track-title'>" + obj.title + "</span>");
             $(document).prop("title", obj.title);
@@ -51,7 +52,7 @@
       playlist = myPlaylist.playlist;
     if(current == playlist.length - 1) {
       $.ajax({
-        type: "GET", 
+        type: "GET",
         url: "#{url_for("/track/random")}",
         success: function(result) {append(myPlaylist, result);}
       });

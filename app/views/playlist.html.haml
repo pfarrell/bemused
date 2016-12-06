@@ -35,6 +35,7 @@
       $.each(playlist, function (index, obj) {
           if (index == current) {
             $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
+            notify(obj);
             $('.navbar-info').html("                                   \
               <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \
               <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}' title='#{playlist.name}'>      \
