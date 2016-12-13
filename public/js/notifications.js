@@ -15,7 +15,7 @@ function notify(msg) {
     Notification.requestPermission(function (permission) {
       // If the user accepts, let's create a notification
       if (permission === "granted") {
-        var notification = new Notification(msg);
+        var notification = new Notification("▶ " + msg.artist + " " + msg.title);
         setTimeout(notification.close.bind(notification), 4000);
       }
     });
