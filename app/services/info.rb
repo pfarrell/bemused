@@ -9,13 +9,15 @@ class Info
   end
 
   def retrieve(category, subject)
-    @cache[category][subject] = @klass.find(subject) unless @cache[category].has_key?(subject)
-    @cache[category][subject]
+    return @cache[category][subject] if @cache[category].has_key?(subject)
+    summary = @klass.find(subject)
+    @cache[category][subject] = summary unless summary.summary.nil?
+    summary
   end
 
   def summary(category, subject)
     s = retrieve(category, subject)
-    { summary: s.summary, url: s.fullurl }.to_json
+    s.summary.nil? ? nil : { summary: s.summary, url: s.fullurl }.to_json
   end
 
 end
