@@ -6,10 +6,10 @@ SimpleCov.start do
   require 'simplecov-badge'
   add_filter "/vendor/"
   add_filter "/spec/"
-  SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
+  SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
     SimpleCov::Formatter::HTMLFormatter,
     SimpleCov::Formatter::BadgeFormatter,
-  ]
+  ])
 end
 
 ENV['RACK_ENV'] = 'test'

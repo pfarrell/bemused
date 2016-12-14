@@ -20,11 +20,9 @@ gem 'unicorn'
 gem 'sinatra-presence', '~> 0.0.3'
 gem 'wikipedia-client'
 gem 'nokogiri'
-gem 'gmail'
 
 group :development do
   gem 'pry'
-  gem 'shotgun'
   gem 'simplecov'
   gem 'rspec'
   gem 'simplecov-badge'
