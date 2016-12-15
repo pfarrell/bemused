@@ -8,6 +8,10 @@
   .col-xs-12.col-md-offset-2.col-md-7.sp-top-sm.summary#album_summary
 .row
   .col-xs-12.col-md-offset-2.col-md-7.sp-top-sm.summary#track_summary
+-if current_user
+  .row
+    .col-xs-12.col.md-offset-2.col.md-7.sp-top-sm.favorites#favorites
+      =haml :"partials/favorites", locals: { tracks: album.tracks }
 
 :javascript
     document.getElementById("image").style.background="url('#{url_for "/images/albums/" + (album.image || "")}')";

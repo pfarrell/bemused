@@ -1,4 +1,8 @@
 class Bemused < Sinatra::Application
+  def track_from_params(params)
+    Track[params[:id]]
+  end
+
   get "/track/random" do
     Track.random.to_json
   end
@@ -28,17 +32,34 @@ class Bemused < Sinatra::Application
   end
 
   get "/admin/track/:id" do
-    haml :"admin/model", locals: {model: Track[params[:id]]}
+    haml :"admin/model", locals: {model: track_from_params(params)}
   end
 
   post "/admin/track/:id" do
     track = Track[params[:id]].merge_params(params)
     track.save
-    haml :"admin/model", locals: {model: Track[params[:id]]}
+    haml :"admin/model", locals: {model: track_from_params(params)}
+  end
+
+  post "/track/:id/favorite" do
+    content_type :json
+    track = track_from_params(params)
+    favorite = FavoriteTrack.find_or_create(target_id: track.id, user_id: current_user.id)
+    respond_to do |wants|
+      wants.json { favorite.to_json }
+    end
   end
 
   delete "/admin/track/:id" do
-    Track[params[:id]].destroy
+    track_from_params(params).destroy
+  end
+
+  delete '/track/:id/favorite' do
+    content_type :json
+    favorites = FavoriteTrack.where(user_id: current_user.id, target_id: params[:id]).map(&:destroy)
+    respond_to do |wants|
+      wants.json { favorites.to_json }
+    end
   end
 
   get "/tracks/words" do

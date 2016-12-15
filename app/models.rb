@@ -19,6 +19,7 @@ DB.pool.connection_validation_timeout = 300
 
 Sequel::Model.plugin :timestamps
 Sequel::Model.plugin :json_serializer
+#Sequel::Model.plugin :single_table_inheritance, :kind
 
 require 'models/editable'
 require 'models/track'
@@ -35,3 +36,4 @@ require 'models/tag'
 require 'models/stat'
 require 'models/opinion'
 require 'models/user'
+require 'models/favorite'

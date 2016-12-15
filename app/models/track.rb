@@ -41,6 +41,10 @@ class Track < Sequel::Model
     return "artists/#{self.artist.image_path}" unless self.artist.nil?
   end
 
+  def favorited?(user)
+    FavoriteTrack.where(user_id: user.id, target_id: self.id).count > 0
+  end
+
   def self.stats
     stats = Stat.new(self)
     stats.values["count"] = Track.count

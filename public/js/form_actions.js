@@ -15,6 +15,14 @@ function del(url) {
   });
 }
 
+function del(url, success_cb, failure_cb) {
+  $.ajax({
+    url: url,
+    method: 'delete',
+    success: success_cb,
+  });
+}
+
 function patch(form, url) {
   $.ajax( {
     url: url,
