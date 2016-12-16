@@ -2,7 +2,6 @@
   %form#track_favorites
     .track
       =haml :'partials/favorite', locals: {track: track}
-      =track.title
 :javascript
   function favorite_track(track_id) {
     var form=$(".track_favorites");

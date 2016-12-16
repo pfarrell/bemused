@@ -1,6 +1,6 @@
 -if track.favorited?(current_user)
-  %a{onClick: "javascript:unfavorite_track('#{track.id}')"}
+  %a{title: "meh #{track.title}", onClick: "javascript:unfavorite_track('#{track.id}')"}
     ♥
 -else
-  %a{onClick: "javascript:favorite_track('#{track.id}')"}
+  %a{title: "!!! #{track.title}", onClick: "javascript:favorite_track('#{track.id}')"}
     ♡
