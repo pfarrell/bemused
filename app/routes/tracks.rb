@@ -43,8 +43,12 @@ class Bemused < Sinatra::Application
 
   post "/track/:id/favorite" do
     content_type :json
-    track = track_from_params(params)
-    favorite = FavoriteTrack.find_or_create(target_id: track.id, user_id: current_user.id)
+    if current_user
+      track = track_from_params(params)
+      favorite = FavoriteTrack.find_or_create(target_id: track.id, user_id: current_user.id)
+    else
+      favorite = {}
+    end
     respond_to do |wants|
       wants.json { favorite.to_json }
     end
