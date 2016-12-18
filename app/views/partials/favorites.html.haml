@@ -1,7 +1,14 @@
--tracks.each do |track|
+-tracks.each_with_index do |track, idx|
   %form#track_favorites
-    .track
-      =haml :'partials/favorite', locals: {track: track}
+    -if idx == 0
+      .track_first
+        =haml :'partials/favorite', locals: {track: track}
+    -elsif idx == (tracks.size - 1)
+      .track_last
+        =haml :'partials/favorite', locals: {track: track}
+    -else
+      .track
+        =haml :'partials/favorite', locals: {track: track}
 :javascript
   function favorite_track(track_id) {
     var form=$(".track_favorites");
