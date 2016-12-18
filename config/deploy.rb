@@ -36,10 +36,10 @@ set :deploy_via, :remote_cache
 # set :default_env, { path: "/opt/ruby/bin:$PATH" }
 
 set :default_env, {
-  'PATH' => "/home/pfarrell/.rvm/rubies/ruby-2.3.1/bin:/home/pfarrell/.rvm/gems/ruby-2.3.1@global/bin:/home/pfarrell/.rvm/bin:$PATH",
-  'RUBY_VERSION' => 'ruby-2.3.1',
-  'GEM_HOME' => '/home/pfarrell/.rvm/gems/ruby-2.3.1@global',
-  'GEM_PATH' => '/home/pfarrell/.rvm/gems/ruby-2.3.1@global'
+  'PATH' => "/home/pfarrell/.rvm/rubies/ruby-2.3.0/bin:/home/pfarrell/.rvm/gems/ruby-2.3.0@global/bin:/home/pfarrell/.rvm/bin:$PATH",
+  'RUBY_VERSION' => 'ruby-2.3.0',
+  'GEM_HOME' => '/home/pfarrell/.rvm/gems/ruby-2.3.0@global',
+  'GEM_PATH' => '/home/pfarrell/.rvm/gems/ruby-2.3.0@global'
 }
 
 # Default value for keep_releases is 5
