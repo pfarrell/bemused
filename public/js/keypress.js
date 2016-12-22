@@ -40,7 +40,7 @@ $(document).keydown(function(event) {
       //dialog?
       break;
     case 80: //p
-      toggle_visible($('#jp_container_1'));
+      toggle_visible($('#player'));
       toggle_visible($('#nav'));
       toggle_visible($('#visualization'));
       if(album_summary_available) {

@@ -124,7 +124,6 @@ canvas {
 
 .favorites {
   margin-top: 81px;
-  padding-top: 5px;
   border-left: 1px solid #009be3;
   border-top: 1px solid #009be3;
   border-bottom: 1px solid #009be3;
@@ -136,27 +135,11 @@ canvas {
   background-color: rgb(204, 204, 204);
 }
 
-.track_first {
-  padding-left: 5px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid rgb(238, 238, 238);
-  cursor: pointer;
-  cursor: hand;
-}
-
-.track {
-  padding-left: 5px;
-  padding-top: 4px;
-  padding-bottom: 5px;
-  border-bottom: 1px solid rgb(238, 238, 238);
-  cursor: pointer;
-  cursor: hand;
-}
-
-.track_last {
+.track_favorites {
   padding-left: 5px;
   padding-top: 4px;
   padding-bottom: 5px;
   cursor: pointer;
   cursor: hand;
+  border-bottom: 1px solid rgb(238, 238, 238);
 }

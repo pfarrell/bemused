@@ -56,6 +56,9 @@ class Bemused < Sinatra::Application
        Digest::MD5.hexdigest email.downcase.strip
     end
 
+    def order_tracks(tracks)
+      tracks.sort_by{ |t| t.track_number.to_i }
+    end
   end
 
   configure do
