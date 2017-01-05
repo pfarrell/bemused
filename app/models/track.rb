@@ -1,5 +1,6 @@
 class Track < Sequel::Model
   include Editable
+  include Favoritable
 
   many_to_one :album
   one_to_one  :media_file
@@ -39,10 +40,6 @@ class Track < Sequel::Model
   def image
     return self.album.image_path unless self.album.nil? || self.album.image_path.nil? || self.album.image_path == ""
     return "artists/#{self.artist.image_path}" unless self.artist.nil?
-  end
-
-  def favorited?(user)
-    FavoriteTrack.where(user_id: user.id, target_id: self.id).count > 0
   end
 
   def self.stats

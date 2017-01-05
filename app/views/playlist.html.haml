@@ -1,5 +1,8 @@
 .row
   .col-xs-12.col-md-offset-2.col-sm-6.col-lg-4.sp-top-sm#player
+    -if current_user
+      .favorites
+        =haml :"partials/favorites", locals: { tracks: playlist.playlist_tracks }
     =haml :"partials/player", locals: { admin_url: "#{url_for("/admin/playlist/#{playlist.id}")}" }
 .row
   .col-xs-12.col-md-offset-2.col-sm-6.col-lg-4.sp-top-sm

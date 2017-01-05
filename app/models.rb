@@ -22,6 +22,7 @@ Sequel::Model.plugin :json_serializer
 #Sequel::Model.plugin :single_table_inheritance, :kind
 
 require 'models/editable'
+require 'models/favoritable'
 require 'models/track'
 require 'models/album'
 require 'models/media_file'

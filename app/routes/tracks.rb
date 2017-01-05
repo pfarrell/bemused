@@ -63,7 +63,7 @@ class Bemused < Sinatra::Application
     content_type :json
     favorites = FavoriteTrack.where(user_id: current_user.id, target_id: params[:id]).map(&:destroy)
     respond_to do |wants|
-      wants.json { favorites.to_json }
+      wants.json { favorites.first.to_json }
     end
   end
 

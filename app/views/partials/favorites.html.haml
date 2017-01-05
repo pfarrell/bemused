@@ -6,16 +6,21 @@
   function favorite_track(track_id) {
     var form=$(".track_favorites");
     var url = "#{url_for('/track/')}" + track_id + '/favorite';
-    return post(form, url);
+    return post(form, url, favorite_callback, failure_callback);
   }
 
   function favorite_callback(data) {
+    $("#fave_track_" + data.target_id).removeClass("hidden");
+    $("#unfave_track_" + data.target_id).addClass("hidden");
   }
 
   function unfavorite_callback(data) {
+    $("#unfave_track_" + data.target_id).removeClass("hidden");
+    $("#fave_track_" + data.target_id).addClass("hidden");
   }
 
   function failure_callback(data) {
+    alert(data);
   }
 
   function unfavorite_track(track_id) {

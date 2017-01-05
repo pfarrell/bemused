@@ -1,17 +1,9 @@
-function post(form, url) {
+function post(form, url, success_cb, failure_cb) {
   $.ajax( {
       url: url,
       data: form.serialize(),
       method: 'post',
-  })
-  .done(function(msg) {
-  });
-}
-
-function del(url) {
-  $.ajax({
-    url: url,
-    method: 'delete'
+      success: success_cb,
   });
 }
 
