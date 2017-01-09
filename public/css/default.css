@@ -136,9 +136,9 @@ canvas {
 }
 
 .track_favorites {
-  padding-left: 5px;
-  padding-top: 4px;
-  padding-bottom: 5px;
+  padding-left: 2px;
+  padding-top: 5px;
+  padding-bottom: 4px;
   cursor: pointer;
   cursor: hand;
   border-bottom: 1px solid rgb(238, 238, 238);
