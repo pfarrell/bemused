@@ -45,6 +45,17 @@ class Playlist < Sequel::Model
     playlist
   end
 
+  def self.favorites(size=10)
+    playlist = Playlist.new()
+    playlist.name = "Random Favorites"
+    playlist.image_path="nursury.jpg"
+    FavoriteTrack.order{Sequel.lit('RANDOM()')}.limit(size).each_with_index do |favorite, i|
+      favorite.track.track_number = i + 1
+      playlist.playlist_tracks << PlaylistTrack.new(track: favorite.track)
+    end
+    playlist
+  end
+
   def self.single(name)
     playlist = Playlist.new()
     playlist.name=(name)

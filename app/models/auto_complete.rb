@@ -7,6 +7,7 @@ class AutoComplete
     ["/active",
      "/albums/recent",
      "/albums/words",
+     "/favorites",
      "/logs",
      "/meta",
      "/newborns",
