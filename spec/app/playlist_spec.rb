@@ -34,6 +34,12 @@ describe Playlist do
     expect(last_response).to match(/Bemused/)
   end
 
+  it 'creates playlists of favorite tracks' do
+    get "/favorites"
+    expect(last_response).to be_ok
+    expect(last_response).to match(/Bemused/)
+  end
+
   it 'manages playlist tracks' do
     post "/playlist_track/#{playlist_track.id}", {order: 3}
     expect(PlaylistTrack[playlist_track.id].order).to eq(3)
