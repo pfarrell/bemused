@@ -11,12 +11,4 @@ class User
     @name = hsh[:name]
   end
 
-  def favorited?(obj)
-    klass = get_favorite_class(obj)
-    klass.where(target_id: obj.id)
-  end
-
-  def get_favorite_class(obj)
-    "Favorite#{obj.class}"
-  end
 end

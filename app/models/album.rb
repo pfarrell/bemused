@@ -14,9 +14,9 @@ class Album < Sequel::Model
       artist_name = track.artist.nil? ? track.album.artist.name : track.artist.name
       %Q(
         {
-          title: "#{track_number}. #{track.title}",
+          title: "#{track_number}. #{track.title.shrink(40)}",
           mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
-          artist: "#{artist_name}"
+          artist: "#{artist_name.shrink(25)}"
         }
       )
     end

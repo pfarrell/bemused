@@ -13,6 +13,7 @@ require 'wikipedia'
 require 'digest'
 
 
+require 'modules'
 require 'models'
 require 'routes'
 require 'services'
