@@ -61,7 +61,10 @@ class Bemused < Sinatra::Application
 
   delete '/track/:id/favorite' do
     content_type :json
-    favorites = FavoriteTrack.where(user_id: current_user.id, target_id: params[:id]).map(&:destroy)
+    favorites = [{}]
+    if current_user
+      favorites = FavoriteTrack.where(user_id: current_user.id, target_id: params[:id]).map(&:destroy)
+    end
     respond_to do |wants|
       wants.json { favorites.first.to_json }
     end

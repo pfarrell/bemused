@@ -135,6 +135,39 @@ describe 'Bemused' do
 
   end
 
+  context 'unauthenticated user' do
+
+    it "prevents users from favoriting tracks" do
+      post("/track/#{track.id}/favorite")
+      expect(FavoriteTrack.where(track: track).count).to eq(0)
+    end
+
+    it "prevents users from unfavoriting tracks" do
+      delete("/track/#{track.id}/favorite")
+    end
+  end
+
+  context 'authenticated user' do
+
+    let(:token) { "eyJ1c2VyX2lkIjoiMzZmNDExOWZhYjk2IiwidG9rZW4iOiIzMmEzZjA1N2Y0MmMzMzFkZDE0NzQwNDFkYzhmMDMyMCIsInByb2ZpbGVfdXJsIjoiaHR0cDovL2xvY2FsaG9zdDo5MjkyL3VzZXIvMSIsImxvZ291dF91cmwiOiJodHRwOi8vbG9jYWxob3N0OjkyOTIvYXBwbGljYXRpb24vMy9sb2dvdXQiLCJuYW1lIjoiUGF0cmljayJ9" }
+    let(:user) { User.new(token) }
+
+    before do
+      rack_mock_session.set_cookie "auth=#{token}"
+      post("/track/#{track.id}/favorite")
+    end
+
+    it "lets authenticated users favorite tracks" do
+      expect(FavoriteTrack.where(track: track).count).to eq(1)
+      expect(track.favorited?(user)).to eq(true)
+    end
+
+    it "prevents users from unfavoriting tracks" do
+      delete("/track/#{track.id}/favorite")
+      expect(FavoriteTrack.where(track: track).count).to eq(0)
+    end
+  end
+
   it "has a logs route" do
     30.times do
       get "/log/#{track.id}"
@@ -205,6 +238,14 @@ describe 'Bemused' do
   it "streams music" do
     get "/stream/#{track.id}"
     expect(last_response).to be_ok
+  end
+
+  it "has a search route" do
+    Artist.new(name: "wax lips").save
+    Album.new(title: "waxing moon").save
+    get "/search?q=wax&lookup_type=artist"
+    expect(last_response).to be_redirect
+    expect(last_response.headers['Location']).to match(/artist\//)
   end
 
   it "has a search route" do
