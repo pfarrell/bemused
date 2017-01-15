@@ -8,6 +8,6 @@ public/libs
 public/media
 .byebug_history
 .bundle/*
-.bundle/config
+/.bundle/config
 coverage/**/*
 !coverage/coverage-badge.png
