@@ -1,3 +1,10 @@
+GIT
+  remote: git@github.com:matthew342/simplecov-badge.git
+  revision: 23ebef1979912fb3955cb0c00f3c48ec7584cc4b
+  branch: master
+  specs:
+    simplecov-badge (2.0.3)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -74,7 +81,6 @@ GEM
       docile (~> 1.1.0)
       json (>= 1.8, < 3)
       simplecov-html (~> 0.10.0)
-    simplecov-badge (2.0.2)
     simplecov-html (0.10.0)
     sinatra (1.4.7)
       rack (~> 1.5)
@@ -126,7 +132,7 @@ DEPENDENCIES
   sequel
   sequel_pg
   simplecov
-  simplecov-badge
+  simplecov-badge!
   sinatra
   sinatra-contrib
   sinatra-presence (~> 0.0.3)
