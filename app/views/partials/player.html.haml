@@ -48,7 +48,7 @@
       %span
         Update Required
       To play the media you will need to either update your browser to a recent version
-  -unless admin_url.nil?
+  -unless !current_user || admin_url.nil?
     .edit
       %a.item{href: "#{admin_url}" }
         Edit
