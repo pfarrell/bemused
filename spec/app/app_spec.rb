@@ -137,6 +137,8 @@ describe 'Bemused' do
 
   context 'unauthenticated user' do
 
+    let(:prod_login_url) { 'https://patf.net/moth/application/3/login' }
+
     it "prevents users from favoriting tracks" do
       post("/track/#{track.id}/favorite")
       expect(FavoriteTrack.where(track: track).count).to eq(0)
@@ -144,6 +146,14 @@ describe 'Bemused' do
 
     it "prevents users from unfavoriting tracks" do
       delete("/track/#{track.id}/favorite")
+    end
+
+    it 'has a login link' do
+      curr_env = ENV['RACK_ENV']
+      ENV['RACK_ENV'] = 'production'
+      get('/')
+      expect(last_response.body).to match(/#{prod_login_url}/)
+      ENV['RACK_ENV'] = curr_env
     end
   end
 
@@ -166,6 +176,17 @@ describe 'Bemused' do
       delete("/track/#{track.id}/favorite")
       expect(FavoriteTrack.where(track: track).count).to eq(0)
     end
+
+    it 'has a link for the user profile' do
+      get('/')
+      expect(last_response.body).to match(/#{user.name}/)
+    end
+
+    it 'gets favorites for albums' do
+      get "/album/#{album.id}"
+      expect(last_response.body).to match(/#{user.name}/)
+    end
+
   end
 
   it "has a logs route" do

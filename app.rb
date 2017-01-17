@@ -33,7 +33,7 @@ class Bemused < Sinatra::Application
   helpers do
     def login_location
       case ENV["RACK_ENV"] || "development"
-      when "development"
+      when "development", "test"
         "http://localhost:9292/application/3/login"
       when "production"
         "https://patf.net/moth/application/3/login"
@@ -51,10 +51,6 @@ class Bemused < Sinatra::Application
     def current_user
       cookie = request.cookies["auth"]
       cookie ? User.new(cookie) : nil
-    end
-
-    def gravatar_hash(email)
-       Digest::MD5.hexdigest email.downcase.strip
     end
 
     def order_tracks(tracks)
