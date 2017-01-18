@@ -4,7 +4,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/playlists" do
-    haml :playlists, locals: {playlists: Playlist.all}
+    haml :playlists, locals: {playlists: Playlist.where(auto_generated: nil).all}
   end
 
   get "/top" do

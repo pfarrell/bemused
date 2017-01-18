@@ -26,6 +26,7 @@ class Playlist < Sequel::Model
   def self.surprise(opts={})
     size = opts[:size]&.to_i || 10
     playlist = opts[:persist] ? Playlist.create : Playlist.new
+    playlist.auto_generated = true
     playlist.name = "Surprise!!"
     playlist.image_path ="shells.jpg"
     Track.order{Sequel.lit('RANDOM()')}.limit(size).each_with_index do |track, i|
@@ -50,6 +51,7 @@ class Playlist < Sequel::Model
   def self.favorites(opts={})
     size = opts[:size]&.to_i || 10
     playlist = opts[:persist] ? Playlist.create : Playlist.new
+    playlist.auto_generated = true
     playlist.name = "Random Favorites"
     playlist.image_path="nursury.jpg"
     FavoriteTrack.order{Sequel.lit('RANDOM()')}.limit(size).each_with_index do |favorite, i|
