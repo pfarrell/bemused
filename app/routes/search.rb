@@ -61,7 +61,12 @@ class Bemused < Sinatra::Application
   end
 
   get "/surprise" do
-    haml :playlist, locals: {playlist: Playlist.surprise(10)}
+    playlist = Playlist.surprise(size: 20, persist: true)
+    redirect( url_for("/surprise/#{playlist.id}") )
+  end
+
+  get "/surprise/:id" do
+    haml :playlist, locals: {playlist: Playlist.surprise(size: 20, persist: true)}
   end
 
   get "/track_paths/:search" do
