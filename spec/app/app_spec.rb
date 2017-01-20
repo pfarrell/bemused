@@ -121,7 +121,6 @@ describe 'Bemused' do
     it_behaves_like "a gettable route", "/playlists"
     it_behaves_like "a gettable route", "/newborns"
     it_behaves_like "a gettable route", "/random"
-    it_behaves_like "a gettable route", "/surprise"
     it_behaves_like "a gettable route", "/tracks"
 
     it_should_behave_like 'a redirected route', '/logs'
