@@ -15,7 +15,7 @@ describe Playlist do
   let(:playlist) { Playlist.new(name: 'test_playlist').save }
   let(:playlist_track) { PlaylistTrack.new(track: track, playlist: playlist).save }
   let(:surprise) { Playlist.surprise(persist: true) }
-  let(:surprise) { Playlist.favorites(persist: true) }
+  let(:favorites) { Playlist.favorites(persist: true) }
 
   let(:log) {
     get "/log/#{track.id}"
