@@ -56,6 +56,22 @@ class Bemused < Sinatra::Application
     def order_tracks(tracks)
       tracks.sort_by{ |t| t.track_number.to_i }
     end
+
+    def resumeable?(location)
+      patterns = [
+        /^\/$/,
+        /^\/resume$/,
+        /\/summary$/,
+        /\/stream\//,
+        /\/log\//,
+        /\/images\//,
+        /^\/livesearch$/,
+        /^\/search$/,
+        /\/favorite$/
+      ]
+      unioned_regex = Regexp.union(patterns)
+      not location.match(unioned_regex)
+    end
   end
 
   configure do
@@ -66,6 +82,7 @@ class Bemused < Sinatra::Application
   before do
     #response.set_cookie(:bmc, value: SecureRandom.uuid, expires: Time.now + 3600 * 24 * 365 * 10) if request.cookies["bmc"].nil?
     @tags = user_tags
+    Resume.log_location(current_user.id, request.path) if current_user && resumeable?(request.path)
   end
 
   not_found do
