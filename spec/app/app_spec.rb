@@ -124,6 +124,7 @@ describe 'Bemused' do
     it_behaves_like "a gettable route", "/tracks"
 
     it_should_behave_like 'a redirected route', '/logs'
+    it_should_behave_like 'a redirected route', '/resume'
 
     it_behaves_like "a search route", "/livesearch?q=t"
     it_behaves_like "a search route", "/searchalbums"
@@ -165,6 +166,8 @@ describe 'Bemused' do
       rack_mock_session.set_cookie "auth=#{token}"
       post("/track/#{track.id}/favorite")
     end
+
+    it_should_behave_like 'a redirected route', '/resume'
 
     it "lets authenticated users favorite tracks" do
       expect(FavoriteTrack.where(track: track).count).to eq(1)
