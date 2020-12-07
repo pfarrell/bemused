@@ -4,7 +4,7 @@ require 'sinatra'
 require 'sinatra/url_for'
 require 'sinatra/presence'
 require 'rack/mobile-detect'
-require 'sinatra/respond_to'
+require 'sinatra/respond_with'
 require 'sinatra/cookies'
 require 'securerandom'
 require 'haml'
@@ -22,7 +22,7 @@ class Bemused < Sinatra::Application
   helpers Sinatra::UrlForHelper
   helpers Sinatra::Cookies
   use Rack::MobileDetect
-  register Sinatra::RespondTo
+  register Sinatra::RespondWith
   register Sinatra::Presence
 
   enable :sessions
