@@ -1,0 +1,21 @@
+-users.each do |user|
+  %a.item{href: "#{url_for("/admin/user/#{user.id}")}"}
+    "#{user.username}"
+%form{method: "POST", action:"#{url_for("/admin/users/new")}"}
+  .input-group.input-group-lg
+    %span.input-group-addon
+      New User
+    %input.form-control{type:"text", name:"name"}
+  .submit
+    %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
+  
+:javascript
+  var container = document.querySelector('#content');
+  var msnry = new Masonry( container, {
+    // options
+    columnWidth: 200,
+    itemSelector: '.item'
+  });
+  imagesLoaded(container, function() {
+    msnry.layout();
+  });

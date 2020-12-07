@@ -19,7 +19,10 @@ redis = Redis.new
 
 #while(redis.llen('bemused:incoming') > 0)
 while(true)
+  require 'byebug'
+  byebug;1
   list, json = redis.blpop('bemused:incoming')
+  byebug;1
   hsh = JSON.parse(json)
   mp3 = Mp3.new(hsh["file_name"])
 
