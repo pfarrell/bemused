@@ -18,8 +18,9 @@
   });
 
   function visualize(audio) {
+    console.log("visualize called");
     visualization_enabled = true;
-    var ctx = new AudioContext();
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
     //var audio = $("audio#jp_audio_i")[0];
     var audioSrc = ctx.createMediaElementSource(audio);
     var analyser = ctx.createAnalyser();
@@ -31,7 +32,7 @@
     var WIDTH = canvas.width;
     var HEIGHT = canvas.height;
 
-    analyser.fftSize = 2048;
+    analyser.fftSize = 256;
 
     // we have to connect the MediaElementSource with the analyser 
     audioSrc.connect(analyser);
@@ -47,38 +48,27 @@
     canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
 
     //renderFrame();
-    function draw(iter) {
-      //drawVisual = requestAnimationFrame(draw);
-      var refresh = document.getElementById("refresh").value;
-      analyser.getByteTimeDomainData(dataArray);
+    console.log("draw called");
+    //drawVisual = requestAnimationFrame(draw);
+    analyser.getByteTimeDomainData(dataArray);
 
+    canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
+
+    var drawAlt = function() {
+      drawVisual = requestAnimationFrame(drawAlt);
+      analyser.getByteFrequencyData(dataArray);
+      canvasCtx.fillStyle='rgb(0,0,0)';
       canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
-      canvasCtx.lineWidth = 2;
 
-      canvasCtx.beginPath();
-
-      var sliceWidth = WIDTH * 1.0 / bufferLength;
+      var barWidth=(WIDTH / bufferLength) * 2.5;
+      var barHeight;
       var x = 0;
-      for(var i = 0; i < bufferLength; i++) {
-   
-        var v = dataArray[i] / 128.0;
-        var y = v * HEIGHT/2;
-
-        if(i === 0) {
-          canvasCtx.moveTo(x, y);
-        } else {
-          canvasCtx.lineTo(x, y);
-        }
-
-        x += sliceWidth;
+      for(var i =0; i<bufferLength; i++) {
+        barHeight = dataArray[i];
+        canvasCtx.fillStyle='rgb(' + (barHeight+100) + ',75,75)';
+        canvasCtx.fillRect(x,HEIGHT-barHeight/2, barWidth, barHeight/2);
+        x+=barWidth + 1;
       }
-      canvasCtx.lineTo(canvas.width, canvas.height/2);
-      canvasCtx.stroke();
-      //draw();
-      if(visualization_enabled) {
-        window.setTimeout( function() { requestAnimationFrame( function() { draw(++iter); })}, refresh );
-      }
-    }
-    
-    window.setTimeout( function() { requestAnimationFrame( function() { draw(0); })}, refresh);
+    };
+    drawAlt();
   }
