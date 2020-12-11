@@ -1,5 +1,3 @@
-#Bemused  <img src="https://raw.githubusercontent.com/pfarrell/bemused/master/coverage/coverage-badge.png" align="right" height="25" >
-
 A simple sinatra based media library
 
 search bar is a command bar

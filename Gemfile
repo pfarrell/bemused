@@ -26,7 +26,6 @@ group :development do
   gem 'pry'
   gem 'simplecov'
   gem 'rspec'
-  gem 'simplecov-badge', git: 'git@github.com:matthew342/simplecov-badge.git', branch: 'master'
   gem 'byebug'
   gem 'test-unit'
 end
