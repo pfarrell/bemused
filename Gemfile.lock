@@ -97,8 +97,6 @@ GEM
       tilt (~> 2.0)
     sinatra-presence (0.0.4)
       sinatra
-    sinatra-respond_to (0.4.0)
-      sinatra (>= 0.9.4)
     sshkit (1.21.1)
       net-scp (>= 1.1.2)
       net-ssh (>= 2.8.0)
@@ -138,7 +136,6 @@ DEPENDENCIES
   sinatra
   sinatra-contrib
   sinatra-presence (>= 0.0.4)
-  sinatra-respond_to
   test-unit
   unicorn
   wikipedia-client
