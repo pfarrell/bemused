@@ -1,5 +1,5 @@
 # config valid only for Capistrano 3.1
-lock '3.4.1'
+lock '3.14.1'
 
 set :application, 'bemused'
 set :repo_url, 'git@github.com:pfarrell/bemused.git'
@@ -12,9 +12,6 @@ ask :branch, proc { `git rev-parse --abbrev-ref HEAD`.chomp }.call
 set :deploy_to, '/var/www/bemused'
 set :rvm_map_bins, %w{bundle gem rake ruby}
 set :rvm_type, :auto
-
-# Default value for :scm is :git
-set :scm, :git
 
 # Default value for :format is :pretty
 # set :format, :pretty

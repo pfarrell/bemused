@@ -5,6 +5,10 @@ require 'capistrano/setup'
 require 'capistrano/deploy'
 require 'capistrano/bundler'
 require 'capistrano/bower'
+require "capistrano/deploy"
+
+require "capistrano/scm/git"
+install_plugin Capistrano::SCM::Git
 
 # Includes tasks from other gems included in your Gemfile
 #
