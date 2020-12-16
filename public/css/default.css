@@ -94,12 +94,12 @@ body {
 }
 
 canvas {
-  width: 1020px;
-  height: 260px;
+  width:420px;
+  height: 150px;
   border-top: 1px solid black;
   border-bottom: 1px solid black;
-  margin-left: -15px;
-  margin-bottom: -3px;
+  margin-top:-10px;
+  margin-left: 5px;
   box-shadow: 0 -2px 4px rgba(0,0,0,0.7),
               0 3px 4px rgba(0,0,0,0.7);
 }
