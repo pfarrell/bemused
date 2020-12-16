@@ -11,3 +11,4 @@ public/media
 /.bundle/config
 coverage/**/*
 !coverage/coverage-badge.png
+log
