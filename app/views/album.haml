@@ -1,17 +1,17 @@
 .row
-  .col-xs-12.col-md-offset-2.col-sm-6.col-lg-4.sp-top-sm#player
+  .col-xs-12.col-sm-5.col-lg-4.sp-top-sm#player
     -if current_user
       .favorites
         =haml :"partials/favorites", locals: { tracks: order_tracks(album.tracks) }
     .player
       =haml :"partials/player", locals: { admin_url: "#{url_for("/admin/album/#{album.id}")}" }
 .row
-  .col-xs-12.col-md-offset-2.col-sm-6.col-lg-4.sp-top-sm
+  .col-xs-12.col-sm-6.col-lg-4.sp-top-sm
     =haml :"partials/visualizer"
 .row
-  .col-xs-12.col-md-offset-2.col-md-7.sp-top-sm.summary#album_summary
+  .col-xs-12.col-md-5.sp-top-sm.summary#album_summary
 .row
-  .col-xs-12.col-md-offset-2.col-md-7.sp-top-sm.summary#track_summary
+  .col-xs-12.col-md-5.sp-top-sm.summary#track_summary
 -if current_user
   .row
     .col-xs-12.col.md-offset-2.col.md-7.sp-top-sm.favorites#favorites
@@ -26,13 +26,13 @@
     var myPlaylist;
 
     function album_summary(data) {
-      $('#album_summary').append("<div class='summary'><p class='text'>" + data.summary + "</p>");
+      $('#album_summary').append("<div><p class='text'>" + data.summary + "</p>");
       $('#album_summary').append("<div class='links'><a target='_' href='" + data.url + "'>wikipedia</a></div></div>");
     }
 
     function track_summary(data) {
       $('#track_summary').empty();
-      $('#track_summary').append("<div class='summary'><p class='text'>" + data.summary + "</p>");
+      $('#track_summary').append("<div><p class='text'>" + data.summary + "</p>");
       $('#track_summary').append("<div class='links'><a target='_' href='" + data.url + "'>wikipedia</a></div></div>");
     }
 
