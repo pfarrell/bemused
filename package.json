@@ -1,0 +1,17 @@
+{
+  "name": "bemused",
+  "description": "streaming audio site",
+  "author": "Patrick Farrell",
+  "version": "0.0.1",
+  "dependencies": {
+    "bootstrap": "^3.3.7",
+    "devbridge-autocomplete": "^1.2.15",
+    "imagesloaded": "^3.1.8",
+    "jplayer": "^2.9.2",
+    "masonry": "https://github.com/desandro/masonry/archive/v3.1.5.tar.gz"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^7.0.0",
+    "webpack": "^5.11.0"
+  }
+}

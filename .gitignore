@@ -12,3 +12,4 @@ public/media
 coverage/**/*
 !coverage/coverage-badge.png
 log
+node_modules
