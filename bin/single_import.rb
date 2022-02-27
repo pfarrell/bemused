@@ -3,6 +3,11 @@
 require 'id3tag'
 require '../app'
 
+if not ARGV[0] or ARGV[0].nil?  then
+  $stderr.puts 'usage: ruby ./single_import.rb [path to mp3 file]'
+  exit(21)
+end
+
 mp3 = Mp3.new(ARGV[0])
 
 #Read tags
@@ -25,7 +30,7 @@ file.save
 track.media_file = file
 begin
   track.save
-rescue 
+rescue
 end
 
 puts "processed: #{File.basename(mp3.tags.source)}"
