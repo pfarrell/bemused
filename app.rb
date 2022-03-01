@@ -44,8 +44,6 @@ class Bemused < Sinatra::Application
       token = request.cookies["auth"]
       decoded = nil
       begin
-        require 'byebug'
-        byebug
         if token then
           decoded = JWT.decode token, ENV['BEMUSED_JWT_SECRET'], 'HS256'
         end
