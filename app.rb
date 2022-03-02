@@ -17,6 +17,7 @@ require 'modules'
 require 'models'
 require 'routes'
 require 'services'
+require 'jwt'
 
 class Bemused < Sinatra::Application
   helpers Sinatra::UrlForHelper
@@ -31,15 +32,6 @@ class Bemused < Sinatra::Application
   set :local_authority, 'http://192.168.0.47' # for Sinatra::LocalApp
 
   helpers do
-    def login_location
-      case ENV["RACK_ENV"] || "development"
-      when "development", "test"
-        "http://localhost:9292/application/3/login"
-      when "production"
-        "https://patf.net/moth/application/3/login"
-      end
-    end
-
     def user_tags
       request.cookies['tags'].nil? ? [] : request.cookies['tags'].split('&').map{|id| Tag[id] }
     end
@@ -49,8 +41,16 @@ class Bemused < Sinatra::Application
     end
 
     def current_user
-      cookie = request.cookies["auth"]
-      cookie ? User.new(cookie) : nil
+      token = request.cookies["auth"]
+      user = nil
+      begin
+        if token then
+          decoded = JWT.decode token, ENV['BEMUSED_JWT_SECRET'], 'HS256'
+          user = User.find(id: decoded[0]['id'])
+        end
+      rescue
+      end
+      user
     end
 
     def order_tracks(tracks)

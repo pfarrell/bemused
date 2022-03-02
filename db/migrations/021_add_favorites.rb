@@ -3,7 +3,7 @@ Sequel.migration do
     create_table(:favorites) do
       primary_key :id
       Integer :target_id
-      String :user_id
+      Integer :user_id
       String :kind
       DateTime :created_at, index: true
       DateTime :updated_at

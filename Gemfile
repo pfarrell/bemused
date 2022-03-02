@@ -21,6 +21,8 @@ gem 'unicorn'
 gem 'sinatra-presence', '>= 0.0.4'
 gem 'wikipedia-client'
 gem 'nokogiri'
+gem 'jwt'
+gem 'bcrypt'
 
 group :development do
   gem 'pry'

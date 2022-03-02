@@ -3,15 +3,15 @@
     -user = current_user
     -if user
       %a.dropdown-toggle{href: "#", role: "button", aria: { haspopup: "true", expanded: "false"}, data: { toggle: "dropdown"}}
-        =user.name
+        =user.username
         %span.caret
       %ul.dropdown-menu
         %li
-          %a{href: "#{user.profile_url}"}
+          %a{href: "#{url_for("/profile")}"}
             Profile
         %li
-          %a{href: "#{user.logout_url}"}
+          %a{href: "#{url_for("/logout")}"}
             Logout
     -else
-      %a{href:"#{login_location}"}
+      %a{href:"#{url_for("/login")}"}
         Login
