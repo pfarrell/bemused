@@ -42,14 +42,15 @@ class Bemused < Sinatra::Application
 
     def current_user
       token = request.cookies["auth"]
-      decoded = nil
+      user = nil
       begin
         if token then
           decoded = JWT.decode token, ENV['BEMUSED_JWT_SECRET'], 'HS256'
+          user = User.find(id: decoded[0]['id'])
         end
       rescue
       end
-      decoded
+      user
     end
 
     def order_tracks(tracks)

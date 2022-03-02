@@ -1,0 +1,9 @@
+.container
+  .card.card-container
+    %img.profile-img-card#profile-img
+    %p.profile-name-card#profile-name
+      %form.form-signin{method: "POST", action: "#{url_for("/login")}"}
+        %input.form-control#username{name: "username", type: "input", placeholder: "Username", required: true, autofocus: true}
+        %input.form-control#password{name: "password", type: "password", placeholder: "Password", required: true}
+        %button.btn.btn-lg.btn-primary.btn-block.btn-signin{type: "submit"}
+          Sign In

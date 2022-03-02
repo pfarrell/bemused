@@ -1,9 +1,9 @@
 %ul.nav.navbar-nav.pull-right
   %li.dropdown
-    -token= current_user
+    -user = current_user
     -if user
       %a.dropdown-toggle{href: "#", role: "button", aria: { haspopup: "true", expanded: "false"}, data: { toggle: "dropdown"}}
-        =token[0]['name']
+        =user.username
         %span.caret
       %ul.dropdown-menu
         %li
