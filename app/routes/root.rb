@@ -35,7 +35,7 @@ class Bemused < Sinatra::Application
         cookies[:auth] = token
       end
     end
-    redirect url_for referer
+    redirect referer
   end
 
   get "/logout" do
