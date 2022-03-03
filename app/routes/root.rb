@@ -39,6 +39,8 @@ class Bemused < Sinatra::Application
   end
 
   get "/logout" do
+    cookies[:auth] = nil
+    redirect request.referer
   end
 
   get "/profile" do
