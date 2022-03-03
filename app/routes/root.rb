@@ -17,12 +17,14 @@ class Bemused < Sinatra::Application
   end
 
   get "/login" do
-    haml :login
+    referer = request.referer
+    haml :login, locals: {referer: referer}
   end
 
   post "/login" do
     username = params['username']
     password = params['password']
+    referer = params['referer']
     user = User.find(username: username)
     if user then
       crypt_pw = BCrypt::Password.new(user.password)
@@ -33,7 +35,7 @@ class Bemused < Sinatra::Application
         cookies[:auth] = token
       end
     end
-    redirect url_for "/"
+    redirect url_for referer
   end
 
   get "/logout" do
