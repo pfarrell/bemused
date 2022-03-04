@@ -29,7 +29,7 @@ class Bemused < Sinatra::Application
     if user then
       crypt_pw = BCrypt::Password.new(user.password)
       if(crypt_pw == password) then
-        exp = Time.now.to_i + 4*3600 # four hours in future
+        exp = Time.now.to_i + 24*3600 # twenty-four hours in future
         payload = {id: user.id, username: user.username, exp: exp}
         token = JWT.encode payload, ENV['BEMUSED_JWT_SECRET'], 'HS256'
         cookies[:auth] = token
