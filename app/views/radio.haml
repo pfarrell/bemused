@@ -9,7 +9,8 @@
   var myPlaylist
 
   function append(playlist, json) {
-    track = JSON.parse(json)[0];
+    // track data is double encoded JSON, hence two parses
+    track = JSON.parse(JSON.parse(json)[0]);
     playlist.add(track, false);
   }
 
