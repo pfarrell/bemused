@@ -1,9 +1,7 @@
 .row
-  .col-sm-6.artist
+  .col-sm-6.artist.img-fluid
     =haml :"partials/artist", locals: { artist: artist, admin: true}
-  .col-sm-6.artist
-    %h2
-      =artist.name
+  .col-sm-offset-1.col-sm-5.artist
     .summary.mb-5#summary
 .row.top-buffer
 .row.top-buffer
@@ -16,8 +14,9 @@
   images_loaded=false;
 
   function summary_done(data) {
-    $('#summary').append("<p class='text'>" + data.summary + "</p>");
+    $('#summary').append("<h3>#{artist.name}</h3>");
     $('#summary').append("<p class='links'><a target='_' href='" + data.url + "'>wikipedia</a></p>");
+    $('#summary').append("<p class='text'>" + data.summary + "</p>");
     summary_loaded = true;
     masonrize();
   }
