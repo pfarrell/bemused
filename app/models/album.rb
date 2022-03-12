@@ -12,9 +12,10 @@ class Album < Sequel::Model
     tracks.sort_by{ |t| t.track_number.to_i }.each_with_index.map do |track, i|
       track_number = track.track_number.nil? ? i+1 :  track.track_number.gsub(/\/.*/, "")
       artist_name = track.artist.nil? ? track.album.artist.name : track.artist.name
+      title = track.title.shrink(40).gsub(/"/, "\\\"")
       %Q(
         {
-          title: "#{track_number}. #{track.title.shrink(40)}",
+          title: "#{track_number}. #{title}",
           mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
           artist: "#{artist_name.shrink(25)}"
         }
