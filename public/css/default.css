@@ -37,7 +37,7 @@ body {
 */
 
 .item img {
-  width:200px;
+  width:180px;
 }
 
 .top-buffer { margin-top:20px; }
@@ -93,10 +93,8 @@ body {
 
 .summary {
   padding: 1em;
-  background-color:#e7e7e7;
   border-radius: 1em;
   overflow: scroll;
-  max-height: 400px;
 }
 
 canvas {

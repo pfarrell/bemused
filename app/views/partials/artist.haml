@@ -1,3 +1,7 @@
 -url = admin == true ? "/admin/artist/#{artist.id}" : "/artist/#{artist.id}"
-%a{href: "#{url_for url}"}
-  %img.artist{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}
+-if use_small then
+  %a.item{href: "#{url_for url}"}
+    %img{title: "#{artist.name}", src: "#{url_for "/images/artists/sm/#{artist.image_path}"}"}
+-else
+  %a{href: "#{url_for url}"}
+    %img.img-responsive.fit-image{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}

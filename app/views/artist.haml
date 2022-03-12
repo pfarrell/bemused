@@ -1,8 +1,8 @@
 .row
-  .col-sm-6.artist.img-fluid
-    =haml :"partials/artist", locals: { artist: artist, admin: true}
+  .col-sm-5
+    =haml :"partials/artist", locals: { artist: artist, admin: true, use_small: false }
   .col-sm-offset-1.col-sm-5.artist
-    .summary.mb-5#summary
+    .summary#summary
 .row.top-buffer
 .row.top-buffer
   .col-sm-12.albums
@@ -26,7 +26,7 @@
   var container = document.querySelector('.albums');
   var msnry = new Masonry( container, {
     // options
-    columnWidth: 200,
+    columnWidth: 180,
     itemSelector: '.item'
   });
   imagesLoaded(container, function() {
