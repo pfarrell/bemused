@@ -4,4 +4,4 @@
     %img{title: "#{artist.name}", src: "#{url_for "/images/artists/sm/#{artist.image_path}"}"}
 -else
   %a{href: "#{url_for url}"}
-    %img.img-responsive.fit-image{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}
+    %img.img-responsive.fit-image#artist_image{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}

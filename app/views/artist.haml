@@ -14,6 +14,8 @@
   images_loaded=false;
 
   function summary_done(data) {
+    var img_height = $('#artist_image')[0].offsetHeight;
+    $('#summary')[0].style.maxHeight = img_height.toString() + "px";
     $('#summary').append("<h3>#{artist.name}</h3>");
     $('#summary').append("<p class='links'><a target='_' href='" + data.url + "'>wikipedia</a></p>");
     $('#summary').append("<p class='text'>" + data.summary + "</p>");
