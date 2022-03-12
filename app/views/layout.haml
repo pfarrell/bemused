@@ -45,7 +45,7 @@
           %li
             %span.navbar-text.navbar-info
         = haml :'partials/profile', locals: {user: current_user}.merge(locals)
-    .container-fluid#content
+    .container#content
       =yield
     %div.sp-bottom-sm.row#footer
       %div.container.footer

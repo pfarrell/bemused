@@ -1,18 +1,25 @@
 .row
-  .col-xs-7.albums
+  .col-sm-offset-4.col-sm-4.artist
+    %h2
+      =artist.name
+.row.top-buffer
+  .col-sm-offset-4.col-sm-1.artist
     =haml :"partials/artist", locals: { artist: artist, admin: true}
+.row.top-buffer
+  .col-sm-offset-2.col-sm-7
+    .summary.mb-5#summary
+.row.top-buffer
+  .col-sm-7.albums
     -artist.albums.each do |album|
       =haml :"partials/album", locals: { album: album}
-  .col-xs-5
-    #summary
 :javascript
   keypress_enable=false;
   summary_loaded=false;
   images_loaded=false;
 
   function summary_done(data) {
-    $('#summary').append("<div class='summary'><p class='text'>" + data.summary + "</p>");
-    $('#summary').append("<div class='links'><a target='_' href='" + data.url + "'>wikipedia</a></div></div>");
+    $('#summary').append("<p class='text'>" + data.summary + "</p>");
+    $('#summary').append("<p class='links'><a target='_' href='" + data.url + "'>wikipedia</a></p>");
     summary_loaded = true;
     masonrize();
   }
