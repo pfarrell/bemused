@@ -37,8 +37,10 @@ body {
 */
 
 .item img {
-  width:200px;
+  width:180px;
 }
+
+.top-buffer { margin-top:20px; }
 
 .album-title {
   font-style:italic;
@@ -91,10 +93,8 @@ body {
 
 .summary {
   padding: 1em;
-  background-color:#e7e7e7;
   border-radius: 1em;
-  margin-left: 32px;
-  width: 420px;
+  overflow: scroll;
 }
 
 canvas {
@@ -146,4 +146,9 @@ canvas {
   cursor: pointer;
   cursor: hand;
   border-bottom: 1px solid rgb(238, 238, 238);
+}
+
+.col-centered{
+    float: none;
+    margin: 0 auto;
 }

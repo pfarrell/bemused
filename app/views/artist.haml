@@ -1,18 +1,24 @@
 .row
-  .col-xs-7.albums
-    =haml :"partials/artist", locals: { artist: artist, admin: true}
+  .col-sm-5
+    =haml :"partials/artist", locals: { artist: artist, admin: true, use_small: false }
+  .col-sm-offset-1.col-sm-5.artist
+    .summary#summary
+.row.top-buffer
+.row.top-buffer
+  .col-sm-12.albums
     -artist.albums.each do |album|
       =haml :"partials/album", locals: { album: album}
-  .col-xs-5
-    #summary
 :javascript
   keypress_enable=false;
   summary_loaded=false;
   images_loaded=false;
 
   function summary_done(data) {
-    $('#summary').append("<div class='summary'><p class='text'>" + data.summary + "</p>");
-    $('#summary').append("<div class='links'><a target='_' href='" + data.url + "'>wikipedia</a></div></div>");
+    var img_height = $('#artist_image')[0].offsetHeight;
+    $('#summary')[0].style.maxHeight = img_height.toString() + "px";
+    $('#summary').append("<h3>#{artist.name}</h3>");
+    $('#summary').append("<p class='links'><a target='_' href='" + data.url + "'>wikipedia</a></p>");
+    $('#summary').append("<p class='text'>" + data.summary + "</p>");
     summary_loaded = true;
     masonrize();
   }
@@ -22,7 +28,7 @@
   var container = document.querySelector('.albums');
   var msnry = new Masonry( container, {
     // options
-    columnWidth: 200,
+    columnWidth: 180,
     itemSelector: '.item'
   });
   imagesLoaded(container, function() {
