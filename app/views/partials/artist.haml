@@ -1,3 +1,3 @@
 -url = admin == true ? "/admin/artist/#{artist.id}" : "/artist/#{artist.id}"
-%a.item{href: "#{url_for url}"}
+%a{href: "#{url_for url}"}
   %img.artist{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}
