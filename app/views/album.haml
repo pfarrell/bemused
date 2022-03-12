@@ -1,39 +1,32 @@
 .row
-  .col-xs-12.col-sm-5.col-lg-4.sp-top-sm#player
+  .col-sm-5
     -if current_user
       .favorites
         =haml :"partials/favorites", locals: { tracks: order_tracks(album.tracks) }
     .player
       =haml :"partials/player", locals: { admin_url: "#{url_for("/admin/album/#{album.id}")}" }
-.row
-  .col-xs-12.col-sm-6.col-lg-4.sp-top-sm
     =haml :"partials/visualizer"
+    .summary#track_summary
+    .summary#album_summary
+  .col-sm-7
+    %img.image-responsive.fit-image{src: url_for("/images/albums/#{album.image}")}
 .row
-  .col-xs-12.col-md-5.sp-top-sm.summary#album_summary
-.row
-  .col-xs-12.col-md-5.sp-top-sm.summary#track_summary
--if current_user
-  .row
-    .col-xs-12.col.md-offset-2.col.md-7.sp-top-sm.favorites#favorites
+//-if current_user
+//  .row
+//    .col-xs-12.col.md-offset-2.col.md-7.sp-top-sm.favorites#favorites
 
 :javascript
-    document.getElementById("image").style.background="url('#{url_for "/images/albums/" + (album.image || "")}')";
-    document.getElementById("image").style.backgroundPosition="center";
-    document.getElementById("image").style.backgroundSize="contain";
-    document.getElementById("image").style.backgroundRepeat="no-repeat";
-    //document.getElementById("content").style.minHeight="900px";
-
     var myPlaylist;
 
     function album_summary(data) {
-      $('#album_summary').append("<div><p class='text'>" + data.summary + "</p>");
-      $('#album_summary').append("<div class='links'><a target='_' href='" + data.url + "'>wikipedia</a></div></div>");
+      $('#album_summary').append("<a target='_' href='" + data.url + "'>wikipedia</a>");
+      $('#album_summary').append("<p class='text'>" + data.summary + "</p>");
     }
 
     function track_summary(data) {
       $('#track_summary').empty();
-      $('#track_summary').append("<div><p class='text'>" + data.summary + "</p>");
-      $('#track_summary').append("<div class='links'><a target='_' href='" + data.url + "'>wikipedia</a></div></div>");
+      $('#track_summary').append("<p class='links'><a target='_' href='" + data.url + "'>wikipedia</a>");
+      $('#track_summary').append("<p class='text'>" + data.summary + "</p>");
     }
 
     function get_id(str) {

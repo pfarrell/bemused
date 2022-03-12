@@ -114,11 +114,6 @@ canvas {
   float: none;
 }
 
-#player {
-  width: 100%;
-  height: 100%
-}
-
 .player {
   float: right;
   display: inline-block;
@@ -151,4 +146,9 @@ canvas {
 .col-centered{
     float: none;
     margin: 0 auto;
+}
+
+.fit-image{
+  width: 100%;
+  object-fit: cover;
 }
