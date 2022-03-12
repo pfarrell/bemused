@@ -56,6 +56,10 @@ body {
   border: 1px solid #e7e7e7;
 }
 
+img .artist {
+  max-width:50%;
+}
+
 .autocomplete-selected {
   background-color:#e7e7e7;
   border: 1px solid #f8f8f8;

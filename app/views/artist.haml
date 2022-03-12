@@ -9,7 +9,7 @@
   .col-sm-offset-2.col-sm-7
     .summary.mb-5#summary
 .row.top-buffer
-  .col-sm-7.albums
+  .col-sm-12.albums
     -artist.albums.each do |album|
       =haml :"partials/album", locals: { album: album}
 :javascript
