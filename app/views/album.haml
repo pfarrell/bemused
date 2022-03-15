@@ -19,14 +19,14 @@
     var myPlaylist;
 
     function album_summary(data) {
-      $('#album_summary').append("<a target='_' href='" + data.url + "'>wikipedia</a>");
-      $('#album_summary').append("<p class='text'>" + data.summary + "</p>");
+      $('#album_summary').append(data.summary);
+      $('#album_summary').append("  <a target='_' href='" + data.url + "'>…more at wikipedia</a>");
     }
 
     function track_summary(data) {
       $('#track_summary').empty();
-      $('#track_summary').append("<p class='links'><a target='_' href='" + data.url + "'>wikipedia</a>");
-      $('#track_summary').append("<p class='text'>" + data.summary + "</p>");
+      $('#track_summary').append(data.summary);
+      $('#track_summary').append("  <a target='_' href='" + data.url + "'>…more at wikipedia</a>");
     }
 
     function get_id(str) {
