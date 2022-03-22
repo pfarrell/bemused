@@ -5,7 +5,7 @@
         =haml :"partials/favorites", locals: { tracks: order_tracks(album.tracks) }
     .player
       =haml :"partials/player", locals: { admin_url: "#{url_for("/admin/album/#{album.id}")}" }
-    =haml :"partials/visualizer"
+    //=haml :"partials/visualizer"
   .col-sm-7
     %img.image-responsive.fit-image{src: url_for("/images/albums/#{album.image}")}
     .summary#track_summary
