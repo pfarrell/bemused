@@ -1,18 +1,13 @@
 .row
-  .col-xs-12.col-md-offset-2.col-sm-6.col-lg-4.sp-top-sm#player
+  .col-sm-5#player
     -if current_user
       .favorites
         =haml :"partials/favorites", locals: { tracks: playlist.playlist_tracks.map(&:track) }
     .player
       =haml :"partials/player", locals: { admin_url: "#{url_for("/admin/playlist/#{playlist.id}")}" }
-.row
-  .col-xs-12.col-md-offset-2.col-sm-6.col-lg-4.sp-top-sm
-    =haml :"partials/visualizer"
+  .col-sm-7
+    %img.image-responsive.fit-image{src: url_for("/images/albums/#{playlist.image_path}")}
 :javascript
-  document.getElementById("image").style.background="url('#{url_for "/images/albums/" + (playlist.image_path || "")}')";
-  document.getElementById("image").style.backgroundPosition="center";
-  document.getElementById("image").style.backgroundSize="contain";
-  document.getElementById("image").style.backgroundRepeat="no-repeat";
   //document.getElementById("content").style.minHeight="900px";
 
   var myPlaylist
