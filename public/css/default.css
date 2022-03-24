@@ -24,6 +24,11 @@ img {
   border-radius: 0.8%;
 }
 
+#artist_image{
+  max-height: 400px;
+  width: auto;
+}
+
 .item img{
 }
 
