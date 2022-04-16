@@ -27,8 +27,6 @@
       .row
         .col-xs-6
           =haml :"partials/player", locals: { admin_url: nil }
-          .sp-top-sm
-            =haml :"partials/visualizer"
 :javascript
   $('#search').prop('action', "#{url_for('/tracks')}");
   $('.navbar-info').html("#{tracks.count} tracks");
