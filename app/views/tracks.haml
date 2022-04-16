@@ -1,8 +1,9 @@
 %div.container#content2
   .row
-    .col-xs-6
-      %table.table
+    .col-xs-8
+      %table.table#tracklist
         %thead
+          %th
           %th
             Title (id)
           %th
@@ -10,8 +11,12 @@
           %th
             Album (id)
         %tbody
+          -num=0
           -tracks.each do |track|
+            -num+=1
             %tr
+              %td
+                =num
               %td
                 %a{href: "#{url_for("/admin/track/#{track.id}")}"}
                   #{track.title} (#{track.id})
@@ -25,7 +30,7 @@
                     #{track.album.title} (#{track.album.id})
     -unless tracks.empty?
       .row
-        .col-xs-6
+        .col-xs-4
           =haml :"partials/player", locals: { admin_url: nil }
 :javascript
   $('#search').prop('action', "#{url_for('/tracks')}");
