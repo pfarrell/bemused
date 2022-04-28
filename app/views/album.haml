@@ -59,13 +59,11 @@
                 get_summary("#{url_for("/track")}" + get_id(obj.mp3) + '/summary', track_summary, "track_summary_available", "#track_summary");
                 notify(obj);
               }
-              $('.navbar-info').html("                                   \
+              $('.navbar-info').html("                                                                \
                 <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
-                  <span class='artist-title'>#{shorten album.artist.name, 20}</span> \
-                </a>>                                                    \
-                <a href='#{url_for("/album/#{album.id}")}' title='#{album.title}'>      \
-                  <span class='album-title'>#{shorten album.title, 20}</span>        \
-                </a>>                                                    \
+                  <span class='artist-title'>#{shorten album.artist.name, 20}</span>                  \
+                </a>>                                                                                 \
+                <span class='album-title'>#{shorten album.title, 20}</span>                           \
                 <span class='track-title'>" + obj.title + "</span>");
                $(document).prop("title", obj.title);
             }
@@ -73,13 +71,10 @@
     });
 
     $(document).ready(function() {
-      $('.navbar-info').html("                        \
+      $('.navbar-info').html("                                                                \
         <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
-          <span class='artist-title'>#{shorten album.artist.name, 30}</span> \
-        </a>>                                                    \
-        <a href='#{url_for("/album/#{album.id}")}' title='#{album.title}'>      \
-          <span class='album-title'>#{shorten album.title, 30}</span> \
-        </a>");
+          <span class='artist-title'>#{shorten album.artist.name, 30}</span>                  \
+        </a>> <span class='album-title'>#{shorten album.title, 30}</span>");
       get_summary("#{url_for("/album/#{album.id}/summary")}", album_summary, "album_summary_available", "#album_summary");
     });
 
