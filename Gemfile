@@ -1,5 +1,5 @@
 source "https://rubygems.org"
-ruby "2.6.5"
+ruby "3.1.0"
 
 gem 'sinatra'
 gem 'sinatra-contrib'
@@ -20,6 +20,7 @@ gem 'wikipedia-client'
 gem 'nokogiri'
 gem 'jwt'
 gem 'bcrypt'
+gem 'thin'
 
 group :development do
   gem 'pry'
