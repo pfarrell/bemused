@@ -44,9 +44,9 @@
         %ul.nav.navbar-nav
           %li
             %span.navbar-text.navbar-info
-        = haml :'partials/profile', locals: {user: current_user}.merge(locals)
+        != haml :'partials/profile', locals: {user: current_user}.merge(locals)
     .container#content
-      =yield
+      !=yield
     %div.sp-bottom-sm.row#footer
       %div.container.footer
 %script{:type => "text/javascript", :src => "#{url_for '/js/keypress.js'}"}
