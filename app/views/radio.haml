@@ -1,4 +1,4 @@
-=haml :"partials/player", locals: { admin_url: nil }
+!=haml :"partials/player", locals: { admin_url: nil }
 :javascript
   document.getElementById("content").style.background="url('#{url_for "/images/albums/" + (playlist.image_path || "")}')";
   document.getElementById("content").style.backgroundPosition="0px 0px";

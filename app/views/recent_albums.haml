@@ -1,4 +1,4 @@
-=haml :paging, locals: {model: model, base: "/albums/recent"}
+!=haml :paging, locals: {model: model, base: "/albums/recent"}
 .albums
   -model[:data].each do |album|
     -next unless album.tracks.count > 0

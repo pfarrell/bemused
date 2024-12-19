@@ -2,9 +2,9 @@
   .col-sm-5#player
     -if current_user
       .favorites
-        =haml :"partials/favorites", locals: { tracks: playlist.playlist_tracks.map(&:track) }
+        !=haml :"partials/favorites", locals: { tracks: playlist.playlist_tracks.map(&:track) }
     .player
-      =haml :"partials/player", locals: { admin_url: "#{url_for("/admin/playlist/#{playlist.id}")}" }
+      !=haml :"partials/player", locals: { admin_url: "#{url_for("/admin/playlist/#{playlist.id}")}" }
   .col-sm-7
     %img.image-responsive.fit-image{src: url_for("/images/albums/#{playlist.image_path}")}
 :javascript

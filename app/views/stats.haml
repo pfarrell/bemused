@@ -37,11 +37,11 @@
 
       .tab-content
         .tab-pane.active#one_week{role: "tabpanel"}
-          =haml :'partials/track_table', locals: {section: "one_week"}
+          !=haml :'partials/track_table', locals: {section: "one_week"}
         .tab-pane#one_month{role: "tabpanel"}
-          =haml :'partials/track_table', locals: {section: "one_month"}
+          !=haml :'partials/track_table', locals: {section: "one_month"}
         .tab-pane#all_time{role: "tabpanel"}
-          =haml :'partials/track_table', locals: {section: "all_time"}
+          !=haml :'partials/track_table', locals: {section: "all_time"}
 
 :javascript
   $('#tabs a').click(function (e) {

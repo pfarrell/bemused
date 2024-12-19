@@ -1,15 +1,15 @@
 %h3
   Playlists
 -playlists.each do |playlist|
-  =haml :"partials/playlist", locals: {playlist: playlist, admin: false}
+  !=haml :"partials/playlist", locals: {playlist: playlist, admin: false}
 %h3
   Artists
 -artists.to_a.select{|artist| artist.albums.size > 0}.each do |artist|
-  =haml :"partials/artist", locals: {artist: artist, admin: false, use_small: true}
+  !=haml :"partials/artist", locals: {artist: artist, admin: false, use_small: true}
 %h3
   Albums
 -albums.to_a.select{|album| album.tracks.size > 0}.each do |album|
-  =haml :"partials/album", locals: {album: album}
+  !=haml :"partials/album", locals: {album: album}
 :javascript
   var $container = $('#container');
   // init

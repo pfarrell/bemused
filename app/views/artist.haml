@@ -1,13 +1,13 @@
 .row
   .col-sm-5
-    =haml :"partials/artist", locals: { artist: artist, admin: true, use_small: false }
+    !=haml :"partials/artist", locals: { artist: artist, admin: true, use_small: false }
   .col-sm-offset-1.col-sm-5.artist
     .summary#summary
 .row.top-buffer
 .row.top-buffer
   .col-sm-12.albums
     -artist.albums.each do |album|
-      =haml :"partials/album", locals: { album: album}
+      !=haml :"partials/album", locals: { album: album}
 :javascript
   keypress_enable=false;
   summary_loaded=false;
