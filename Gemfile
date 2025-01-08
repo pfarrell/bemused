@@ -28,3 +28,9 @@ group :development do
   gem 'byebug'
   gem 'test-unit'
 end
+
+gem "ed25519", "~> 1.3"
+gem "bcrypt_pbkdf", "~> 1.1"
+gem "capistrano-rbenv", "~> 2.2"
+gem "rexml", "~> 3.4"
+gem "net-ssh", "~> 7.3"
