@@ -35,21 +35,19 @@
 
     $(document).ready(function() {
       document.title = "#{album.title}";
-      myPlaylist = new jPlayerPlaylist({
-        jPlayer: "#jquery_jplayer_1",
-        cssSelectorAncestor: "#jp_container_1"
-      },
-      [
-        #{ album.playlist }
-      ],
-      {
-        swfPath: "http://patf.net/js",
-        supplied: "mp3",
-        wmode: "window"
-      });
     });
 
-    $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
+    document.addEventListener('DOMContentLoaded', () => {
+      const playlist = [#{album.playlist}];
+
+      new AudioPlayer(playlist, 'player-container', {
+        onTrackStart: (track) => console.log('Now playing:', track.title),
+        onFiveSecondMark: (track) => console.log('5 seconds into track:', track.title)
+      });
+
+    });
+
+   /* $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
         var current = myPlaylist.current,
             playlist = myPlaylist.playlist;
         $.each(playlist, function (index, obj) {
@@ -70,6 +68,7 @@
         });
     });
 
+  */
     $(document).ready(function() {
       $('.navbar-info').html("                                                                \
         <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \

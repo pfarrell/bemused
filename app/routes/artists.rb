@@ -30,7 +30,7 @@ class Bemused < Sinatra::Application
 
   post "/admin/artist/:id/image" do
     artist = Artist[params[:id]]
-    open("#{params[:image_url]}") {|f|
+    URI.open("#{params[:image_url]}") {|f|
       File.open("public/images/artists/#{params[:image_name]}", "wb") do |file|
         file.puts f.read
       end

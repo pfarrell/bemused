@@ -15,8 +15,8 @@ class Album < Sequel::Model
       title = track.title.shrink(40).gsub(/"/, "\\\"")
       %Q(
         {
-          title: "#{track_number}. #{title}",
-          mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
+          title: "#{title}",
+          url: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
           artist: "#{artist_name.shrink(25)}"
         }
       )
