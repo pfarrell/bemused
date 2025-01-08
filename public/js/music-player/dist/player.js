@@ -139,6 +139,7 @@
     controlsWrapper.appendChild(shuffleToggle);
 
     this.controlsContainer.appendChild(controlsWrapper);
+    this.playButton = playButton;
   };
 
   AudioPlayer.prototype.formatTime = function(seconds) {
