@@ -11,7 +11,7 @@ class Playlist < Sequel::Model
       %Q(
         {
           title: "#{i+1}. #{track.title}",
-          mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
+          url: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
           artist: "#{artist_name}"
         }
       )

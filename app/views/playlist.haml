@@ -12,7 +12,17 @@
 
   var myPlaylist
 
-  $(document).ready(function() {
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const playlist = [#{playlist.track_list}];
+    new AudioPlayer(playlist, 'player-container', {
+      onTrackStart: (track) => console.log('Now playing:', track.title),
+      onFiveSecondMark: (track) => console.log('5 seconds into track:', track.title)
+    });
+  });
+  
+
+  /*$(document).ready(function() {
     document.title = "#{playlist.name}";
     myPlaylist = new jPlayerPlaylist({
       jPlayer: "#jquery_jplayer_1",
@@ -45,7 +55,7 @@
           }
       });
   });
-
+  */
   $(document).ready(function() {
     $('.navbar-info').html("                        \
       <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \
