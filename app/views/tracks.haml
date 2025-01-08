@@ -38,6 +38,19 @@
   $(document).ready(function() {
     $('#q').autocomplete('disable');
   });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.title = "#{album.title}";
+    const playlist = [#{album.playlist}];
+
+    new AudioPlayer(playlist, 'player-container', {
+      onTrackStart: (track) => console.log('Now playing:', track.title),
+      onFiveSecondMark: (track) => console.log('5 seconds into track:', track.title)
+    });
+
+  });
+
+  /*
   $(document).ready(function() {
     document.title = "#{album.title}";
     myPlaylist = new jPlayerPlaylist({
@@ -64,3 +77,4 @@
           }
       });
   });
+  */
