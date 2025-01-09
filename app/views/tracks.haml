@@ -42,8 +42,10 @@
   document.addEventListener('DOMContentLoaded', () => {
     document.title = "#{album.title}";
     const playlist = [#{album.playlist}];
+    const audioElement = document.createElement('audio');
+    const containerElement = document.getElementById('player-container');
 
-    new AudioPlayer(playlist, 'player-container', {
+    new AudioPlayer(playlist, audioElement, containerElement, {
       onTrackStart: (track) => {
         notify(track);
         $(document).prop("title", track.title);

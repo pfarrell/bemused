@@ -39,8 +39,10 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       const playlist = [#{album.playlist}];
+      const audioElement = document.createElement('audio');
+      const containerElement = document.getElementById('player-container');
 
-      new AudioPlayer(playlist, 'player-container', {
+      new AudioPlayer(playlist, audioElement, containerElement, {
         onTrackStart: (track) => {
           get_summary("#{url_for("/track")}" + get_id(track.url) + '/summary', track_summary, "track_summary_available", "#track_summary");
           notify(track);

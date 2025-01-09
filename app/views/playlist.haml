@@ -15,7 +15,9 @@
   document.addEventListener('DOMContentLoaded', () => {
     document.title = "#{playlist.name}";
     const playlist = [#{playlist.track_list}];
-    new AudioPlayer(playlist, 'player-container', {
+    const audioElement = document.createElement('audio');
+    const containerElement = document.getElementById('player-container');
+    new AudioPlayer(playlist, audioElement, containerElement, {
       onTrackStart: (track) => {
         $('.navbar-info').html("                                   \
           <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \
