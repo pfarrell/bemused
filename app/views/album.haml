@@ -42,7 +42,6 @@
 
       new AudioPlayer(playlist, 'player-container', {
         onTrackStart: (track) => {
-          $.ajax({type: "GET", url: track.url.replace("stream","log")});
           get_summary("#{url_for("/track")}" + get_id(track.url) + '/summary', track_summary, "track_summary_available", "#track_summary");
           notify(track);
           $('.navbar-info').html("                                                                \
@@ -54,7 +53,9 @@
              $(document).prop("title", track.title);
           }
         ,
-        onFiveSecondMark: (track) => console.log('5 seconds into track:', track.title)
+        onFiveSecondMark: (track) => {
+          $.ajax({type: "GET", url: track.url.replace("stream","log")});
+        }
       });
 
     });

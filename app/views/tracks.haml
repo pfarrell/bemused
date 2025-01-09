@@ -45,12 +45,13 @@
 
     new AudioPlayer(playlist, 'player-container', {
       onTrackStart: (track) => {
-        $.ajax({type: "GET", url: track.url.replace("stream","log")});
         notify(track);
         $(document).prop("title", track.title);
         $('.navbar-info').html("<span class='track-title'>" + track.title + "</span>");
-        },
-      onFiveSecondMark: (track) => console.log('5 seconds into track:', track.title)
+      },
+      onFiveSecondMark: (track) => {
+        $.ajax({type: "GET", url: track.url.replace("stream","log")});
+      }
     });
 
   });
