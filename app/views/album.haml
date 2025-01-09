@@ -41,34 +41,24 @@
       const playlist = [#{album.playlist}];
 
       new AudioPlayer(playlist, 'player-container', {
-        onTrackStart: (track) => console.log('Now playing:', track.title),
+        onTrackStart: (track) => {
+          $.ajax({type: "GET", url: track.url.replace("stream","log")});
+          get_summary("#{url_for("/track")}" + get_id(track.url) + '/summary', track_summary, "track_summary_available", "#track_summary");
+          notify(track);
+          $('.navbar-info').html("                                                                \
+              <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
+                <span class='artist-title'>#{shorten album.artist.name, 20}</span>                  \
+              </a>>                                                                                 \
+              <span class='album-title'>#{shorten album.title, 20}</span>                           \
+              <span class='track-title'>" + track.title + "</span>");
+             $(document).prop("title", track.title);
+          }
+        ,
         onFiveSecondMark: (track) => console.log('5 seconds into track:', track.title)
       });
 
     });
 
-   /* $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
-        var current = myPlaylist.current,
-            playlist = myPlaylist.playlist;
-        $.each(playlist, function (index, obj) {
-            if (index == current) {
-              if(!scrubbing) {
-                $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
-                get_summary("#{url_for("/track")}" + get_id(obj.mp3) + '/summary', track_summary, "track_summary_available", "#track_summary");
-                notify(obj);
-              }
-              $('.navbar-info').html("                                                                \
-                <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
-                  <span class='artist-title'>#{shorten album.artist.name, 20}</span>                  \
-                </a>>                                                                                 \
-                <span class='album-title'>#{shorten album.title, 20}</span>                           \
-                <span class='track-title'>" + obj.title + "</span>");
-               $(document).prop("title", obj.title);
-            }
-        });
-    });
-
-  */
     $(document).ready(function() {
       $('.navbar-info').html("                                                                \
         <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \

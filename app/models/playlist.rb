@@ -10,7 +10,7 @@ class Playlist < Sequel::Model
       artist_name = track.album.nil? || track.album.artist.nil? ? "unknown" : track.album.artist.name
       %Q(
         {
-          title: "#{i+1}. #{track.title}",
+          title: "#{track.title}",
           url: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
           artist: "#{artist_name}"
         }

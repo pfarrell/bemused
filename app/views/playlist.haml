@@ -12,51 +12,26 @@
 
   var myPlaylist
 
-
   document.addEventListener('DOMContentLoaded', () => {
     document.title = "#{playlist.name}";
     const playlist = [#{playlist.track_list}];
     new AudioPlayer(playlist, 'player-container', {
-      onTrackStart: (track) => console.log('Now playing:', track.title),
+      onTrackStart: (track) => {
+        $.ajax({type: "GET", url: track.url.replace("stream","log")});
+        //get_summary("#{url_for("/track")}" + get_id(track.url) + '/summary', track_summary, "track_summary_available", "#track_summary");
+        notify(track);
+        $('.navbar-info').html("                                   \
+          <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \
+          <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}' title='#{playlist.name}'>      \
+            <span class='album-title'>#{playlist.name}</span> \
+          </a> >                                                    \
+          <span class='track-title'>" + track.title + "</span>");
+        $(document).prop("title", track.title);
+      } ,
       onFiveSecondMark: (track) => console.log('5 seconds into track:', track.title)
     });
   });
   
-
-  /*$(document).ready(function() {
-    document.title = "#{playlist.name}";
-    myPlaylist = new jPlayerPlaylist({
-      jPlayer: "#jquery_jplayer_1",
-      cssSelectorAncestor: "#jp_container_1"
-    },
-    [
-      #{ playlist.track_list }
-    ],
-    {
-      swfPath: "http://patf.net/js",
-      supplied: "mp3",
-      wmode: "window"
-    });
-  });
-
-  $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
-      var current = myPlaylist.current,
-          playlist = myPlaylist.playlist;
-      $.each(playlist, function (index, obj) {
-          if (index == current) {
-            $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
-            notify(obj);
-            $('.navbar-info').html("                                   \
-              <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \
-              <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}' title='#{playlist.name}'>      \
-                <span class='album-title'>#{playlist.name}</span> \
-              </a> >                                                    \
-              <span class='track-title'>" + obj.title + "</span>");
-            $(document).prop("title", obj.title);
-          }
-      });
-  });
-  */
   $(document).ready(function() {
     $('.navbar-info').html("                        \
       <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \

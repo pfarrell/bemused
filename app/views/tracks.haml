@@ -44,37 +44,13 @@
     const playlist = [#{album.playlist}];
 
     new AudioPlayer(playlist, 'player-container', {
-      onTrackStart: (track) => console.log('Now playing:', track.title),
+      onTrackStart: (track) => {
+        $.ajax({type: "GET", url: track.url.replace("stream","log")});
+        notify(track);
+        $(document).prop("title", track.title);
+        $('.navbar-info').html("<span class='track-title'>" + track.title + "</span>");
+        },
       onFiveSecondMark: (track) => console.log('5 seconds into track:', track.title)
     });
 
   });
-
-  /*
-  $(document).ready(function() {
-    document.title = "#{album.title}";
-    myPlaylist = new jPlayerPlaylist({
-      jPlayer: "#jquery_jplayer_1",
-      cssSelectorAncestor: "#jp_container_1"
-    }, 
-    [
-      #{ album.playlist }
-    ], 
-    {
-      swfPath: "http://patf.net/js",
-      supplied: "mp3",
-      wmode: "window"
-    });  
-  });
-  $("#jquery_jplayer_1").bind($.jPlayer.event.play, function (event) {
-      var current = myPlaylist.current,
-          playlist = myPlaylist.playlist;
-      $.each(playlist, function (index, obj) {
-          if (index == current) {
-            $.ajax({type: "GET", url: obj.mp3.replace("stream","log")});
-            $('.navbar-info').html("<span class='track-title'>" + obj.title + "</span>");
-            $(document).title = obj.title;
-          }
-      });
-  });
-  */
