@@ -1,8 +1,5 @@
 .row
   .col-sm-5
-    -if current_user
-      .favorites
-        !=haml :"partials/favorites", locals: { tracks: order_tracks(album.tracks) }
     .player
       !=haml :"partials/player", locals: { admin_url: "#{url_for("/admin/album/#{album.id}")}" }
     //=haml :"partials/visualizer"
@@ -10,10 +7,6 @@
   .col-sm-7
     %img.image-responsive.fit-image{src: url_for("/images/albums/#{album.image}")}
     .summary#album_summary
-.row
-//-if current_user
-//  .row
-//    .col-xs-12.col.md-offset-2.col.md-7.sp-top-sm.favorites#favorites
 
 :javascript
     var myPlaylist;
@@ -38,7 +31,7 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      const playlist = [#{album.playlist}];
+      const playlist = [#{album.playlist(current_user)}];
       const audioElement = document.createElement('audio');
       const containerElement = document.getElementById('player-container');
 
@@ -51,12 +44,19 @@
                 <span class='artist-title'>#{shorten album.artist.name, 20}</span>                  \
               </a>>                                                                                 \
               <span class='album-title'>#{shorten album.title, 20}</span>                           \
-              <span class='track-title'>" + track.title + "</span>");
-             $(document).prop("title", track.title);
-          }
-        ,
+              <span class='track-title'>" + track.title + "</span>"
+          );
+          $(document).prop("title", track.title);
+        },
         onFiveSecondMark: (track) => {
           $.ajax({type: "GET", url: track.url.replace("stream","log")});
+        },
+        getTrackPrefix: (track, index) => {
+          if(#{!current_user.nil?}) {
+            var favorite_url = "#{url_for('/track/')}" + track.id + "/favorite"; 
+            track.favorite_url= favorite_url;
+            return build_favorites_entities(track);
+          }
         }
       });
 

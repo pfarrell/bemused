@@ -51,7 +51,6 @@ class Bemused < Sinatra::Application
     end
     respond_to do |wants|
       wants.json { favorite.to_json }
-      #wants.json { haml :'partials/favorite', locals: { track: track } }
     end
   end
 

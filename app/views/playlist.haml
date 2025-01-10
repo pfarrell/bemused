@@ -1,8 +1,5 @@
 .row
   .col-sm-5#player
-    -if current_user
-      .favorites
-        !=haml :"partials/favorites", locals: { tracks: playlist.playlist_tracks.map(&:track) }
     .player
       !=haml :"partials/player", locals: { admin_url: "#{url_for("/admin/playlist/#{playlist.id}")}" }
   .col-sm-7
@@ -14,7 +11,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     document.title = "#{playlist.name}";
-    const playlist = [#{playlist.track_list}];
+    const playlist = [#{playlist.track_list(current_user)}];
     const audioElement = document.createElement('audio');
     const containerElement = document.getElementById('player-container');
     new AudioPlayer(playlist, audioElement, containerElement, {
@@ -31,6 +28,13 @@
         $.ajax({type: "GET", url: track.url.replace("stream","log")});
         //get_summary("#{url_for("/track")}" + get_id(track.url) + '/summary', track_summary, "track_summary_available", "#track_summary");
         notify(track);
+      },
+      getTrackPrefix: (track) => {
+        if(#{!current_user.nil?}) {
+          var favorite_url = "#{url_for('/track/')}" + track.id + "/favorite" ; 
+          track.favorite_url = favorite_url;
+          return build_favorites_entities(track);
+        }
       }
     });
   });

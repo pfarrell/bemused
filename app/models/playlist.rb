@@ -3,7 +3,7 @@ class Playlist < Sequel::Model
 
   one_to_many :playlist_tracks
 
-  def track_list
+  def track_list(user=nil)
     tracks = playlist_tracks.sort_by{|x| x.order}.map{|x| x.track}
     tracks.map.with_index do |track,i|
       next if track.nil?
@@ -12,7 +12,9 @@ class Playlist < Sequel::Model
         {
           title: "#{track.title}",
           url: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
-          artist: "#{artist_name}"
+          artist: "#{artist_name}",
+          favorited: "#{track.favorited?(user)}",
+          id: "#{track.id}"
         }
       )
     end

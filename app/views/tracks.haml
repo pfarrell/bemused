@@ -53,7 +53,14 @@
       },
       onFiveSecondMark: (track) => {
         $.ajax({type: "GET", url: track.url.replace("stream","log")});
-      }
+      },
+      getTrackPrefix: (track) => {
+        if(#{!current_user.nil?}) {
+          var favorite_url = "#{url_for('/track/')}" + track.id + "/favorite"; 
+          track.favorite_url= favorite_url;
+          return build_favorites_entities(track);
+        }
+      } 
     });
 
   });

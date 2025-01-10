@@ -204,7 +204,7 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
 
   this.playlist.forEach((track, index) => {
     const listItem = document.createElement('li');
-    const prefix = this.getTrackPrefix(track, index);
+    const prefix = this.getTrackPrefix(track);
     const trackText = document.createElement('span');
     trackText.textContent = `${index + 1}. ${track.title} - ${track.artist}`;
 
@@ -225,7 +225,7 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
     }
     listItem.appendChild(trackText);
 
-    listItem.addEventListener('click', () => {
+    trackText.addEventListener('click', () => {
       if (this.currentTrackIndex === index && !this.audioPlayer.paused) {
         this.audioPlayer.pause();
       } else {
@@ -252,8 +252,8 @@ AudioPlayer.prototype.loadAndPlayTrack = function(index) {
 
     Array.from(this.trackListElement.children).forEach((item, idx) => {
       item.classList.toggle('active', idx === index);
-      item.style.backgroundColor = idx === index ? '#007acc' : '';
-      item.style.color = idx === index ? 'white' : 'black';
+      //item.style.backgroundColor = idx === index ? '#007acc' : '';
+      //item.style.color = idx === index ? 'white' : 'black';
     });
 
     this.updatePlayButton();
