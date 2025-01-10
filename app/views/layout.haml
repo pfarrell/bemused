@@ -4,16 +4,15 @@
     %title#title
       #{@title}
     %meta{:charset => "utf-8"}
-    %meta{:name => "viewport", :content=>"width=device-width, initial-scale=1, maximum-scale=1"}
+    %meta{:name => "viewport", :content=>"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"}
     %meta{:name=>"apple-mobile-web-app-capable", :content=>"yes"}
-    %link{:rel => "stylesheet", :href => "#{url_for '/libs/jplayer/dist/skin/blue.monday/css/jplayer.blue.monday.min.css'}", :type => "text/css" }
     %script{:type => "text/javascript", :src => "#{url_for('/libs/jquery/dist/jquery.min.js')}"}
     %link{:rel => "stylesheet", :href => "#{url_for '/libs/bootstrap/dist/css/bootstrap.min.css'}", :type => "text/css"}
     %link{:rel => "stylesheet", :href => "#{url_for '/css/default.css'}", :type => "text/css", :media => "screen" }
-    %link{rel:"shortcut icon",href:"//patf.net/images/bemused.ico"}
+    %link{:rel => "stylesheet", :href => "#{url_for '/css/player.css'}", :type => "text/css", :media => "screen" }
+    %link{rel:"shortcut icon",href:"//patf.com/images/bemused.ico"}
     %script{:type => "text/javascript", :src => "#{url_for '/libs/bootstrap/dist/js/bootstrap.min.js'}"}
-    %script{:type => "text/javascript", :src => "#{url_for '/libs/jplayer/dist/jplayer/jquery.jplayer.min.js'}"}
-    %script{:type => "text/javascript", :src => "#{url_for '/libs/jplayer/dist/add-on/jplayer.playlist.js'}"}
+    %script{:type => "text/javascript", :src => "#{url_for '/js/music-player/dist/player.js'}"}
     %script{type: "text/javascript", src: "#{url_for "/libs/masonry/dist/masonry.pkgd.js"}"}
     %script{type: "text/javascript", src: "#{url_for "/libs/imagesloaded/imagesloaded.pkgd.min.js"}"}
     %script{type: "text/javascript", src: "#{url_for "/libs/devbridge-autocomplete/dist/jquery.autocomplete.min.js"}"}
@@ -21,7 +20,7 @@
     %script{:type => "text/javascript", :src => "#{url_for '/js/notifications.js'}"}
     %script
       //default is to enable keypress functions unless page opts out
-      var keypress_enable=true;
+      //var keypress_enable=true;
       var album_summary_available=false;
       var track_summary_available=true;
   %body
@@ -49,7 +48,7 @@
       !=yield
     %div.sp-bottom-sm.row#footer
       %div.container.footer
-%script{:type => "text/javascript", :src => "#{url_for '/js/keypress.js'}"}
+//%script{:type => "text/javascript", :src => "#{url_for '/js/keypress.js'}"}
 :javascript
   $('#q').autocomplete({
     serviceUrl: '#{url_for "/livesearch"}',

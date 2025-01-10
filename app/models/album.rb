@@ -8,16 +8,18 @@ class Album < Sequel::Model
 
   # returns tracks formatted as string of form
   # {title: "${track_number}. ${track_title}", mp3: "${path to mp3 (in public folder}"}, ...
-  def playlist
+  def playlist(user=nil)
     tracks.sort_by{ |t| t.track_number.to_i }.each_with_index.map do |track, i|
       track_number = track.track_number.nil? ? i+1 :  track.track_number.gsub(/\/.*/, "")
       artist_name = track.artist.nil? ? track.album.artist.name : track.artist.name
       title = track.title.shrink(40).gsub(/"/, "\\\"")
       %Q(
         {
-          title: "#{track_number}. #{title}",
-          mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
-          artist: "#{artist_name.shrink(25)}"
+          title: "#{title}",
+          url: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
+          artist: "#{artist_name.shrink(25)}",
+          favorited: "#{track.favorited?(user)}",
+          id: "#{track.id}"
         }
       )
     end

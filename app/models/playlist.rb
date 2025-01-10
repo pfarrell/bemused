@@ -3,16 +3,18 @@ class Playlist < Sequel::Model
 
   one_to_many :playlist_tracks
 
-  def track_list
+  def track_list(user=nil)
     tracks = playlist_tracks.sort_by{|x| x.order}.map{|x| x.track}
     tracks.map.with_index do |track,i|
       next if track.nil?
       artist_name = track.album.nil? || track.album.artist.nil? ? "unknown" : track.album.artist.name
       %Q(
         {
-          title: "#{i+1}. #{track.title}",
-          mp3: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
-          artist: "#{artist_name}"
+          title: "#{track.title}",
+          url: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
+          artist: "#{artist_name}",
+          favorited: "#{track.favorited?(user)}",
+          id: "#{track.id}"
         }
       )
     end
