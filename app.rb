@@ -28,6 +28,7 @@ class Bemused < Sinatra::Application
   set :session_secret, ENV["BEMUSED_SESSION_SECRET"]
   set :views, Proc.new { File.join(root, "app/views") }
   set :local_authority, 'http://192.168.0.47' # for Sinatra::LocalApp
+  set :bind, '0.0.0.0'
 
   helpers do
     def user_tags
@@ -73,7 +74,7 @@ class Bemused < Sinatra::Application
   end
 
   configure do
-    info = development? || test? ? MockWikipedia : ::Wikipedia
+    info = development? || test? ? Wikipedia : ::Wikipedia
     set :info, Info.new(info)
   end
 

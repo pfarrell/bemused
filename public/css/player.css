@@ -1,3 +1,8 @@
+.player-btn, .track-item {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .player-btn {
   font-size: 20px;
 }
