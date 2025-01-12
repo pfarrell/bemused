@@ -25,8 +25,6 @@ function AudioPlayer(playlist, audioElement, containerElement, config = {}) {
 
 AudioPlayer.prototype.init = function() {
   this.audioPlayer.controls = false;
-  this.audioPlayer.playsInline = true;
-  this.audioPlayer.webkitPlaysinline = true;
   this.container.appendChild(this.audioPlayer);
 
   this.controlsContainer = document.createElement('div');
@@ -156,26 +154,7 @@ AudioPlayer.prototype.createProgressBar = function() {
   progressBar.addEventListener('input', (e) => {
     const percent = e.target.value / 100;
     this.audioPlayer.currentTime = percent * this.audioPlayer.duration;
-  }, {passive: false});
-
-  // Add touch events for progress bar
-  progressBar.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const rect = progressBar.getBoundingClientRect();
-    const percent = (touch.clientX - rect.left) / rect.width;
-    progressBar.value = percent * 100;
-    this.audioPlayer.currentTime = percent * this.audioPlayer.duration;
-  }, { passive: false});
-
-  progressBar.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const rect = progressBar.getBoundingClientRect();
-    const percent = (touch.clientX - rect.left) / rect.width;
-    progressBar.value = percent * 100;
-    this.audioPlayer.currentTime = percent * this.audioPlayer.duration;
-  }, { passive: false});
+  });
 
   progressBarWrapper.appendChild(progressBar);
   return progressBarWrapper;
@@ -225,7 +204,7 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
 
   this.playlist.forEach((track, index) => {
     const listItem = document.createElement('li');
-    const prefix = this.getTrackPrefix(track);
+    const prefix = this.getTrackPrefix(track, index);
     const trackText = document.createElement('span');
     trackText.textContent = `${index + 1}. ${track.title} - ${track.artist}`;
 
@@ -246,25 +225,13 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
     }
     listItem.appendChild(trackText);
 
-    const handleTrackSelection = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
+    trackText.addEventListener('click', () => {
       if (this.currentTrackIndex === index && !this.audioPlayer.paused) {
         this.audioPlayer.pause();
       } else {
         this.loadAndPlayTrack(index);
       }
-      return false;
-    };
-
-    trackText.addEventListener('click', handleTrackSelection, { passive: false });
-    trackText.addEventListener('touchstart', handleTrackSelection, { passive: false });
-    trackText.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }, { passive: false });
+    });
 
     this.trackListElement.appendChild(listItem);
   });
@@ -280,16 +247,13 @@ AudioPlayer.prototype.loadAndPlayTrack = function(index) {
     const track = this.playlist[index];
 
     this.audioPlayer.src = track.url;
-    // Add a small delay before playing to ensure src is loaded
-    setTimeout(() => {
-      this.audioPlayer.play()
-        .catch(error => console.error('Error playing track:', error));
-    }, 100);
-    
+    this.audioPlayer.play();
     this.onTrackStart(track);
 
     Array.from(this.trackListElement.children).forEach((item, idx) => {
       item.classList.toggle('active', idx === index);
+      //item.style.backgroundColor = idx === index ? '#007acc' : '';
+      //item.style.color = idx === index ? 'white' : 'black';
     });
 
     this.updatePlayButton();
