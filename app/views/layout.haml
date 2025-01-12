@@ -50,12 +50,6 @@
       %div.container.footer
 //%script{:type => "text/javascript", :src => "#{url_for '/js/keypress.js'}"}
 :javascript
-  document.addEventListener('touchmove', function(e) {
-    if(!e.target.closest('.summary')) {
-        e.preventDefault();
-    }
-  }, { passive: false });
-
   $('#q').autocomplete({
     serviceUrl: '#{url_for "/livesearch"}',
     paramName: 'q',
