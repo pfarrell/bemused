@@ -110,6 +110,8 @@ img {
 }
 
 .summary {
+  -webkit-overflow-scrolling: touch;
+  max-height: 300px;
   padding: 1em;
   border-radius: 1em;
   overflow: scroll;
@@ -133,10 +135,9 @@ canvas {
 }
 
 .player {
-  float: right;
-  display: inline-block;
+  position: relative;
   width: calc(100% - 20px);
-  height: 100%;
+  z-index: 2;
 }
 
 .favorites {
