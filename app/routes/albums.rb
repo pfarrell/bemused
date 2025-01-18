@@ -7,7 +7,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/album/:id" do
-    haml :album, locals: {album: Album[params[:id]] }
+    haml :album, layout: !request.xhr?, locals: {album: Album[params[:id]] }
   end
 
   get "/admin/album/:id" do

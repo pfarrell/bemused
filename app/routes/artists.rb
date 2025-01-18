@@ -8,7 +8,7 @@ class Bemused < Sinatra::Application
     page = (params[:page] || 1).to_i
     artist = Artist[params[:id]]
     albums = Album.where(:artist => artist).order(:title).paginate(page, 24).to_a.select{|album| album.tracks.size > 0}
-    haml :artist, locals: {artist: artist, albums: albums, nxt: page + 1, prev: page - 1}
+    haml :artist, layout: !request.xhr?, locals: {artist: artist, albums: albums, nxt: page + 1, prev: page - 1}
   end
 
   get "/admin/artist/:id" do

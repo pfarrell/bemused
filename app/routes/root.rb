@@ -5,7 +5,7 @@ require 'bcrypt'
 class Bemused < Sinatra::Application
   include RootHelper
   get "/" do
-    haml :index, locals: {artists: random_artists(66)}
+    haml :index, layout: !request.xhr?, locals: {artists: random_artists(66)}
   end
 
   get "/resume" do
@@ -18,7 +18,7 @@ class Bemused < Sinatra::Application
 
   get "/login" do
     referer = request.referer
-    haml :login, locals: {referer: referer}
+    haml :login, layout: !request.xhr?, locals: {referer: referer}
   end
 
   post "/login" do

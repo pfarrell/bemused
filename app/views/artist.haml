@@ -1,13 +1,8 @@
-.row
-  .col-sm-5
-    !=haml :"partials/artist", locals: { artist: artist, admin: true, use_small: false }
-  .col-sm-offset-1.col-sm-5.artist
-    .summary#summary
-.row.top-buffer
-.row.top-buffer
-  .col-sm-12.albums
-    -artist.albums.each do |album|
-      !=haml :"partials/album", locals: { album: album}
+!=haml :"partials/artist", locals: { artist: artist, admin: true, use_small: false }
+.artist
+  .summary#summary
+-albums.each do |album|
+  !=haml :"partials/album", locals: { album: album}
 :javascript
   keypress_enable=false;
   summary_loaded=false;
@@ -20,31 +15,14 @@
     $('#summary').append("<p class='text'>" + data.summary);
     $('#summary').append("  <a target='_' href='" + data.url + "'>…more at wikipedia</a></p>");
     summary_loaded = true;
-    masonrize();
   }
 
   $(document).attr("title", "#{artist.name}");
   $('.navbar-info').html("<span class='artist-title'>#{artist.name}</span>");
   var container = document.querySelector('.albums');
-  var msnry = new Masonry( container, {
-    // options
-    columnWidth: 180,
-    itemSelector: '.item'
-  });
-  imagesLoaded(container, function() {
-    images_loaded = true;
-    masonrize();
-  });
 
   $(document).ready(function() {
     get_summary("#{url_for("/artist/#{artist.id}/summary")}", summary_done, summary_loaded, "#summary");
     summary_loaded = true;
-    masonrize();
   });
-
-  function masonrize() {
-    if(images_loaded && summary_loaded) {
-      msnry.layout();
-    }
-  }
 
