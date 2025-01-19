@@ -6,15 +6,12 @@
     %meta{:charset => "utf-8"}
     %meta{:name => "viewport", :content=>"width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0"}
     %meta{:name=>"apple-mobile-web-app-capable", :content=>"yes"}
-    %script{:type => "text/javascript", :src => "#{url_for('/libs/jquery/dist/jquery.min.js')}"}
     %link{:rel => "stylesheet", :href => "#{url_for '/css/default.css'}", :type => "text/css", :media => "screen" }
     %link{:rel => "stylesheet", :href => "#{url_for '/css/player2.css'}", :type => "text/css", :media => "screen" }
     %link{rel:"shortcut icon",href:"//patf.com/images/bemused.ico"}
+    %script{:type => "text/javascript", :src => "#{url_for('/libs/jquery/dist/jquery.min.js')}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/navigation.js'}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/music-player/dist/player.js'}"}
-    //%script{type: "text/javascript", src: "#{url_for "/libs/masonry/dist/masonry.pkgd.js"}"}
-    //%script{type: "text/javascript", src: "#{url_for "/libs/imagesloaded/imagesloaded.pkgd.min.js"}"}
-    %script{type: "text/javascript", src: "#{url_for "/libs/devbridge-autocomplete/dist/jquery.autocomplete.min.js"}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/form_actions.js'}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/notifications.js'}"}
     %script
@@ -28,10 +25,8 @@
         PShare
       .search-container
         %form{data: {"internal": "true"}, id: "search", action: "#{url_for("/search")}", method: "GET"}
-          %input{type:"Hidden", id: "lookup_type", name: "lookup_type"}
-          %input{type:"Hidden", id: "lookup_id", name: "lookup_id"}
           .form-group
-            %input.search-input{data: {"internal": "true"}, type: "TEXT", id: "q", name: "q", autofocus: true, placeholder: "Search for songs, artists, or albums..."}
+            %input#q.search-input{data: {"internal": "true"}, type: "TEXT", name: "q", autofocus: true, placeholder: "Search for songs, artists, or albums..."}
       %span
         != haml :'partials/profile', locals: {user: current_user}.merge(locals)
     %main.main-content
@@ -58,23 +53,6 @@
 //%script{:type => "text/javascript", :src => "#{url_for '/js/keypress.js'}"}
 :javascript
   window.player
-
-  $('#q').autocomplete({
-    serviceUrl: '#{url_for "/livesearch"}',
-    paramName: 'q',
-    minChars: 3,
-    lookupLimit: 50,
-    deferRequestBy: 100,
-    autoSelectFirst: true,
-    beforeRender: function(container, suggestions) {
-      var i = 1;
-    },
-    onSelect: function (suggestion) {
-      document.getElementById('lookup_type').value = suggestion.type;
-      document.getElementById('lookup_id').value = suggestion.data;
-      document.getElementById('search').submit();
-    }
-  });
 
   function togglePlaylist() {
     const playlist = document.getElementById('playlist');

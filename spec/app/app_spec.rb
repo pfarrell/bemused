@@ -263,13 +263,13 @@ describe 'Bemused' do
     expect(last_response).to be_ok
   end
 
-  it "has a search route" do
-    Artist.new(name: "wax lips").save
-    Album.new(title: "waxing moon").save
-    get "/search?q=wax&lookup_type=artist"
-    expect(last_response).to be_redirect
-    expect(last_response.headers['Location']).to match(/artist\//)
-  end
+#  it "has a search route" do
+#    Artist.new(name: "wax lips").save
+#    Album.new(title: "waxing moon").save
+#    get "/search?q=wax&lookup_type=artist"
+#    expect(last_response).to be_redirect
+#    expect(last_response.headers['Location']).to match(/artist\//)
+#  end
 
   it "has a search route" do
     Artist.new(name: "wax lips").save

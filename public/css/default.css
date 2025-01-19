@@ -164,3 +164,18 @@ canvas {
   height: 400px;
   object-fit: cover;
 }
+
+.twocol {
+  display: grid;
+  grid-template-columns: 400px auto;
+  column-gap: 1em;
+}
+
+.track {
+  font-size: large;
+  cursor: pointer;
+}
+
+.track:hover {
+  font-weight: bold;
+}
