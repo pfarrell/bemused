@@ -226,7 +226,8 @@ body {
 }
 
 .track-item:hover {
-  background-color: #f4f4f4;
+  background-color: #000000;
+  opacity: .5;
 }
 
 .track-title {
