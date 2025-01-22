@@ -245,7 +245,7 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
     listItem.addEventListener('dragstart', (e) => {
       this.draggedItem = listItem;
       this.draggedItemIndex = index;
-      this.style.pointer = 'grab';
+      this.draggedItemIndex.style.pointer = 'grab';
       listItem.style.opacity = '0.2';
       e.dataTransfer.effectAllowed = 'move';
     });
@@ -254,7 +254,7 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
       this.draggedItem.style.opacity = '1';
       this.draggedItem = null;
       this.draggedItemIndex = null;
-      this.style.pointer = 'pointer';
+      this.draggedItemIndex.style.pointer = 'pointer';
 
       // Remove all drag-over effects
       const items = this.trackListElement.getElementsByClassName('track-item');
@@ -328,6 +328,9 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
     });
 
     this.trackListElement.appendChild(listItem);
+  });
+  Array.from(this.trackListElement.children).forEach((item, idx) => {
+    item.classList.toggle('active', idx === this.currentTrackIndex);
   });
 };
 
@@ -405,7 +408,7 @@ AudioPlayer.prototype.addTrack = function(track) {
   return this.playlist.length - 1; // Return index of newly added track
 };
 
-AudioPlayer.prototype.addTracks = function(tracks) {
+AudioPlayer.prototype.addTracks = function(tracks, playNext=false) {
   if (!Array.isArray(tracks)) {
     throw new Error('Tracks must be provided as an array');
   }
@@ -416,7 +419,11 @@ AudioPlayer.prototype.addTracks = function(tracks) {
   }
   
   const startIndex = this.playlist.length;
-  this.playlist.push(...tracks);
+  if (playNext) {
+    this.playlist.splice(this.currentTrackIndex+1, 0, ...tracks);
+  } else {
+    this.playlist.push(...tracks);
+  }
   this.loadPlaylistUI();
   return { startIndex, count: tracks.length };
 };

@@ -8,7 +8,9 @@
       =album.title
     .artist
       =album.artist.name
-    %input{type: "button", value: "Play Album", onclick: "enqueueAlbum([#{album.playlist(current_user)}])"}
+    %input{type: "button", value: "Play Now", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, true)"}
+    %input{type: "button", value: "Play Next", onclick: "enqueueAlbum([#{album.playlist(current_user)}], true, false)"}
+    %input{type: "button", value: "Add to Queue", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, false)"}
 .tracks
   -album.tracks.sort_by{ |t| t.track_number.to_i }.each do |track|
     .track
