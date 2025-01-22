@@ -2,27 +2,20 @@
 .twocol
   .col
     %img.image-responsive.fit-image{src: url_for("/images/albums/#{album.image}")}
-  .col
-    %div
-      %input{type: "button", value: "Play Album", onclick: "enqueueAlbum()"}
-    .tracks
-      -album.tracks.sort_by{ |t| t.track_number.to_i }.each do |track|
-        .track
-          %a{onClick: "enqueueTrack(#{track.to_json})"}
-            =track.title
+  .album-info
+    Album Info
+    .title
+      =album.title
+    .artist
+      =album.artist.name
+    %input{type: "button", value: "Play Album", onclick: "enqueueAlbum([#{album.playlist(current_user)}])"}
+.tracks
+  -album.tracks.sort_by{ |t| t.track_number.to_i }.each do |track|
+    .track
+      %a{onClick: "enqueueTrack(#{track.to_json})"}
+        =track.title
 .summary#album_summary
 .summary#track_summary
 
 :javascript
   
-  function enqueueAlbum() {
-    player.clearPlaylist();
-    
-    player.addTracks([#{album.playlist(current_user)}])
-    player.loadAndPlayTrack(0);
-  }
-
-  function enqueueTrack(track) {
-    player.addTrack(track)
-  }
-

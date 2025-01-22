@@ -12,6 +12,7 @@
     %script{:type => "text/javascript", :src => "#{url_for('/libs/jquery/dist/jquery.min.js')}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/navigation.js'}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/music-player/dist/player.js'}"}
+    %script{:type => "text/javascript", :src => "#{url_for '/js/player-controls.js'}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/form_actions.js'}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/notifications.js'}"}
     %script
@@ -82,10 +83,19 @@
 
     window.player = new AudioPlayer([], audioElement, containerElement, playlistElement, {
       onTrackStart: (track) => {
+        get_summary("#{url_for("/track")}" + get_id(track.url) + '/summary', track_summary, "track_summary_available", "#track_summary");
+        notify(track);
+        $(document).prop("title", track.title);
       },
       onFiveSecondMark: (track) => {
+        $.ajax({type: "GET", url: track.url.replace("stream","log")});
       },
       getTrackPrefix: (track, index) => {
+        if(#{!current_user.nil?}) {
+          var favorite_url = "#{url_for('/track/')}" + track.id + "/favorite";
+          track.favorite_url= favorite_url;
+          return build_favorites_entities(track);
+        }
       }
     });
 
