@@ -2,14 +2,30 @@ html {
   height: 100%;
   overflow-y: scroll;
 }
+
 body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
   color: #110000;
   font-family: "Lato";
   height: 100%;
 }
 
-#tracklist {
- margin-top:46px;
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 80px;
+}
+
+.player-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  z-index: 1000;
 }
 
 td {
@@ -64,10 +80,6 @@ img {
   font-style:italic;
 }
 
-.track-title {
-  font-weight:bold;
-  color:#CF7C29;
-}
 
 .autocomplete-suggestion {
   background-color:#f8f8f8;
@@ -168,6 +180,22 @@ canvas {
 }
 
 .fit-image{
-  width: 100%;
-  object-fit: cover;
+  max-height: 400px;
+  width: auto;
+  object-fit: contain;
+}
+
+.twocol {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 1em;
+}
+
+.track {
+  font-size: large;
+  cursor: pointer;
+}
+
+.track:hover {
+  font-weight: bold;
 }

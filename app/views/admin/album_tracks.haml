@@ -1,5 +1,5 @@
 -model.tracks.each do |track|
   .track
     =track.title
-    %a{href: "#{url_for("/admin/track/#{track.id}")}"}
+    %a{href: "#{url_for("/admin/track/#{track.id}")}", data: {"internal": "true"}}
       Edit

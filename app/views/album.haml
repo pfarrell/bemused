@@ -1,73 +1,27 @@
-.row
-  .col-sm-5
-    .player
-      !=haml :"partials/player", locals: { admin_url: "#{url_for("/admin/album/#{album.id}")}" }
-    //=haml :"partials/visualizer"
-    .summary#track_summary
-  .col-sm-7
+//=haml :"partials/visualizer"
+.twocol
+  .col
     %img.image-responsive.fit-image{src: url_for("/images/albums/#{album.image}")}
+  .album-info
+    .artist
+      %a{data: {"internal": "true"}, href: url_for("/artist/#{album.artist.id}")} 
+        =album.artist.name
+    .title
+      =album.title
+    .btn
+      %input{type: "button", value: "Play Now", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, true)"}
+    .btn
+      %input{type: "button", value: "Play Next", onclick: "enqueueAlbum([#{album.playlist(current_user)}], true, false)"}
+    .btn
+      %input{type: "button", value: "Add to Queue", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, false)"}
     .summary#album_summary
-
-:javascript
-    var myPlaylist;
-
-    function album_summary(data) {
-      $('#album_summary').append(data.summary);
-      $('#album_summary').append("  <a target='_' href='" + data.url + "'>…more at wikipedia</a>");
-    }
-
-    function track_summary(data) {
-      $('#track_summary').empty();
-      $('#track_summary').append(data.summary);
-      $('#track_summary').append("  <a target='_' href='" + data.url + "'>…more at wikipedia</a>");
-    }
-
-    function get_id(str) {
-      return str.substring(str.lastIndexOf('/'));
-    }
-
-    $(document).ready(function() {
-      document.title = "#{album.title}";
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const playlist = [#{album.playlist(current_user)}];
-      const audioElement = document.createElement('audio');
-      const containerElement = document.getElementById('player-container');
-
-      new AudioPlayer(playlist, audioElement, containerElement, {
-        onTrackStart: (track) => {
-          get_summary("#{url_for("/track")}" + get_id(track.url) + '/summary', track_summary, "track_summary_available", "#track_summary");
-          notify(track);
-          $('.navbar-info').html("                                                                \
-              <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
-                <span class='artist-title'>#{shorten album.artist.name, 20}</span>                  \
-              </a>>                                                                                 \
-              <span class='album-title'>#{shorten album.title, 20}</span>                           \
-              <span class='track-title'>" + track.title + "</span>"
-          );
-          $(document).prop("title", track.title);
-        },
-        onFiveSecondMark: (track) => {
-          $.ajax({type: "GET", url: track.url.replace("stream","log")});
-        },
-        getTrackPrefix: (track, index) => {
-          if(#{!current_user.nil?}) {
-            var favorite_url = "#{url_for('/track/')}" + track.id + "/favorite"; 
-            track.favorite_url= favorite_url;
-            return build_favorites_entities(track);
-          }
-        }
-      });
-
-    });
-
-    $(document).ready(function() {
-      $('.navbar-info').html("                                                                \
-        <a href='#{url_for("/artist/#{album.artist.id}")}' title='#{album.artist.name}'>      \
-          <span class='artist-title'>#{shorten album.artist.name, 30}</span>                  \
-        </a>> <span class='album-title'>#{shorten album.title, 30}</span>");
-      get_summary("#{url_for("/album/#{album.id}/summary")}", album_summary, "album_summary_available", "#album_summary");
-    });
-
-
+      =summary['summary']
+      -if summary['url']
+        %a{target: "_", href:"#{summary['url']}"}
+          \...more at wikipedia
+    .summary#track_summary
+.tracks
+  -album.tracks.sort_by{ |t| t.track_number.to_i }.each do |track|
+    .track
+      %a{onClick: "enqueueTrack(#{track.to_json})"}
+        =track.title

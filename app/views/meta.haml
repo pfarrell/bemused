@@ -79,6 +79,3 @@
             =track.media_file.absolute_path unless track.media_file.nil?
 :javascript
   $('#search').prop('action', "#{url_for('/meta')}");
-  $(document).ready(function() {
-    $('#q').autocomplete('disable');
-  });

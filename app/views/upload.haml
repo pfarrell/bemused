@@ -21,18 +21,3 @@
 -unless params["info"].nil?
   .text
     =params["info"]
-:javascript
-  $('#album').autocomplete({
-    serviceUrl: '#{url_for "/searchalbums"}',
-    paramName: 'q',
-    minChars: 1,
-    lookupLimit: 50,
-    autoSelectFirst: true,
-  });
-  $('#artist').autocomplete({
-    serviceUrl: '#{url_for "/searchartists"}',
-    paramName: 'q',
-    minChars: 1,
-    lookupLimit: 50,
-    autoSelectFirst: true,
-  });

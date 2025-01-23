@@ -1,23 +1,12 @@
 -playlists.each do |playlist|
   .playlist
-    %a.item{href: "#{url_for("/playlist/#{playlist.id}")}"}
+    %a.item{href: "#{url_for("/playlist/#{playlist.id}")}", data: {"internal": "true"}}
       %div
         %img{title: "#{playlist.name}", src: "#{url_for "/images/albums/sm/#{playlist.image_path}"}"}
-%form{method: "POST", action:"#{url_for("/playlists/new")}"}
+%form{method: "POST", action:"#{url_for("/playlists/new")}", data: {"internal": "true"}}
   .input-group.input-group-lg
     %span.input-group-addon
       New Playlist
     %input.form-control{type:"text", name:"name"}
   .submit
     %input.btn.btn-default.btn-lg{type:"Submit", value:"Submit"}
-  
-:javascript
-  var container = document.querySelector('#content');
-  var msnry = new Masonry( container, {
-    // options
-    columnWidth: 200,
-    itemSelector: '.item'
-  });
-  imagesLoaded(container, function() {
-    msnry.layout();
-  });

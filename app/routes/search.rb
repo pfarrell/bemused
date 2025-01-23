@@ -1,29 +1,18 @@
 require 'json'
 class Bemused < Sinatra::Application
 
-  def search
-  end
-
-  def search_albums
-  end
-
-  def handle_direct
-    url_for("/#{params[:lookup_type]}/#{params[:lookup_id].to_i}")
-  end
-
   %w(get post).each do |meth|
     send meth, "/search" do
       query = params[:q]
       redirect(url_for("/#{AutoComplete.translate(query[1..-1])}")) if query =~ /^\//
       redirect(url_for("/")) if query.nil? || query.length < 2
-      redirect handle_direct unless params[:lookup_type].nil? || params[:lookup_type].empty?
       albums = Album.where(Sequel.ilike(:title, "%#{query}%"))
       artists = Artist.where(Sequel.ilike(:name, "%#{query}%"))
       playlists = Playlist.where(Sequel.ilike(:name, "%#{query}%"))
       redirect(url_for("/artist/#{artists.first.id}")) if artists.count == 1 and albums.count == 0 and playlists.count == 0
       redirect(url_for("/album/#{albums.first.id}")) if albums.count == 1 and artists.count == 0 and playlists.count == 0
       redirect(url_for("/album/#{albums.first.id}")) if playlists.count == 1 and artists.count == 0 and albums.count == 0
-      haml :search, locals: {
+      haml :search, layout: !request.xhr?, locals: {
         :albums => albums,
         :artists => artists,
         :playlists => playlists

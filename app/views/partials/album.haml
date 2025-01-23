@@ -1,2 +1,2 @@
-%a.item{href: "#{url_for("/album/#{album.id}")}"}
+%a.item{href: "#{url_for("/album/#{album.id}")}", data: {"internal": "true"}}
   %img.artist{title: "#{album.title}", src: "#{url_for("/images/albums/sm/#{album.image_path}")}"}

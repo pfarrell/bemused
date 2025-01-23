@@ -1,4 +1,4 @@
-%a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}"}
+%a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}", data: {"internal": "true"}}
   =model.to_s
 %form.model
   -model.editable_attributes.each do |k,v|
@@ -23,16 +23,6 @@
     !=haml :'partials/newtag', locals: { owner_id: model.id }
 :javascript
   keypress_enable=false;
-
-  $(document).ready(function() {
-    $('#tag').autocomplete({
-      serviceUrl: '#{url_for "/searchtags"}',
-      paramName: 'q',
-      minChars: 1,
-      lookupLimit: 50,
-      autoSelectFirst: true,
-    });
-  });
 
   function add_tag(owner_id) {
     var url = "#{url_for('/artist/')}" + owner_id + '/tags'; 
