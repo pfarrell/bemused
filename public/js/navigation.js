@@ -9,11 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  document.getElementById('search').addEventListener('submit', async (e) => {
-    e.preventDefualt();
-    console.log("submit clicked");
-  });
-
   // Handle internal navigation
   document.addEventListener('click', async (e) => {
     // Find closest anchor tag with data-internal (handles nested elements in links)
@@ -41,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
       history.pushState({}, '', url);
       
       // Update main content
-      document.querySelector('.main-content').innerHTML = html;
+      document.querySelector('.content-container').innerHTML = html;
       
       // Update page title if provided
       const titleMatch = html.match(/<title>(.*?)<\/title>/);
@@ -57,6 +52,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Add form handler
+  const searchForm = document.querySelector('form[data-internal]');
+  if (searchForm) {
+    searchForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      
+      try {
+        const response = await fetch(form.action, {
+          method: form.method,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: new FormData(form)
+        });
+        
+        const html = await response.text();
+        document.querySelector('.content-container').innerHTML = html;
+        
+        const url = `${form.action}?${new URLSearchParams(new FormData(form))}`;
+        history.pushState({}, '', url);
+      } catch (error) {
+        console.error('Search failed:', error);
+        form.submit();
+      }
+    });
+  }
+
+
   // Handle browser back/forward buttons
   window.addEventListener('popstate', async () => {
     try {
@@ -66,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       const html = await response.text();
-      document.querySelector('.main-content').innerHTML = html;
+      document.querySelector('.content-container').innerHTML = html;
     } catch (error) {
       console.error('Navigation failed:', error);
       window.location.reload();

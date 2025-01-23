@@ -25,7 +25,7 @@
       %a{data: {"internal": "true"}, href:"#{url_for("/")}"}
         PShare
       .search-container
-        %form{data: {"internal": "true"}, id: "search", action: "#{url_for("/search")}", method: "GET"}
+        %form{data: {"internal": "true"}, id: "search", action: "#{url_for("/search")}", method: "POST"}
           .form-group
             %input#q.search-input{data: {"internal": "true"}, type: "TEXT", name: "q", autofocus: true, placeholder: "Search for songs, artists, or albums..."}
       %span
