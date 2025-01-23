@@ -4,11 +4,19 @@ require 'json'
 
 class Bemused < Sinatra::Application
 
+  def summarize(artist)
+    if artist.wikipedia || artist[:name]
+      name = artist.wikipedia || wp_fix(artist[:name])
+      JSON.parse(summary('artists', possible_names(name)))
+    end
+  end
+
   get "/artist/:id" do
     page = (params[:page] || 1).to_i
     artist = Artist[params[:id]]
+    summary = summarize(artist) || {}
     albums = Album.where(:artist => artist).order(:title).paginate(page, 24).to_a.select{|album| album.tracks.size > 0}
-    haml :artist, layout: !request.xhr?, locals: {artist: artist, albums: albums, nxt: page + 1, prev: page - 1}
+    haml :artist, layout: !request.xhr?, locals: {artist: artist, albums: albums, nxt: page + 1, prev: page - 1, summary: summary}
   end
 
   get "/admin/artist/:id" do

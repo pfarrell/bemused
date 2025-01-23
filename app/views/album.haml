@@ -3,21 +3,25 @@
   .col
     %img.image-responsive.fit-image{src: url_for("/images/albums/#{album.image}")}
   .album-info
-    Album Info
+    .artist
+      %a{data: {"internal": "true"}, href: url_for("/artist/#{album.artist.id}")} 
+        =album.artist.name
     .title
       =album.title
-    .artist
-      =album.artist.name
-    %input{type: "button", value: "Play Now", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, true)"}
-    %input{type: "button", value: "Play Next", onclick: "enqueueAlbum([#{album.playlist(current_user)}], true, false)"}
-    %input{type: "button", value: "Add to Queue", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, false)"}
+    .btn
+      %input{type: "button", value: "Play Now", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, true)"}
+    .btn
+      %input{type: "button", value: "Play Next", onclick: "enqueueAlbum([#{album.playlist(current_user)}], true, false)"}
+    .btn
+      %input{type: "button", value: "Add to Queue", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, false)"}
+    .summary#album_summary
+      =summary['summary']
+      -if summary['url']
+        %a{target: "_", href:"#{summary['url']}"}
+          \...more at wikipedia
+    .summary#track_summary
 .tracks
   -album.tracks.sort_by{ |t| t.track_number.to_i }.each do |track|
     .track
       %a{onClick: "enqueueTrack(#{track.to_json})"}
         =track.title
-.summary#album_summary
-.summary#track_summary
-
-:javascript
-  
