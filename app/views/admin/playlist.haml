@@ -1,6 +1,6 @@
-%a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}"}
+%a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}", data: {"internal": "true"}}
   =model.to_s
-%form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}")}"}
+%form{method: "POST", action:"#{url_for("/admin/#{model.class.to_s.downcase}/#{model.id}")}", data: {"internal": "true"}}
   -model.editable_attributes.each do |k,v|
     .input-group.input-group-lg
       %span.input-group-addon
@@ -48,13 +48,6 @@
         
 :javascript
   keypress_enable=false
-  $('#track').autocomplete({
-    serviceUrl: '#{url_for "/searchtracks"}',
-    paramName: 'q',
-    minChars: 1,
-    lookupLimit: 50,
-    autoSelectFirst: true,
-  });
 
   function delete_track(id) {
     var url = "#{url_for('/playlist_track/')}" + id;

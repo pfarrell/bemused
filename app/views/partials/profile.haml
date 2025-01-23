@@ -2,16 +2,16 @@
   %li.dropdown
     -user = current_user
     -if user
-      %a.dropdown-toggle{href: "#", role: "button", aria: { haspopup: "true", expanded: "false"}, data: { toggle: "dropdown"}}
+      %a.dropdown-toggle{data: {"internal": "true"}, href: "#", role: "button", aria: { haspopup: "true", expanded: "false"}, data: { toggle: "dropdown"}}
         =user.username
         %span.caret
       %ul.dropdown-menu
         %li
-          %a{href: "#{url_for("/profile")}"}
+          %a{data: {"internal": "true"}, href: "#{url_for("/profile")}"}
             Profile
         %li
-          %a{href: "#{url_for("/logout")}"}
+          %a{data: {"internal": "true"}, href: "#{url_for("/logout")}"}
             Logout
     -else
-      %a{href:"#{url_for("/login")}"}
+      %a{data: {"internal": "true"}, href:"#{url_for("/login")}"}
         Login

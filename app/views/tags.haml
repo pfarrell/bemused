@@ -1,12 +1,12 @@
 .row
-  %form.usertags{action: "#{url_for('/tags/set')}", method: 'POST'}
+  %form.usertags{action: "#{url_for('/tags/set')}", method: 'POST', data: {"internal": "true"}}
     -tags.each do |tag|
       .checkbox
         %label
           %input{ name: "tag_#{tag.id}", type: "checkbox", value: tag.id, checked: (set.select{|t| t.id == tag.id}.size > 0)}
             =tag.name
     %input.btn.btn-primary{ value: "Save", type: 'submit'}
-  %form.usertags{action: "#{url_for('/tags')}", method: 'POST'}
+  %form.usertags{action: "#{url_for('/tags')}", method: 'POST', data: {"internal": "true"}}
     %input{ name: "name", type: "text"}
     %input.btn.btn-primary{ value: "Save", type: 'submit'}
 :javascript

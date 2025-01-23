@@ -13,5 +13,5 @@
               -if prop[:link].nil?
                 =prop[:value].call(row)
               -else
-                %a{href:"#{prop[:link].call(row)}"}
+                %a{href:"#{prop[:link].call(row)}", data: {"internal": "true"}}
                   =prop[:value].call(row)

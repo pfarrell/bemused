@@ -18,15 +18,15 @@
               %td
                 =num
               %td
-                %a{href: "#{url_for("/admin/track/#{track.id}")}"}
+                %a{href: "#{url_for("/admin/track/#{track.id}")}", data: {"internal": "true"}}
                   #{track.title} (#{track.id})
               %td
                 -unless track.album.nil? || track.album.artist.nil?
-                  %a{href: "#{url_for("/artist/#{track.album.artist.id}")}"}
+                  %a{href: "#{url_for("/artist/#{track.album.artist.id}")}", data: {"internal": "true"}}
                     #{track.album.artist.name} (#{track.album.artist.id})
               %td
                 -unless track.album.nil?
-                  %a{href: "#{url_for("/album/#{track.album.id}")}"}
+                  %a{href: "#{url_for("/album/#{track.album.id}")}", data: {"internal": "true"}}
                     #{track.album.title} (#{track.album.id})
     -unless tracks.empty?
       .row
@@ -35,32 +35,3 @@
 :javascript
   $('#search').prop('action', "#{url_for('/tracks')}");
   $('.navbar-info').html("#{tracks.count} tracks");
-  $(document).ready(function() {
-    $('#q').autocomplete('disable');
-  });
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.title = "#{album.title}";
-    const playlist = [#{album.playlist}];
-    const audioElement = document.createElement('audio');
-    const containerElement = document.getElementById('player-container');
-
-    new AudioPlayer(playlist, audioElement, containerElement, {
-      onTrackStart: (track) => {
-        notify(track);
-        $(document).prop("title", track.title);
-        $('.navbar-info').html("<span class='track-title'>" + track.title + "</span>");
-      },
-      onFiveSecondMark: (track) => {
-        $.ajax({type: "GET", url: track.url.replace("stream","log")});
-      },
-      getTrackPrefix: (track) => {
-        if(#{!current_user.nil?}) {
-          var favorite_url = "#{url_for('/track/')}" + track.id + "/favorite"; 
-          track.favorite_url= favorite_url;
-          return build_favorites_entities(track);
-        }
-      } 
-    });
-
-  });

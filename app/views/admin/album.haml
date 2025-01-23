@@ -1,8 +1,8 @@
 .link
-  %a{href: "#{url_for("/artist/#{model.artist.id}")}"}
+  %a{href: "#{url_for("/artist/#{model.artist.id}")}", data: {"internal": "true"}}
     =model.artist.name
 .link
-  %a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}"}
+  %a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}", data: {"internal": "true"}}
     =model.to_s
 .row
   %form.model
@@ -67,16 +67,6 @@
         %input.btn.btn-warning{type: 'button', onClick:"if(confirm('delete track?')) {delete_track(#{track.id})}", value: "delete"}
 :javascript
   keypress_enable=false;
-
-  $(document).ready(function() {
-    $('#tag').autocomplete({
-      serviceUrl: '#{url_for "/searchtags"}',
-      paramName: 'q',
-      minChars: 1,
-      lookupLimit: 50,
-      autoSelectFirst: true,
-    });
-  });
 
   function remove_tag(album_id, tag_id) {
     var url = "#{url_for('/album/')}" + album_id + '/tag/' + tag_id; 

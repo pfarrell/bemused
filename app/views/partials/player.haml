@@ -1,6 +1,6 @@
 #player-container
 -unless !current_user || admin_url.nil?
   .edit
-    %a.item{href: "#{admin_url}" }
+    %a.item{href: "#{admin_url}", data: {"internal": "true"} }
       Edit
 :javascript
