@@ -18,15 +18,15 @@
       %tr
         %td
           - unless log.artist.nil?
-            %a{href: "#{url_for("/artist/#{log.artist.id}")}"}
+            %a{href: "#{url_for("/artist/#{log.artist.id}")}", data: {"internal": "true"}}
               #{log.artist.name} (#{log.artist.id})
         %td
           - unless log.album.nil?
-            %a{href: "#{url_for("/album/#{log.album.id}")}"}
+            %a{href: "#{url_for("/album/#{log.album.id}")}", data: {"internal": "true"}}
               #{log.album.title} (#{log.album.id})
         %td
           - unless log.track.nil?
-            %a{href: "#{url_for("/admin/track/#{log.track.id}")}"}
+            %a{href: "#{url_for("/admin/track/#{log.track.id}")}", data: {"internal": "true"}}
               #{log.track.title} (#{log.track.id})
         %td
           #{log.created_at}
@@ -37,6 +37,3 @@
 
 :javascript
   $('.navbar-info').html("#{model[:data].count} log entries");
-  $(document).ready(function() {
-    $('#q').autocomplete('disable');
-  });
