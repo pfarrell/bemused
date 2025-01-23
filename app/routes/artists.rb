@@ -6,7 +6,8 @@ class Bemused < Sinatra::Application
 
   def summarize(artist)
     name = artist.wikipedia || wp_fix(artist[:name])
-    JSON.parse(summary('artists', possible_names(name)))
+    summ = summary('artists', possible_names(name))
+    !summ.empty? ?  JSON.parse(summ) : {}
   end
 
   get "/artist/:id" do

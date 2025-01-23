@@ -4,7 +4,8 @@
   .artist
     .summary#summary
       =summary['summary']
-      %a{target: "_", href:"#{summary['url']}"}
-        \...more at wikipedia
+      -if summary['url']
+        %a{target: "_", href:"#{summary['url']}"}
+          \...more at wikipedia
 -artist.albums.each do |album|
   !=haml :"partials/album", locals: { album: album}

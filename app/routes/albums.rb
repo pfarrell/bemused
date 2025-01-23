@@ -3,8 +3,9 @@ require 'open-uri'
 class Bemused < Sinatra::Application
 
   def summarize(album)
-    name = album.wikipedia || wp_fix(album.name)
-    JSON.parse(summary('albums', possible_names(name)))
+    name = artist.wikipedia || wp_fix(artist[:name])
+    summ = summary('albums', possible_names(name))
+    !summ.empty? ?  JSON.parse(summ) : {}
   end
 
   def shorten(str, len=50)
@@ -13,7 +14,7 @@ class Bemused < Sinatra::Application
 
   get "/album/:id" do
     album = Album[params[:id]]
-    summary = summarize(album) || {}
+    summary = summarize(album)
     haml :album, layout: !request.xhr?, locals: {album: album, summary: summary }
   end
 
