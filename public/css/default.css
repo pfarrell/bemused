@@ -2,12 +2,31 @@ html {
   height: 100%;
   overflow-y: scroll;
 }
+
 body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
   color: #110000;
   font-family: "Lato";
   height: 100%;
 }
 
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 80px;
+}
+
+.player-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  z-index: 1000;
+}
 
 td {
   font-size: 0.8em;
@@ -161,9 +180,9 @@ canvas {
 }
 
 .fit-image{
-  height: 400px;
-  max-width: 50%;
-  object-fit: cover;
+  max-height: 400px;
+  width: auto;
+  object-fit: contain;
 }
 
 .twocol {
