@@ -1,11 +1,10 @@
 .twocol
   .col
     !=haml :"partials/artist", locals: { artist: artist, admin: true, use_small: false }
-  .col
-    .artist
-      .summary#summary
-        =summary['summary']
-        %a{target: "_", href:"#{summary['url']}"}
-          \...more at wikipedia
--albums.each do |album|
+  .artist
+    .summary#summary
+      =summary['summary']
+      %a{target: "_", href:"#{summary['url']}"}
+        \...more at wikipedia
+-artist.albums.each do |album|
   !=haml :"partials/album", locals: { album: album}

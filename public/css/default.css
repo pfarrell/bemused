@@ -167,7 +167,7 @@ canvas {
 
 .twocol {
   display: grid;
-  grid-template-columns: 400px auto;
+  grid-template-columns: auto auto;
   column-gap: 1em;
 }
 
