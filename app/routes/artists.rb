@@ -5,16 +5,14 @@ require 'json'
 class Bemused < Sinatra::Application
 
   def summarize(artist)
-    if artist.wikipedia || artist[:name]
-      name = artist.wikipedia || wp_fix(artist[:name])
-      JSON.parse(summary('artists', possible_names(name)))
-    end
+    name = artist.wikipedia || wp_fix(artist[:name])
+    JSON.parse(summary('artists', possible_names(name)))
   end
 
   get "/artist/:id" do
     page = (params[:page] || 1).to_i
     artist = Artist[params[:id]]
-    summary = summarize(artist) || {}
+    summary = summarize(artist)
     haml :artist, layout: !request.xhr?, locals: {artist: artist, summary: summary}
   end
 
