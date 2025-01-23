@@ -162,12 +162,13 @@ canvas {
 
 .fit-image{
   height: 400px;
+  max-width: 50%;
   object-fit: cover;
 }
 
 .twocol {
   display: grid;
-  grid-template-columns: 30% auto;
+  grid-template-columns: auto auto;
   column-gap: 1em;
 }
 
