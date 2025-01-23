@@ -36,7 +36,7 @@ class Bemused < Sinatra::Application
   end
 
   def fix(string, match, replace)
-    string.gsub(/\b#{match}\b/, replace)
+    string&.gsub(/\b#{match}\b/, replace)
   end
 
   def coalesce(str)
