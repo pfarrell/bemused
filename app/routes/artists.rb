@@ -4,7 +4,7 @@ require 'json'
 
 class Bemused < Sinatra::Application
 
-  def summarize(artist)
+  def summarize_artist(artist)
     name = artist.wikipedia || wp_fix(artist[:name])
     summ = summary('artists', possible_names(name))
     !summ.empty? ?  JSON.parse(summ) : {}
@@ -13,7 +13,7 @@ class Bemused < Sinatra::Application
   get "/artist/:id" do
     page = (params[:page] || 1).to_i
     artist = Artist[params[:id]]
-    summary = summarize(artist)
+    summary = summarize_artist(artist)
     haml :artist, layout: !request.xhr?, locals: {artist: artist, summary: summary}
   end
 
