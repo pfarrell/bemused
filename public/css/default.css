@@ -202,7 +202,10 @@ canvas {
 
 .btn {
   font-size: 1.4em;
-  font-weight: bold;
   text-decoration: none;
   color: white;
+}
+
+.logo {
+  font-weight: bold;
 }
