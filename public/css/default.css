@@ -199,3 +199,10 @@ canvas {
 .track:hover {
   font-weight: bold;
 }
+
+.btn {
+  font-size: 1.4em;
+  font-weight: bold;
+  text-decoration: none;
+  color: white;
+}

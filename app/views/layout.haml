@@ -22,7 +22,7 @@
       var track_summary_available=true;
   %body
     %header.search-header
-      %a{data: {"internal": "true"}, href:"#{url_for("/")}"}
+      %a.btn{data: {"internal": "true"}, href:"#{url_for("/")}"}
         PShare
       .search-container
         %form{data: {"internal": "true"}, id: "search", action: "#{url_for("/search")}", method: "POST"}
