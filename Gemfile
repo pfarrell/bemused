@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem 'sinatra'
+gem 'sinatra', '~> 1.4.5'
 gem 'sinatra-contrib'
 gem 'rack-mobile-detect'
 gem 'haml'
@@ -18,8 +18,5 @@ gem 'passenger'
 gem 'unicorn'
 
 group :development do
-  gem 'byebug'
-  gem 'shotgun'
-  gem 'simplecov'
   gem 'rspec'
 end
