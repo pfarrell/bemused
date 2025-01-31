@@ -14,6 +14,7 @@
       %input{type: "button", value: "Play Next", onclick: "enqueueAlbum([#{album.playlist(current_user)}], true, false)"}
     .btn
       %input{type: "button", value: "Add to Queue", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, false)"}
+    !=haml :"partials/player", layout: !request.xhr?, locals: { admin_url: "#{url_for("/admin/album/#{album.id}")}" }
     .summary#album_summary
       =summary['summary']
       -if summary['url']
