@@ -18,7 +18,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/admin/artist/:id" do
-    haml :"admin/artist", locals: {model: Artist[params[:id]]}
+    haml :"admin/artist", layout: !request.xhr?, locals: {model: Artist[params[:id]]}
   end
 
   get "/artists" do
@@ -31,7 +31,7 @@ class Bemused < Sinatra::Application
   post "/admin/artist/:id" do
     artist = Artist[params[:id]].merge_params(params)
     artist.save
-    haml :'admin/artist', locals: {model: artist}
+    haml :'admin/artist', layout: !request.xhr?, locals: {model: artist}
   end
 
   post "/admin/artist/:id/image" do
@@ -57,7 +57,7 @@ class Bemused < Sinatra::Application
         props={}
         props["word"] = {value: lambda{|x| x[0]}}
         props["count"] = {value: lambda{|x| x[1]}}
-        haml :nonpaginatedlist, locals: {header:props, data: data}
+        haml :nonpaginatedlist, layout: !request.xhr?, locals: {header:props, data: data}
       }
     end
   end

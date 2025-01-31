@@ -3,7 +3,7 @@ require 'json'
 
 class Bemused < Sinatra::Application
   get "/upload" do
-    haml :upload
+    haml :upload, layout: !request.xhr?
   end
 
   post '/upload' do

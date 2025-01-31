@@ -1,10 +1,10 @@
 class Bemused < Sinatra::Application
   get "/playlist/:id" do
-    haml :playlist, locals: {playlist: Playlist[params[:id]]}
+    haml :playlist, layout: !request.xhr?, locals: {playlist: Playlist[params[:id]]}
   end
 
   get "/playlists" do
-    haml :playlists, locals: {playlists: Playlist.where(auto_generated: nil).all}
+    haml :playlists, layout: !request.xhr?, locals: {playlists: Playlist.where(auto_generated: nil).all}
   end
 
   get "/top" do
@@ -16,7 +16,7 @@ class Bemused < Sinatra::Application
       playlist.playlist_tracks << PlaylistTrack.new(track: track)
     end
     playlist.image_path = playlist.random_image
-    haml :playlist, locals: {playlist: playlist}
+    haml :playlist, layout: !request.xhr?, locals: {playlist: playlist}
   end
 
   get "/active" do
@@ -24,12 +24,12 @@ class Bemused < Sinatra::Application
     playlist.name= "Random Active Tracks"
     playlist.playlist_tracks << PlaylistTrack.new(track: Track.active[0])
     playlist.image_path = playlist.random_image
-    haml :radio, locals: {playlist: playlist}
+    haml :radio, layout: !request.xhr?, locals: {playlist: playlist}
   end
 
   get "/newborns" do
     size = params[:size] || "25"
-    haml :playlist, locals: {playlist: Playlist.recent(size.to_i)}
+    haml :playlist, layout: !request.xhr?, locals: {playlist: Playlist.recent(size.to_i)}
   end
 
   post "/playlists/new" do
@@ -51,7 +51,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/admin/playlist/:id" do
-    haml :"admin/playlist", locals: {model: Playlist[params[:id]]}
+    haml :"admin/playlist", layout: !request.xhr?, locals: {model: Playlist[params[:id]]}
   end
 
   post "/admin/playlist/:id" do
@@ -62,7 +62,7 @@ class Bemused < Sinatra::Application
       playlist.add_playlist_track(pt)
     end
     playlist.save
-    haml :"admin/playlist", locals: {model: playlist}
+    haml :"admin/playlist", layout: !request.xhr?, locals: {model: playlist}
   end
 
   post "/admin/playlist/:id/image" do

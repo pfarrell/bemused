@@ -7,7 +7,7 @@ class Bemused < Sinatra::Application
   end
 
   get '/favorites/:id' do
-    haml :playlist, locals: {playlist: Playlist[params[:id].to_i]}
+    haml :playlist, layout: !request.xhr?, locals: {playlist: Playlist[params[:id].to_i]}
   end
 
   delete '/favorite/:id' do
