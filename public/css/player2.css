@@ -106,8 +106,7 @@ body {
 }
 
 .now-playing {
-    display: flex;
-    align-items: center;
+    display: none;
 }
 
 .track-info {
@@ -238,3 +237,19 @@ body {
 #tracklist {
  margin-top:46px;
 }
+
+.time-display {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .now-playing {
+      display: flex;
+      align-items: center;
+  }
+
+  .time-display {
+    display: inline-block;
+  }
+}
+

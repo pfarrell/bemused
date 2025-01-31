@@ -95,13 +95,6 @@ body {
   padding: 0.5rem;
 }
 
-.now-playing {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.5rem;
-}
-
 .playlist-panel {
   position: fixed;
   bottom: var(--player-height);
