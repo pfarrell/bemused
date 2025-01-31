@@ -52,7 +52,7 @@
     %a.item{href: "#{url_for("/admin/album/#{album.id}")}"}
       Edit
 :javascript
-    document.getElementById("content").style.background="url('#{url_for "/images/" + (album.image || "")}')";
+    document.getElementById("content").style.background="url('#{url_for "https://patf.com/images/" + (album.image || "")}')";
     document.getElementById("content").style.backgroundPosition="0px 0px";
     document.getElementById("content").style.backgroundSize="contain";
     document.getElementById("content").style.backgroundRepeat="no-repeat";

@@ -1,9 +1,9 @@
 .albums
   %a.item{href: "#{url_for("/artist/#{artist.id}")}"}
-    %img.artist{title: "#{artist.name}", src: "#{url_for "/images/artists/#{artist.image_path}"}"}
+    %img.artist{title: "#{artist.name}", src: "#{url_for "https://patf.com/images/artists/#{artist.image_path}"}"}
   -artist.albums.each do |album|
     %a.item{href: "#{url_for("/album/#{album.id}")}"}
-      %img.artist{title: "#{album.title}", src: "#{url_for("/images/#{album.image_path}")}"}
+      %img.artist{title: "#{album.title}", src: "#{url_for("https://patf.com/images/#{album.image_path}")}"}
 
 .edit
   %a.item{href: "#{url_for("/admin/artist/#{artist.id}")}"}

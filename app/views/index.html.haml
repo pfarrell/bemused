@@ -1,6 +1,6 @@
 -artists.to_a.select{|artist| artist.albums.size > 0}.each do |artist|
   %a.item{href: "#{url_for "/artist/#{artist.id}"}"}
-    %img.artist{src: "#{url_for "/images/artists/sm/#{artist.image_path}"}", title: "#{artist.name}"}
+    %img.artist{src: "#{url_for "https://patf.com/images/artists/sm/#{artist.image_path}"}", title: "#{artist.name}"}
 :javascript
   var container = document.querySelector('.container');
   var msnry = new Masonry( container, {

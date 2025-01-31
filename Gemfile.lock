@@ -2,9 +2,6 @@ GEM
   remote: https://rubygems.org/
   specs:
     backports (3.6.8)
-    byebug (3.1.2)
-      columnize (~> 0.8)
-      debugger-linecache (~> 1.2)
     capistrano (3.2.1)
       i18n
       rake (>= 10.0.0)
@@ -15,11 +12,8 @@ GEM
       capistrano (~> 3.0)
       sshkit (~> 1.2)
     colorize (0.7.3)
-    columnize (0.8.9)
     daemon_controller (1.2.0)
-    debugger-linecache (1.2.0)
     diff-lcs (1.2.5)
-    docile (1.1.5)
     emk-sinatra-url-for (0.2.1)
       sinatra (>= 0.9.1.1)
     haml (4.0.5)
@@ -62,14 +56,6 @@ GEM
     sequel_pg (1.6.13)
       pg (>= 0.8.0)
       sequel (>= 3.39.0)
-    shotgun (0.9)
-      rack (>= 1.0)
-    simplecov (0.9.1)
-      docile (~> 1.1.0)
-      multi_json (~> 1.0)
-      simplecov-html (~> 0.8.0)
-    simplecov-badge (2.0.2)
-    simplecov-html (0.8.0)
     sinatra (1.4.5)
       rack (~> 1.4)
       rack-protection (~> 1.4)
@@ -99,7 +85,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  byebug
   capistrano (~> 3.2.0)
   capistrano-bower
   capistrano-bundler (~> 1.1.2)
@@ -114,9 +99,6 @@ DEPENDENCIES
   rspec
   sequel
   sequel_pg
-  shotgun
-  simplecov
-  simplecov-badge
   sinatra
   sinatra-contrib
   sinatra-presence (~> 0.0.3)
@@ -124,4 +106,4 @@ DEPENDENCIES
   unicorn
 
 BUNDLED WITH
-   1.11.2
+   1.17.2
