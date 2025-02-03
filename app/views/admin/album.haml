@@ -1,4 +1,4 @@
-%meta{name: "page-script", content: "/js/pages/admin/album.js"}
+%meta{name: "page-script", content: url_for("/js/pages/admin/album.js")}
 .link
   %a{href: "#{url_for("/artist/#{model.artist.id}")}", data: {"internal": "true"}}
     =model.artist.name

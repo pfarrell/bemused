@@ -1,4 +1,4 @@
-%meta{name: "page-script", content: "/js/pages/admin/artist.js"}
+%meta{name: "page-script", content: url_for("/js/pages/admin/artist.js")}
 %a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}", data: {"internal": "true"}}
   =model.to_s
 %form.model
