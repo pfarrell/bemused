@@ -7,9 +7,8 @@ export function update_model(id) {
   return post(form, window.location);
 }
 
-export function save_track(base_url, id) {
+export function save_track(url, id) {
   const form = document.querySelector(`.trackform${id}`);
-  const url = `/admin/track/${id}`;
   return post(form, url);
 }
 
@@ -35,8 +34,7 @@ export function update_all_tracks(id) {
   return patch(form, url);
 }
 
-export function delete_track(base_url, id) {
-  const url = `${base_url}/admin/track/${id}`;
+export function delete_track(url, id) {
   document.querySelector(`.trackform${id}`).remove();
   return del(url);
 } 
