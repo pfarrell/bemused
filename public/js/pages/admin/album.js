@@ -26,7 +26,7 @@ export function remove_tag(url) {
 
 export function save_image(id) {
   const form = document.querySelector('.imageform');
-  return post(form, `${window.location}/image);
+  return post(form, `${window.location}/image`);
 }
 
 export function update_all_tracks(id) {
