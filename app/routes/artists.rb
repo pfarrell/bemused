@@ -18,7 +18,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/admin/artist/:id" do
-    haml :"admin/artist", layout: !request.xhr?, locals: {model: Artist[params[:id]]}
+    haml :"admin/artist", layout: !request.xhr?, locals: { model: Artist[params[:id]] }
   end
 
   get "/artists" do

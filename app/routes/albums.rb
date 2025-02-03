@@ -19,7 +19,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/admin/album/:id" do
-    haml :"admin/album", layout: !request.xhr?, locals: { model: Album[params[:id]] }
+    haml :"admin/album", layout: !request.xhr?, locals: { base_url: url_for("/admin/album/#{params[:id]}"), model: Album[params[:id]] }
   end
 
   post "/admin/album/:id" do

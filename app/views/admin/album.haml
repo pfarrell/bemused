@@ -25,7 +25,7 @@
         Image Name
       %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}", onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_image(#{model.id})}"} 
 .row.sp-top-sm.no-pad
-  !=haml :'partials/tags', locals: { base_url: "#{url_for("/album/#{model.id}/tag"}", tags: model.tags }
+  !=haml :'partials/tags', locals: { base_url: "#{base_url}/tag", tags: model.tags }
 .row
   .col-xs-12
     !=haml :'partials/newtag', locals: { owner_id: model.id }
