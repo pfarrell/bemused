@@ -1,5 +1,6 @@
 // navigation.js
 document.addEventListener('DOMContentLoaded', () => {
+  loadPageScripts();
   // Store player state in localStorage when it changes
   const player = document.querySelector('audio');
   if (player) {
@@ -34,9 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Update the URL
       history.pushState({}, '', url);
-      
-      // Update main content
-      document.querySelector('.content-container').innerHTML = html;
+      await handlePageTransition(html);  // updated content and load javascripts if necessary
       
       // Update page title if provided
       const titleMatch = html.match(/<title>(.*?)<\/title>/);
@@ -69,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         const html = await response.text();
-        document.querySelector('.content-container').innerHTML = html;
+        await handlePageTransition(html); // update content and load javascripts if necessary
         
         const url = `${form.action}?${new URLSearchParams(new FormData(form))}`;
         history.pushState({}, '', url);
@@ -90,7 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       const html = await response.text();
-      document.querySelector('.content-container').innerHTML = html;
+      await handlePageTransition(html); // update content and load javascripts if necessary
+
     } catch (error) {
       console.error('Navigation failed:', error);
       window.location.reload();
@@ -112,6 +112,29 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }
+
+  async function handlePageTransition(html) {
+    const container = document.querySelector('.content-container');
+    container.innerHTML = html;
+    await loadPageScripts();
+  }
+
+  async function loadPageScripts() {
+    const pageScripts = document.querySelectorAll('meta[name="page-script"]');
+    for (const script of pageScripts) {
+      const modulePath = script.getAttribute('content');
+      try {
+        const module = await import(modulePath);
+        if (typeof module.init === 'function') {
+          module.init();
+        }
+        Object.assign(window, module);
+      } catch (error) {
+        console.error(`Failed to load module ${modulePath}:`, error);
+      }
+  }
+}
+
 
   // Call on initial load
   restorePlayerState();
