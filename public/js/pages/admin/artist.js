@@ -8,7 +8,7 @@ export function add_tag(owner_id) {
   return put(form, url);
 }
 
-export function remove_tag(url) {
+export function remove_tag(url, tag_id) {
   $('.tagform' + tag_id).remove();
   return del(url);
 }
