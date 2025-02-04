@@ -16,6 +16,18 @@ body {
   min-height: 100vh;
 }
 
+.logo {
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.dropdown * {
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 .search-header {
   height: var(--header-height);
   display: flex;
@@ -33,6 +45,7 @@ body {
 .search-container {
   flex: 1;
   margin: 0 1rem;
+  background: white;
 }
 
 .search-input {

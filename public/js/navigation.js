@@ -52,30 +52,33 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Add form handler
-  const searchForm = document.querySelector('form[data-internal]');
-  if (searchForm) {
-    searchForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.target;
+  const searchForms = document.querySelectorAll('form[data-internal]');
+
+  if (searchForms.length > 0) {
+    searchForms.forEach(form => {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+            
+        try {
+          const response = await fetch(form.action, {
+            method: form.method,
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new FormData(form)
+          });
       
-      try {
-        const response = await fetch(form.action, {
-          method: form.method,
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          body: new FormData(form)
-        });
-        
-        const html = await response.text();
-        await handlePageTransition(html); // update content and load javascripts if necessary
-        
-        const url = `${form.action}?${new URLSearchParams(new FormData(form))}`;
-        history.pushState({}, '', url);
-      } catch (error) {
-        console.error('Search failed:', error);
-        form.submit();
-      }
+          const html = await response.text();
+          await handlePageTransition(html);
+      
+          const url = `${form.action}`;
+          history.pushState({}, '', url);
+        } catch (error) {
+          console.error('Search failed:', error);
+          form.submit();
+        }   
+      });
     });
   }
 
@@ -134,7 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
   }
 }
-
 
   // Call on initial load
   restorePlayerState();

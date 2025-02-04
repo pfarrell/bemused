@@ -4,13 +4,12 @@
     -if user
       %a.btn{data: {"internal": "true"}, href: "#", role: "button", aria: { haspopup: "true", expanded: "false"}, data: { toggle: "dropdown"}}
         =user.username
-        %span.caret
       %ul
         %li
           %a.btn{data: {"internal": "true"}, href: "#{url_for("/profile")}"}
             Profile
         %li
-          %a.btn{data: {"internal": "true"}, href: "#{url_for("/logout")}"}
+          %a.btn{href: "#{url_for("/logout")}"}
             Logout
     -else
       %a.btn{data: {"internal": "true"}, href:"#{url_for("/login")}"}
