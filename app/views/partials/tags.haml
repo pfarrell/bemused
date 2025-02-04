@@ -1,7 +1,5 @@
 -tags.each do |tag|
-  %form{class: "tagform#{tag.id}", data: {"internal": "true"}}
-    .input-group.input-group-lg
-      %input.form-control{type:"text", name:"name", value: "#{tag.name}"} 
-    .input-group.input-group-lg
-      %input.btn.btn-warning{type: 'button', onClick:"if(confirm('remove tag?')) { remove_tag('#{base_url}/#{tag.id}', '#{tag.id}') }", value: "X"}
-  var url = "; 
+  .input-group.input-group-lg
+    %input.form-control{type:"text", name:"name", value: "#{tag.name}"} 
+  .input-group.input-group-lg
+    %input.btn.btn-warning{type: 'button', onClick:"if(confirm('remove tag?')) { remove_tag('#{base_url}/tag/#{tag.id}', '#{tag.id}') }", value: "X"}

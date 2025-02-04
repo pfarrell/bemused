@@ -21,7 +21,7 @@
   !=haml :'partials/tags', locals: { owner_id: model.id, tags: model.tags, base_url: "#{url_for("/admin/artist/#{model.id}")}" }
 .row
   .col-xs-12
-    !=haml :'partials/newtag', locals: { owner_id: model.id }
+    !=haml :'partials/newtag', locals: { url: url_for("/artist/#{model.id}/tags") }
 :javascript
   keypress_enable=false;
 

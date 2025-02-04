@@ -2,8 +2,8 @@ export function init() {
   console.log('loaded artist scripts');
 }
 
-export function add_tag(owner_id) {
-  var url = "#{url_for('/artist/')}" + owner_id + '/tags'; 
+export function add_tag(url) {
+  console.log(url);
   var form= $("#newtag");
   return put(form, url);
 }

@@ -62,7 +62,7 @@ class Bemused < Sinatra::Application
     end
   end
 
-  delete "/artist/:id/tag/:tag_id" do
+  delete "/admin/artist/:id/tag/:tag_id" do
     artist = Artist[params[:id]]
     tag = Tag[params[:tag_id]]
     artist.remove_tag(tag)
@@ -73,7 +73,7 @@ class Bemused < Sinatra::Application
   end
 
   put "/artist/:id/tags" do
-    tag = Tag.find(name: params[:tag])
+    tag = Tag.find_or_create(name: params[:tag])
     artist = Artist[params[:id]]
     unless artist.tags.include?(tag)
       artist.add_tag(tag)
