@@ -3,7 +3,7 @@ require 'open-uri'
 class Bemused < Sinatra::Application
 
   def summarize_album(album)
-    name = album.wikipedia || wp_fix(album[:title])
+    name = (album.wikipedia and !album.wikipedia.empty? ? album.wikipedia : wp_fix(album[:name]))
     summ = summary('albums', possible_names(name))
     !summ.empty? ?  JSON.parse(summ) : {}
   end
@@ -15,11 +15,11 @@ class Bemused < Sinatra::Application
   get "/album/:id" do
     album = Album[params[:id]]
     summary = summarize_album(album)
-    haml :album, layout: !request.xhr?, locals: {album: album, summary: summary }
+    haml :album, layout: !request.xhr?, locals: {album: album, summary: summary}
   end
 
   get "/admin/album/:id" do
-    haml :"admin/album", locals: {model: Album[params[:id]]}
+    haml :"admin/album", layout: !request.xhr?, locals: { base_url: url_for("/admin/album/#{params[:id]}"), model: Album[params[:id]] }
   end
 
   post "/admin/album/:id" do
@@ -28,7 +28,7 @@ class Bemused < Sinatra::Application
 
     respond_to do |wants|
       wants.js { album.to_json }
-      wants.html { haml :album, locals: {album: album} }
+      wants.html { haml :album, layout: !request.xhr?, locals: {album: album} }
     end
   end
 
@@ -79,7 +79,7 @@ class Bemused < Sinatra::Application
 
   get "/albums/recent/:page" do
      page = params[:page].to_i
-     haml :recent_albums, locals: {model: {data: Album.order(Sequel.desc(:id)).paginate(page, 24)}}
+     haml :recent_albums, layout: !request.xhr?, locals: {model: {data: Album.order(Sequel.desc(:id)).paginate(page, 24)}}
   end
 
   get "/albums/words" do
@@ -91,7 +91,7 @@ class Bemused < Sinatra::Application
         props={}
         props["word"] = {value: lambda{|x| x[0]}}
         props["count"] = {value: lambda{|x| x[1]}}
-        haml :nonpaginatedlist, locals: {header: props, data: data}
+        haml :nonpaginatedlist, layout: !request.xhr?, locals: {header: props, data: data}
       }
     end
   end

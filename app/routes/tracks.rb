@@ -24,7 +24,7 @@ class Bemused < Sinatra::Application
           album.tracks << track
         end
       end
-      haml :tracks, locals: {
+      haml :tracks, layout: !request.xhr?, locals: {
         :tracks => tracks || [],
         :album => album
       }
@@ -32,13 +32,13 @@ class Bemused < Sinatra::Application
   end
 
   get "/admin/track/:id" do
-    haml :"admin/model", locals: {model: track_from_params(params)}
+    haml :"admin/model", layout: !request.xhr?, locals: {model: track_from_params(params)}
   end
 
   post "/admin/track/:id" do
     track = Track[params[:id]].merge_params(params)
     track.save
-    haml :"admin/model", locals: {model: track_from_params(params)}
+    haml :"admin/model", layout: !request.xhr?, locals: {model: track_from_params(params)}
   end
 
   post "/track/:id/favorite" do
@@ -80,7 +80,7 @@ class Bemused < Sinatra::Application
         props={}
         props["word"] = {value: lambda{|x| x[0]}}
         props["count"] = {value: lambda{|x| x[1]}}
-        haml :nonpaginatedlist, locals: {header:props, data: data}
+        haml :nonpaginatedlist, layout: !request.xhr?, locals: {header:props, data: data}
       }
     end
   end

@@ -69,7 +69,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/stats" do
-    haml :stats
+    haml :stats, layout: !request.xhr?
   end
 
   get "/stats/albums" do
@@ -98,7 +98,7 @@ class Bemused < Sinatra::Application
     tracks = query.length >= 2 ? Track.where(Sequel.ilike(:title, "%#{query}%")) : []
     albums = query.length >= 2 ? Album.where(Sequel.ilike(:title, "%#{query}%")) : []
     artists = query.length >= 2 ? Artist.where(Sequel.ilike(:name, "%#{query}%")) : []
-    haml :meta, locals: { tracks: tracks, albums: albums, artists: artists }
+    haml :meta, layout: !request.xhr?, locals: { tracks: tracks, albums: albums, artists: artists }
   end
 
 end

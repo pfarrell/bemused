@@ -8,12 +8,12 @@ class Bemused < Sinatra::Application
     tags = Tag.order(Sequel.asc(:id)).paginate(page, 24)
     respond_to do |wants|
       wants.json { tags.to_json }
-      wants.html { haml :'admin/tags', locals: { model: tags } }
+      wants.html { haml :'admin/tags', layout: !request.xhr?, locals: { model: tags } }
     end
   end
 
   get '/tags' do
-    haml :tags, locals: { tags: Tag.all, set: @tags }
+    haml :tags, layout: !request.xhr?, locals: { tags: Tag.all, set: @tags }
   end
 
   post '/tags/set' do

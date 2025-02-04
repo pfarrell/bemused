@@ -1,5 +1,5 @@
 %form.form{id: "newtag", data: {"internal": "true"}}
   .form-group
-    %input.form-control{id: "tag", type: "text", name: "tag", placeholder: "Add Tag"}
+    %input.form-control{id: "tag", type: "text", name: "tag", placeholder: "Add Tag pat"}
     .submit
-      %input.btn.btn-default.btn-md{type:"Submit", value:"Add Tag", onClick: "add_tag(#{owner_id})"}
+      %input.btn.btn-default.btn-md{value:"Add Tag", onClick: "add_tag('#{url}')"}

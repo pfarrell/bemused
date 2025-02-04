@@ -1,3 +1,4 @@
+%meta{name: "page-script", content: url_for("/js/pages/admin/artist.js")}
 %a{href: "#{url_for("/#{model.class.to_s.downcase}/#{model.id}")}", data: {"internal": "true"}}
   =model.to_s
 %form.model
@@ -17,33 +18,10 @@
       Image Name
     %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}", onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_image(#{model.id})}"}
 .row.sp-top-sm.no-pad
-  !=haml :'partials/tags', locals: { owner_id: model.id, tags: model.tags }
+  !=haml :'partials/tags', locals: { owner_id: model.id, tags: model.tags, base_url: "#{url_for("/admin/artist/#{model.id}")}" }
 .row
   .col-xs-12
-    !=haml :'partials/newtag', locals: { owner_id: model.id }
+    !=haml :'partials/newtag', locals: { url: url_for("/artist/#{model.id}/tags") }
 :javascript
   keypress_enable=false;
 
-  function add_tag(owner_id) {
-    var url = "#{url_for('/artist/')}" + owner_id + '/tags'; 
-    var form= $("#newtag");
-    return put(form, url);
-  }
-
-  function remove_tag(owner_id, tag_id) {
-    var url = "#{url_for('/artist/')}" + owner_id + '/tag/' + tag_id; 
-    $('.tagform' + tag_id).remove();
-    return del(url);
-  }
-
-  function update_model(id) {
-    var form=$(".model");
-    var url = "#{url_for('/admin/artist/')}" + id;
-    return post(form, url);
-  }
-
-  function save_image(id) {
-    var form= $(".imageform");
-    var url = "#{url_for('/admin/artist/')}" + id + "/image";
-    return post(form, url);
-  }

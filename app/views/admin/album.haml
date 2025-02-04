@@ -1,3 +1,4 @@
+%meta{name: "page-script", content: url_for("/js/pages/admin/album.js")}
 .link
   %a{href: "#{url_for("/artist/#{model.artist.id}")}", data: {"internal": "true"}}
     =model.artist.name
@@ -24,7 +25,7 @@
         Image Name
       %input.form-control{type:"text", name:"image_name", value: "#{model.image_path}", onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_image(#{model.id})}"} 
 .row.sp-top-sm.no-pad
-  !=haml :'partials/tags', locals: { owner_id: model.id, tags: model.tags }
+  !=haml :'partials/tags', locals: { base_url: "#{base_url}/tag", tags: model.tags }
 .row
   .col-xs-12
     !=haml :'partials/newtag', locals: { owner_id: model.id }
@@ -53,60 +54,16 @@
   .col-md-6
     Title
 -model.tracks.sort_by{|x| x.track_number.to_i}.each do |track|
+  -base_track_url = url_for("/admin/track/#{track.id}")
   %form{class: "trackform#{track.id}"}
     .row.no-pad
       .col-md-1
-        %input.col-md-4.form-control{type: 'text', name: 'track_number', value: "#{track.track_number}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track(#{track.id})}"}
+        %input.col-md-4.form-control{type: 'text', name: 'track_number', value: "#{track.track_number}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track('#{base_track_url}', '#{track.id}')}"}
       .col-md-1
-        %input.col-md-4.form-control{type: 'text', name: 'album_id', value: "#{track.album_id}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track(#{track.id})}"}
+        %input.col-md-4.form-control{type: 'text', name: 'album_id', value: "#{track.album_id}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track('#{base_track_url}', '#{track.id}')}"}
       .col-md-1
-        %input.col-md-4.form-control{type: 'text', name: 'artist_id', value: "#{track.artist_id}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track(#{track.id})}"}
+        %input.col-md-4.form-control{type: 'text', name: 'artist_id', value: "#{track.artist_id}" , onFocus: "this.dirty=false", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track('#{base_track_url}', '#{track.id}')}"}
       .col-md-6
-        %input.form-control{type: 'text', name: 'title', value: "#{track.title}", onFocus: "this.dirty=false;", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track(#{track.id})}"}
+        %input.form-control{type: 'text', name: 'title', value: "#{track.title}", onFocus: "this.dirty=false;", onChange: "this.dirty = true", onBlur: "if(this.dirty) {save_track('#{base_track_url}', '#{track.id}')}"}
       .col-md-1
-        %input.btn.btn-warning{type: 'button', onClick:"if(confirm('delete track?')) {delete_track(#{track.id})}", value: "delete"}
-:javascript
-  keypress_enable=false;
-
-  function remove_tag(album_id, tag_id) {
-    var url = "#{url_for('/album/')}" + album_id + '/tag/' + tag_id; 
-    $('.tagform' + tag_id).remove();
-    return del(url);
-  }
-
-  function add_tag(album_id) {
-    var url = "#{url_for('/album/')}" + album_id + '/tags'; 
-    var form= $("#newtag");
-    return put(form, url);
-  }
-
-  function save_track(id) {
-    var form= $(".trackform" + id);
-    var url = "#{url_for('/admin/track/')}" + id; 
-    return post(form, url);
-  }
-
-  function save_image(id) {
-    var form= $(".imageform");
-    var url = "#{url_for('/admin/album/')}" + id + "/image";
-    return post(form, url);
-  }
-
-  function update_model(id) {
-    var form=$(".model");
-    var url = "#{url_for('/admin/album/')}" + id;
-    return post(form, url);
-  }
-
-  function update_all_tracks(id) {
-    var form=$(".globalform");
-    var url = "#{url_for('/admin/album/')}" + id + "/tracks";
-    return patch(form, url);
-  }
-
-  function delete_track(id) {
-    var url = "#{url_for('/admin/track/')}" + id;
-    $('.trackform' + id).remove();
-    return del(url);
-  }
-
+        %input.btn.btn-warning{type: 'button', onClick:"if(confirm('delete track?')) {delete_track('#{base_track_url}', '#{track.id}')}", value: "delete"}

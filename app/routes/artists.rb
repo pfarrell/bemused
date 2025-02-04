@@ -5,7 +5,7 @@ require 'json'
 class Bemused < Sinatra::Application
 
   def summarize_artist(artist)
-    name = artist.wikipedia || wp_fix(artist[:name])
+    name = (artist.wikipedia and !artist.wikipedia.empty? ? artist.wikipedia : wp_fix(artist[:name]))
     summ = summary('artists', possible_names(name))
     !summ.empty? ?  JSON.parse(summ) : {}
   end
@@ -18,7 +18,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/admin/artist/:id" do
-    haml :"admin/artist", locals: {model: Artist[params[:id]]}
+    haml :"admin/artist", layout: !request.xhr?, locals: { model: Artist[params[:id]] }
   end
 
   get "/artists" do
@@ -31,7 +31,7 @@ class Bemused < Sinatra::Application
   post "/admin/artist/:id" do
     artist = Artist[params[:id]].merge_params(params)
     artist.save
-    haml :'admin/artist', locals: {model: artist}
+    haml :'admin/artist', layout: !request.xhr?, locals: {model: artist}
   end
 
   post "/admin/artist/:id/image" do
@@ -57,12 +57,12 @@ class Bemused < Sinatra::Application
         props={}
         props["word"] = {value: lambda{|x| x[0]}}
         props["count"] = {value: lambda{|x| x[1]}}
-        haml :nonpaginatedlist, locals: {header:props, data: data}
+        haml :nonpaginatedlist, layout: !request.xhr?, locals: {header:props, data: data}
       }
     end
   end
 
-  delete "/artist/:id/tag/:tag_id" do
+  delete "/admin/artist/:id/tag/:tag_id" do
     artist = Artist[params[:id]]
     tag = Tag[params[:tag_id]]
     artist.remove_tag(tag)
@@ -73,7 +73,7 @@ class Bemused < Sinatra::Application
   end
 
   put "/artist/:id/tags" do
-    tag = Tag.find(name: params[:tag])
+    tag = Tag.find_or_create(name: params[:tag])
     artist = Artist[params[:id]]
     unless artist.tags.include?(tag)
       artist.add_tag(tag)

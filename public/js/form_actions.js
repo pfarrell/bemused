@@ -1,7 +1,7 @@
 function post(form, url, success_cb, failure_cb) {
   $.ajax( {
       url: url,
-      data: form.serialize(),
+      data: $(form).serialize(),
       method: 'post',
       success: success_cb,
   });

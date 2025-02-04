@@ -46,7 +46,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/random" do
-    haml :album, locals: {album: Album.order{Sequel.lit('RANDOM()')}.first}
+    haml :album, layout: !request.xhr?, locals: {album: Album.order{Sequel.lit('RANDOM()')}.first}
   end
 
   get "/surprise" do
@@ -55,7 +55,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/surprise/:id" do
-    haml :playlist, locals: {playlist: Playlist.surprise(size: 20, persist: true)}
+    haml :playlist, layout: !request.xhr?, locals: {playlist: Playlist.surprise(size: 20, persist: true)}
   end
 
   get "/track_paths/:search" do

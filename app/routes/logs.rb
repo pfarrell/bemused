@@ -5,12 +5,12 @@ class Bemused < Sinatra::Application
     return (start..stop)
   end
 
-  get "/logs" do 
+  get "/logs" do
     redirect url_for("/logs/1")
   end
 
   get "/logs/:page" do
      page = params[:page].to_i
-     haml :logs, locals: {model: {data: Log.order(Sequel.desc(:id)).paginate(page, 25)}}
+     haml :logs, layout: !request.xhr?, locals: {model: {data: Log.order(Sequel.desc(:id)).paginate(page, 25)}}
   end
 end
