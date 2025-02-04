@@ -1,2 +1,2 @@
--artists.to_a.select{|artist| artist.albums.size > 0}.each do |artist|
+-artists.each do |artist|
   !=haml :"partials/artist", locals: {artist: artist, admin: false, use_small: true}

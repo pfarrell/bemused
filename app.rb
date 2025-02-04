@@ -30,7 +30,10 @@ class Bemused < Sinatra::Application
   set :local_authority, 'http://192.168.0.47' # for Sinatra::LocalApp
   set :bind, '0.0.0.0'
 
+  set :user_cache, {}
+
   helpers do
+
     def user_tags
       request.cookies['tags'].nil? ? [] : request.cookies['tags'].split('&').map{|id| Tag[id] }
     end
@@ -41,11 +44,13 @@ class Bemused < Sinatra::Application
 
     def current_user
       token = request.cookies["auth"]
-      user = nil
+
       begin
         if token then
           decoded = JWT.decode token, ENV['BEMUSED_JWT_SECRET'], 'HS256'
+          return settings.user_cache[decoded] if settings.user_cache[decoded]
           user = User.find(id: decoded[0]['id'])
+          settings.user_cache[decoded] = user
         end
       rescue
       end
