@@ -136,6 +136,22 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error(`Failed to load module ${modulePath}:`, error);
       }
   }
+
+  const dropBtn = document.querySelector('.dropdown');
+  const dropContent = document.querySelector('.dropdown-content');
+
+  if (dropBtn && dropContent) {
+      dropBtn.addEventListener('click', (e) => {
+          //e.stopPropagation();
+          dropContent.classList.toggle('show');
+      });
+
+      document.addEventListener('click', (e) => {
+          if (!dropBtn.contains(e.target)) {
+              dropContent.classList.remove('show');
+          }
+      });
+  }
 }
 
   // Call on initial load

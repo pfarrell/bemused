@@ -14,6 +14,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background-color: #f3f4f6;
 }
 
 .logo {
@@ -22,14 +23,9 @@ body {
   text-decoration: none;
 }
 
-.dropdown * {
-  color: white;
-  text-decoration: none;
-  cursor: pointer;
-}
-
 .search-header {
   height: var(--header-height);
+  color: white;
   display: flex;
   align-items: center;
   padding: 0 1rem;
@@ -39,17 +35,33 @@ body {
   right: 0;
   background: white;
   z-index: 100;
+  background-color: #111827;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.search-header a {
+  color: white;
+}
+
 .search-container {
-  flex: 1;
-  margin: 0 1rem;
-  background: white;
+    max-width: 42rem;
+    width: 100%;
+    margin: 0 auto;
+    background-color: #1f2937;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    align-items: center;
+}
+
+.search-input:focus {
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: #9ca3af;
 }
 
 .search-input {
-  width: 100%;
   padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -58,8 +70,9 @@ body {
 .main-content {
   margin-top: var(--header-height);
   margin-bottom: var(--player-height);
-  padding: 1rem;
-  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  min-height: calc(100vh - 152px);
 }
 
 .twocol {
@@ -158,6 +171,41 @@ body {
   overflow-y: auto;
   height: calc(100% - 3rem);
 }
+
+/* Header dropdown styles */
+.dropdown {
+    position: relative;
+    z-index: 1001;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    min-width: 160px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    background: #111827;
+    z-index: 1001;
+}
+
+.dropdown-content.show {
+    color: white;
+    display: block;
+}
+
+.dropdown-content a {
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    display: block;
+    color: white;
+}
+
+.dropdown-content a:hover {
+    background: #1f2937;
+}
+
 
 @media (min-width: 768px) {
   .twocol {

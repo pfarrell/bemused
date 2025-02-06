@@ -1,16 +1,15 @@
-%ul.nav.navbar-nav.pull-right
-  %li.dropdown
-    -user = current_user
-    -if user
-      %a.btn{data: {"internal": "true"}, href: "#", role: "button", aria: { haspopup: "true", expanded: "false"}, data: { toggle: "dropdown"}}
-        =user.username
-      %ul
-        %li
-          %a.btn{data: {"internal": "true"}, href: "#{url_for("/profile")}"}
-            Profile
-        %li
-          %a.btn{href: "#{url_for("/logout")}"}
-            Logout
-    -else
-      %a.btn{data: {"internal": "true"}, href:"#{url_for("/login")}"}
-        Login
+.pull-right.dropdown
+  -user = current_user
+  -if user
+    .playlist-button
+      =user.username
+      %svg{width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2"}
+        %path{d:"M6 9l6 6 6-6"}
+    .dropdown-content
+      %a{data: {"internal": true}, href: "#{url_for("/profile")}"}
+        Profile
+      %a{href: "#{url_for("/logout")}"}
+        Logout
+  -else
+    %a.btn{data: {"internal": "true"}, href:"#{url_for("/login")}"}
+      Login
