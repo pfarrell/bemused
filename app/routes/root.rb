@@ -44,6 +44,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/profile" do
+    haml "hello", layout: !request.xhr?
   end
 
 end
