@@ -25,7 +25,7 @@
       %a.btn.logo{data: {"internal": "true"}, href:"#{url_for("/")}"}
         P&middot;Share
       .search-container
-        %form{data: {"internal": "true"}, id: "search", action: "#{url_for("/search")}", method: "POST"}
+        %form{data: {"internal": "true"}, id: "search", action: "#{url_for("/search")}", method: "GET"}
           .form-group
             %input#q.search-input{data: {"internal": "true"}, type: "TEXT", name: "q", autofocus: true, placeholder: "Search for songs, artists, or albums..."}
       %span
@@ -37,9 +37,9 @@
       .now-playing
         %svg{width: "24", height: "24", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg"}
           %path{"stroke-linecap": "round", "stroke-linejoin": "round", "stroke-width": "2", d: "M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"}
-        .track-info
-          .track-name Currently Playing
-          .track-artist Artist Name
+        #track-info.track-info
+          .track-artist
+          .track-title
       .player
         #player-container
       %button.playlist-button{onclick: "togglePlaylist()"}
@@ -47,17 +47,16 @@
           %path{"stroke-linecap": "round", "stroke-linejoin": "round", "stroke-width": "2", d: "M4 6h16M4 10h16M4 14h16M4 18h16"}
 
       #playlist.playlist-panel
-        %h2.playlist-title Current Playlist
+        .playlist-header
+          %h2.playlist-title Current Playlist
+          %button.playlist-clear{onclick: "if(confirm('clear playlist?')) {clearPlaylist()};"}
+            X
         #tracklist
 
 //%script{:type => "text/javascript", :src => "#{url_for '/js/keypress.js'}"}
 :javascript
   window.player
 
-  function togglePlaylist() {
-    const playlist = document.getElementById('playlist');
-    playlist.classList.toggle('show');
-  }
   var myPlaylist;
 
   function album_summary(data) {
@@ -85,6 +84,8 @@
         get_summary("#{url_for("/track")}" + get_id(track.url) + '/summary', track_summary, "track_summary_available", "#track_summary");
         notify(track);
         $(document).prop("title", track.title);
+        setCurrent(track.artist, track.title);
+        ensureClass('track-info', 'show');
       },
       onFiveSecondMark: (track) => {
         $.ajax({type: "GET", url: track.url.replace("stream","log")});
@@ -103,5 +104,62 @@
   function enqueueTrack(track) {
     player.addTrack(track)
   }
+
+  function setCurrent(artist_name, track_name) {
+    setTextByClass("track-artist", artist_name);
+    setTextByClass("track-title", track_name);
+  }
+
+  function setTextByClass(className, text) {
+    const elements = document.getElementsByClassName(className);
+
+    if (elements.length === 0) {
+        console.warn(`No elements found with class '${className}'`);
+        return 0;
+    }
+
+    for (let element of elements) {
+        element.innerText = text;
+    }
+
+    return elements.length; // Returns number of elements updated
+  }
+
+  function togglePlaylist() {
+    const playlist = document.getElementById('playlist');
+    playlist.classList.toggle('show');
+  }
+
+  function toggleCurrent() {
+    const trackInfo = document.getElementById('track-info');
+    trackInfo.classList.toggle('show');
+  }
+
+  function clearPlaylist() {
+    player.clearPlaylist();
+    ensureClass("track-info", "show", true);
+  }
+
+  function ensureClass(elementId, className, isRemoved=false) {
+    const element = document.getElementById(elementId);
+
+    if (element) {
+        if(isRemoved){
+          if (element.classList.contains(className)) {
+              element.classList.remove(className);
+          }
+          return true;
+        } else {
+          if (!element.classList.contains(className)) {
+              element.classList.add(className);
+          }
+          return true;
+        }
+    } else {
+        console.warn(`Element with id '${elementId}' not found`);
+        return false;
+    }
+  }
+}
 
 

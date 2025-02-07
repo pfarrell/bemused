@@ -1,5 +1,6 @@
 :root {
-  --player-height: 160px;
+  --player-height: 80px;
+  --playlist-height: 160px;
   --header-height: 60px;
 }
 
@@ -15,6 +16,10 @@ body {
   flex-direction: column;
   min-height: 100vh;
   background-color: #f3f4f6;
+}
+
+.content-container {
+    margin: 0 auto;
 }
 
 .logo {
@@ -110,15 +115,18 @@ body {
 
 .player-bar {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
   height: var(--player-height);
-  background: white;
   box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
-  display: grid;
-  grid-template-rows: auto 1fr;
-  padding: 0.5rem;
+    background-color: #111827;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+    color: white;
 }
 
 .playlist-panel {
@@ -126,30 +134,43 @@ body {
   bottom: var(--player-height);
   left: 0;
   right: 0;
-  background: white;
   height: 0;
   overflow: hidden;
   transition: height 0.3s ease;
+    top: 72px;
+    width: 480px;
+    background-color: #1f2937;
+    color: white;
+    padding: 1rem;
+    overflow-y: auto;
+    display: none;
+    z-index: 5;
 }
 
 .playlist-panel.show {
+  display: block;
   height: 300px;
   box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
 }
 
 .track-info {
+  display: none;
+}
+
+.track-info.show {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  padding-left: 1em;
 }
 
 .track-name {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .track-artist {
-  font-size: 0.9em;
-  color: #666;
+    font-size: 0.875rem;
+    color: #9ca3af;
 }
 
 .playlist-button {
@@ -162,15 +183,42 @@ body {
   cursor: pointer;
 }
 
+.playlist-header {
+  border-bottom: 1px solid #eee;
+}
 .playlist-title {
   padding: 1rem;
-  border-bottom: 1px solid #eee;
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.playlist-clear {
+  display: inline-block;
 }
 
 #tracklist {
   overflow-y: auto;
   height: calc(100% - 3rem);
 }
+
+.playlist-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #374151;
+}
+
+.playlist-item-title {
+    font-weight: 500;
+}
+
+.playlist-item-artist {
+    font-size: 0.875rem;
+    color: #9ca3af;
+}
+
+
+
 
 /* Header dropdown styles */
 .dropdown {
@@ -216,19 +264,19 @@ body {
     min-width: 400px;
   }
 
-  .fit-image {
+  .ge {
     max-height: 400px;
   }
   
   .playlist-panel {
     width: 300px;
     right: auto;
-    height: calc(100vh - var(--player-height));
+    height: var(--player-height);
     transform: translateX(-100%);
   }
   
   .playlist-panel.show {
-    height: calc(100vh - var(--player-height));
+    height: calc(100vh - var(--playlist-height));
     transform: translateX(0);
   }
 }
