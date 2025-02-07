@@ -18,8 +18,13 @@ class Info
   def summary(category, subject)
     s = retrieve(category, subject)
     return if s.summary.nil?
-    arr = s.summary.split('. ')
-    sum = arr.length > 4 ? arr[0..3].join('. ') : s.summary
+    sum = ""
+    if s.summary.index("\n")
+      sum = s.summary.gsub(/\n.*/, '')
+    else
+      arr = s.summary.split('. ')
+      sum = arr.length > 4 ? arr[0..3].join('. ') : s.summary
+    end
     s.summary.nil? ? nil : { summary: sum, url: s.fullurl }.to_json
   end
 
