@@ -102,6 +102,14 @@ body {
   font-size: x-large;
 }
 
+.artist .name {
+  font-size: xx-large;
+  padding-bottom: .5em;
+}
+
+.artist .name a {
+  text-decoration: none;
+}
 
 
 .controls {
@@ -311,5 +319,9 @@ body {
 
   .fit-image {
     max-height: 500px;
+  }
+
+  .summary {
+    width: 800px;
   }
 }

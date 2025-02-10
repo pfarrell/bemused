@@ -2,6 +2,9 @@
   .col
     !=haml :"partials/artist", locals: { artist: artist, admin: true, use_small: false }
   .artist
+    .name
+      %a{href: "#{url_for("/album/#{artist.id}")}"}
+        =artist.name
     .summary#summary
       =summary['summary']
       -if summary['url']

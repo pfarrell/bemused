@@ -6,8 +6,8 @@ class Bemused < Sinatra::Application
       query = params[:q]
       redirect(url_for("/#{AutoComplete.translate(query[1..-1])}")) if query =~ /^\//
       redirect(url_for("/")) if query.nil? || query.length < 2
-      albums = Album.where(Sequel.ilike(:title, "%#{query}%"))
-      artists = Artist.where(Sequel.ilike(:name, "%#{query}%"))
+      albums = albums_with_tracks(query)
+      artists = artists_with_albums(query)
       playlists = Playlist.where(Sequel.ilike(:name, "%#{query}%"))
       redirect(url_for("/artist/#{artists.first.id}")) if artists.count == 1 and albums.count == 0 and playlists.count == 0
       redirect(url_for("/album/#{albums.first.id}")) if albums.count == 1 and artists.count == 0 and playlists.count == 0
