@@ -204,7 +204,9 @@ AudioPlayer.prototype.attachAudioPlayerListeners = function() {
   this.audioPlayer.addEventListener('play', handlePlay);
   this.nextAudio.addEventListener('play', handlePlay);
 
-  const handlePause = () => this.updatePlayButton();
+  const handlePause = (e) => {
+    this.updatePlayButton();
+  }
 
   this.audioPlayer.addEventListener('pause', handlePause);
   this.nextAudio.addEventListener('pause', handlePause);
@@ -496,6 +498,9 @@ AudioPlayer.prototype.clearPlaylist = function() {
   this.shuffleHistory = [];
   this.loadPlaylistUI();
   this.audioPlayer.pause();
+  this.updatePlayButton();
+  this.timeElapsedDisplay.textContent = '0:00';
+  this.trackLengthDisplay.textContent = '0:00';
   this.audioPlayer.src = '';
 };
 
