@@ -20,6 +20,8 @@ body {
 
 .content-container {
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .logo {
@@ -293,6 +295,10 @@ body {
 
 
 @media (min-width: 768px) {
+  .content-container {
+    flex-direction: row;
+  }
+
   .twocol {
     flex-direction: row;
   }
