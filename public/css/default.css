@@ -113,6 +113,9 @@ body {
   text-decoration: none;
 }
 
+.item {
+  max-width: 95%;
+}
 
 .controls {
   display: inline;
@@ -297,6 +300,10 @@ body {
 @media (min-width: 768px) {
   .content-container {
     flex-direction: row;
+  }
+  
+  .item {
+    max-width: 100px;
   }
 
   .twocol {
