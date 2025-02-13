@@ -1,14 +1,16 @@
-.twocol
-  .col
-    !=haml :"partials/artist", locals: { artist: artist, admin: true, use_small: false }
-  .artist
-    .name
-      %a{href: "#{url_for("/album/#{artist.id}")}"}
-        =artist.name
-    .summary#summary
-      =summary['summary']
-      -if summary['url']
-        %a{target: "_", href:"#{summary['url']}"}
-          \...more at wikipedia
--artist.albums.each do |album|
-  !=haml :"partials/album", locals: { album: album}
+.grid
+  .twocol
+    .col
+      !=haml :"partials/artist", locals: { artist: artist, admin: true, use_small: false }
+    .artist
+      .name
+        %a{href: "#{url_for("/album/#{artist.id}")}"}
+          =artist.name
+      .summary#summary
+        =summary['summary']
+        -if summary['url']
+          %a{target: "_", href:"#{summary['url']}"}
+            \...more at wikipedia
+  .flex
+    -artist.albums.each do |album|
+      !=haml :"partials/album", locals: { album: album}

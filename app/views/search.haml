@@ -1,12 +1,13 @@
-%h3
-  Playlists
--playlists.each do |playlist|
-  !=haml :"partials/playlist", locals: {playlist: playlist, admin: false}
-%h3
-  Artists
--artists.each do |artist|
-  !=haml :"partials/artist", locals: {artist: artist, admin: false, use_small: true}
-%h3
-  Albums
--albums.each do |album|
-  !=haml :"partials/album", locals: {album: album}
+.grid
+  %h3
+    Playlists
+  -playlists.each do |playlist|
+    !=haml :"partials/playlist", locals: {playlist: playlist, admin: false}
+  %h3
+    Artists
+  -artists.each do |artist|
+    !=haml :"partials/artist", locals: {artist: artist, admin: false, use_small: true}
+  %h3
+    Albums
+  -albums.each do |album|
+    !=haml :"partials/album", locals: {album: album}

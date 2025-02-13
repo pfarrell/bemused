@@ -1,34 +1,35 @@
 //=haml :"partials/visualizer"
-.twocol
-  .col
-    %img.fit-image{src: url_for("/images/albums/#{album.image}")}
-  .album-info
-    .title
-      %a{data: {"internal": "true"}, href: url_for("/album/#{album.id}")} 
-        =album.title
-    .artist
-      %a{data: {"internal": "true"}, href: url_for("/artist/#{album.artist.id}")} 
-        =album.artist.name
-    .controls
-      .btn
-        %input{type: "button", value: "Play Now", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, true)"}
-      .btn
-        %input{type: "button", value: "Play Next", onclick: "enqueueAlbum([#{album.playlist(current_user)}], true, false)"}
-      .btn
-        %input{type: "button", value: "Add to Queue", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, false)"}
-    !=haml :"partials/player", layout: !request.xhr?, locals: { admin_url: "#{url_for("/admin/album/#{album.id}")}" }
-    .summary#album_summary
-      =summary['summary']
-      -if summary['url']
-        %a{target: "_", href:"#{summary['url']}"}
-          \...more at wikipedia
-    .summary#track_summary
-.tracks
-  -album.tracks.sort_by{ |t| t.track_number.to_i }.each do |track|
-    .track
-      .play-now
-        %a{onClick: "enqueueTrack(#{track.to_json})"}
-          &#9655;
-      .title 
-        ="#{track.track_number}."
-        =track.title
+.grid
+  .twocol
+    .col
+      %img.fit-image{src: url_for("/images/albums/#{album.image}")}
+    .album-info
+      .title
+        %a{data: {"internal": "true"}, href: url_for("/album/#{album.id}")} 
+          =album.title
+      .artist
+        %a{data: {"internal": "true"}, href: url_for("/artist/#{album.artist.id}")} 
+          =album.artist.name
+      .controls
+        .btn
+          %input{type: "button", value: "Play Now", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, true)"}
+        .btn
+          %input{type: "button", value: "Play Next", onclick: "enqueueAlbum([#{album.playlist(current_user)}], true, false)"}
+        .btn
+          %input{type: "button", value: "Add to Queue", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, false)"}
+      !=haml :"partials/player", layout: !request.xhr?, locals: { admin_url: "#{url_for("/admin/album/#{album.id}")}" }
+      .summary#album_summary
+        =summary['summary']
+        -if summary['url']
+          %a{target: "_", href:"#{summary['url']}"}
+            \...more at wikipedia
+      .summary#track_summary
+  .tracks
+    -album.tracks.sort_by{ |t| t.track_number.to_i }.each do |track|
+      .track
+        .play-now
+          %a{onClick: "enqueueTrack(#{track.to_json})"}
+            &#9655;
+        .title 
+          ="#{track.track_number}."
+          =track.title

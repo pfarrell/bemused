@@ -30,6 +30,15 @@ body {
   text-decoration: none;
 }
 
+.grid {
+  display: grid;
+}
+
+.flex {
+  display: flex;
+  gap: .5rem;
+}
+
 .search-header {
   height: var(--header-height);
   color: white;
