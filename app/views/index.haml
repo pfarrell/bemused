@@ -1,2 +1,3 @@
--artists.each do |artist|
-  !=haml :"partials/artist", locals: {artist: artist, admin: false, use_small: true}
+.flex
+  -artists.each do |artist|
+    !=haml :"partials/artist", locals: {artist: artist, admin: false, use_small: true}
