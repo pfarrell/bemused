@@ -342,7 +342,7 @@ body {
     max-height: 500px;
   }
 
-  .summary {
-    width: 800px;
+  .summary{
+    max-width: 600px;
   }
 }
