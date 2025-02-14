@@ -319,7 +319,7 @@ body {
   }
   
   .col {
-    min-width: 400px;
+    min-width: 500px;
   }
 
   .ge {
@@ -343,6 +343,6 @@ body {
   }
 
   .summary{
-    max-width: 600px;
+    max-width: 80%;
   }
 }
