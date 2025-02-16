@@ -1,15 +1,15 @@
+%h3
+  Artists
 .flex
-  %h3
-    Playlists
-  -playlists.each do |playlist|
-    !=haml :"partials/playlist", locals: {playlist: playlist, admin: false}
-.flex
-  %h3
-    Artists
   -artists.each do |artist|
     !=haml :"partials/artist", locals: {artist: artist, admin: false, use_small: true}
+%h3
+  Albums
 .flex
-  %h3
-    Albums
   -albums.each do |album|
     !=haml :"partials/album", locals: {album: album}
+%h3
+  Playlists
+.flex
+  -playlists.each do |playlist|
+    !=haml :"partials/playlist", locals: {playlist: playlist, admin: false}
