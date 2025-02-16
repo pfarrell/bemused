@@ -22,4 +22,10 @@ module RootHelper
       .qualify
       .distinct(:id)
   end
+
+  def tracks_from_search(query)
+    count = Track.where(Sequel.ilike(:title, "%#{query}%")).count
+    tracks = Track.where(Sequel.ilike(:title, "%#{query}%")).limit(20)
+    return {count: count, tracks: tracks}
+  end
 end

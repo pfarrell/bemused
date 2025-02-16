@@ -12,10 +12,13 @@ class Bemused < Sinatra::Application
       redirect(url_for("/artist/#{artists.first.id}")) if artists.count == 1 and albums.count == 0 and playlists.count == 0
       redirect(url_for("/album/#{albums.first.id}")) if albums.count == 1 and artists.count == 0 and playlists.count == 0
       redirect(url_for("/album/#{albums.first.id}")) if playlists.count == 1 and artists.count == 0 and albums.count == 0
+      tracks = tracks_from_search(query)
       haml :search, layout: !request.xhr?, locals: {
         :albums => albums,
         :artists => artists,
-        :playlists => playlists
+        :playlists => playlists,
+        :tracks => tracks[:tracks],
+        :count => tracks[:count]
       }
     end
   end

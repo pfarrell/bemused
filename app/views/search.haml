@@ -1,15 +1,23 @@
 %h3
-  Artists
+  Artists (#{artists.count})
 .flex
   -artists.each do |artist|
     !=haml :"partials/artist", locals: {artist: artist, admin: false, use_small: true}
 %h3
-  Albums
+  Albums (#{albums.count})
 .flex
   -albums.each do |album|
     !=haml :"partials/album", locals: {album: album}
 %h3
-  Playlists
+  Playlists (#{playlists.count})
 .flex
   -playlists.each do |playlist|
     !=haml :"partials/playlist", locals: {playlist: playlist, admin: false}
+%h3
+  "Tracks (#{count})
+.grid
+  -if count > 0
+    -tracks.each do |track|
+      !=haml :"partials/track", locals: {track: track, show_track_number: false, show_album: true, show_artist: true}
+    -if count > tracks.count
+      more...

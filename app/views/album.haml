@@ -26,10 +26,4 @@
       .summary#track_summary
   .tracks
     -album.tracks.sort_by{ |t| t.track_number.to_i }.each do |track|
-      .track
-        .play-now
-          %a{onClick: "enqueueTrack(#{track.to_json})"}
-            &#9655;
-        .title 
-          ="#{track.track_number}."
-          =track.title
+      !=haml :"partials/track", locals: {track: track, show_track_number: true, show_album: false, show_artist: false}

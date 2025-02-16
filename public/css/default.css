@@ -148,6 +148,15 @@ body {
   cursor: pointer;
 }
 
+.sp {
+  margin: .2em;
+}
+
+.link {
+  text-decoration: none;
+  font-style: italic;
+}
+
 .fit-image {
   width: 100%;
   max-height: 300px;
