@@ -28,10 +28,6 @@ body {
   text-decoration: none;
 }
 
-.grid {
-  display: grid;
-}
-
 .search-header {
   height: var(--header-height);
   color: white;
@@ -357,19 +353,6 @@ body {
                 height: 150px;
             }
         }
-
-        @media (max-width: 480px) {
-            .flex {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-                gap: 10px;
-                padding: 10px;
-            }
-
-            .item img {
-                height: 120px;
-            }
-        }
-
 
 @media (min-width: 768px) {
   .content-container {
