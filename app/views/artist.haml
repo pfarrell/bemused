@@ -12,5 +12,5 @@
           %a{target: "_", href:"#{summary['url']}"}
             \...more at wikipedia
   .flex
-    -artist.albums.each do |album|
+    -albums.each do |album|
       !=haml :"partials/album", locals: { album: album}

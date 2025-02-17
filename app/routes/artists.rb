@@ -14,7 +14,8 @@ class Bemused < Sinatra::Application
     page = (params[:page] || 1).to_i
     artist = Artist[params[:id]]
     summary = summarize_artist(artist)
-    haml :artist, layout: !request.xhr?, locals: {artist: artist, summary: summary}
+    albums = Album.where(artist_id: artist.id).qualify.association_join(:tracks).select_all(:albums).distinct
+    haml :artist, layout: !request.xhr?, locals: {artist: artist, summary: summary, albums: albums}
   end
 
   get "/admin/artist/:id" do
