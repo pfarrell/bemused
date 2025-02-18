@@ -45,6 +45,8 @@ GEM
     jwt (2.9.3)
       base64
     method_source (1.1.0)
+    mp3info (0.8.5)
+      ruby-mp3info (>= 0.8.5)
     multi_json (1.15.0)
     mustermann (3.0.3)
       ruby2_keywords (~> 0.0.1)
@@ -88,6 +90,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
     rspec-support (3.13.2)
+    ruby-mp3info (0.8.10)
     ruby2_keywords (0.0.5)
     sequel (5.87.0)
       bigdecimal
@@ -146,6 +149,7 @@ DEPENDENCIES
   haml
   id3tag
   jwt
+  mp3info (~> 0.8.5)
   net-ssh (~> 7.3)
   nokogiri
   pg

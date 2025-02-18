@@ -4,6 +4,7 @@ require 'id3tag'
 require 'redis'
 require 'json'
 require '../app'
+reqiure 'mp3info'
 
 def coalesce(first, second)
   return first.strip unless first.nil? || first == ""
@@ -53,6 +54,7 @@ while(true)
   file.track = track;
   file.save
   track.media_file = file
+  track.duration_sec = Mp3Info.new(file_path).length.to_i
   track.save
 
   unless(genre.nil? || genre == '')

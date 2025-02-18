@@ -34,3 +34,6 @@ gem "bcrypt_pbkdf", "~> 1.1"
 gem "capistrano-rbenv", "~> 2.2"
 gem "rexml", "~> 3.4"
 gem "net-ssh", "~> 7.3"
+
+
+gem "mp3info", "~> 0.8.5"
