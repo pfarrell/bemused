@@ -118,6 +118,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function handlePageTransition(html) {
     const container = document.querySelector('.content-container');
+
+    // Create a new MutationObserver to watch for DOM changes
+    const observer = new MutationObserver((mutations) => {
+      // Once changes are detected, scroll to top and disconnect the observer
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth' // Use 'auto' for instant scroll without animation
+      });
+      observer.disconnect();
+    });
+
+    // Start observing the container for child changes
+    observer.observe(container, {
+      childList: true // Watch for changes to child elements
+    });
+
     container.innerHTML = html;
     await loadPageScripts();
   }
