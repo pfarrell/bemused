@@ -61,13 +61,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const form = e.target;
             
         try {
-          const response = await fetch(form.action, {
-            method: form.method,
-            headers: {
-              'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: new FormData(form)
-          });
+            let req = { 
+              method: form.method, 
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }                                       
+            }
+          if (form.method == 'POST') {
+            req['body'] = new FormData(form)
+          }
+          const response = await fetch(form.action, req);
       
           const html = await response.text();
           await handlePageTransition(html);
