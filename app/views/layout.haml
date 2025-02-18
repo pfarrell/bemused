@@ -27,7 +27,7 @@
       .search-container
         %form{data: {"internal": "true"}, id: "search", action: "#{url_for("/search")}", method: "GET"}
           .form-group
-            %input#q.search-input{data: {"internal": "true"}, type: "TEXT", name: "q", autofocus: true, autocorrect: "off", autocapitalize: "none", autocomplete: "off",  placeholder: "Search for songs, artists, or albums..."}
+            %input#q.search-input{data: {"internal": "true"}, type: "TEXT", name: "q", autofocus: true, autocorrect: "off", autocapitalize: "none", autocomplete: "off",  placeholder: "Search for songs, artists, or albums...", size: 45}
       %span
         != haml :'partials/profile', locals: {user: current_user}.merge(locals)
     %main.main-content
