@@ -43,6 +43,7 @@ class Track < Sequel::Model
   end
 
   def duration
+    return unless self.duration_sec
     "#{(self.duration_sec / 60).floor}:#{'%02i' % (self.duration_sec % 60)}"
   end
 
