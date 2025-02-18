@@ -2,7 +2,7 @@
 .grid
   .twocol
     .col
-      %img.fit-image{src: url_for("#{ENV["BEMUSED_PATH"]}/images/albums/#{album.image}")}
+      %img.fit-image{src: url_for("#{ENV["BEMUSED_DEV_PATH"]}/images/albums/#{album.image}")}
     .album-info
       .title
         %a{data: {"internal": "true"}, href: url_for("/album/#{album.id}")} 
