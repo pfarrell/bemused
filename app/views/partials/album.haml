@@ -1,4 +1,4 @@
 %a.item{href: "#{url_for("/album/#{album.id}")}", data: {"internal": "true"}}
-  %img.artist{title: "#{album.title}", src: "#{url_for("/images/albums/sm/#{album.image_path}")}"}
+  %img.artist{title: "#{album.title}", src: "#{url_for("#{ENV["BEMUSED_PATH"]}/images/albums/sm/#{album.image_path}")}"}
   .item-title
     =album.title

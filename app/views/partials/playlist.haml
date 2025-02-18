@@ -1,5 +1,5 @@
 -url = admin == true ? "/admin/playlist/#{playlist.id}" : "/playlist/#{playlist.id}"
 %a.item{href: "#{url_for url}", data: {"internal": "true"}}
-  %img.item{title: "#{playlist.name}", src: "#{url_for "/images/albums/sm/#{playlist.image_path}"}"}
+  %img.item{title: "#{playlist.name}", src: "#{url_for "#{ENV["BEMUSED_PATH"]}/images/albums/sm/#{playlist.image_path}"}"}
   .item-title
     =playlist.name
