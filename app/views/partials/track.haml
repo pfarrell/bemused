@@ -12,3 +12,4 @@
     -if show_album and track.album
       %a.sp.link{href: "#{url_for("/album/#{track.album.id}")}"}
         =track.album.title
+    =track.duration

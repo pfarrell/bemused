@@ -42,6 +42,10 @@ class Track < Sequel::Model
     return "artists/#{self.artist.image_path}" unless self.artist.nil?
   end
 
+  def duration
+    "#{(self.duration_sec / 60).floor}:#{'%02i' % (self.duration_sec % 60)}"
+  end
+
   def self.stats
     stats = Stat.new(self)
     stats.values["count"] = Track.count
