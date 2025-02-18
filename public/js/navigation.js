@@ -125,6 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
         behavior: 'smooth'
       });
     await loadPageScripts();
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+      if (scrollContainer.scrollHeight > scrollContainer.clientHeight) {
+        scrollContainer.scrollTo(0, 0);
+      }
+    }, .5);
   }
 
   async function loadPageScripts() {
