@@ -59,26 +59,44 @@ document.addEventListener('DOMContentLoaded', () => {
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const form = e.target;
-            
+
         try {
-            let req = { 
-              method: form.method, 
-              headers: { 'X-Requested-With': 'XMLHttpRequest' }                                       
+          let url = form.action;
+          let req = {
+            method: form.method,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          };
+
+          if (form.method.toUpperCase() === 'POST') {
+            req['body'] = new FormData(form);
+          } else if (form.method.toUpperCase() === 'GET') {
+            // Create URLSearchParams from form data
+            const formData = new FormData(form);
+            const searchParams = new URLSearchParams();
+
+            // Add each form field to the search params
+            for (const [key, value] of formData) {
+              searchParams.append(key, value);
             }
-          if (form.method == 'POST') {
-            req['body'] = new FormData(form)
+
+            // Append search params to URL
+            const queryString = searchParams.toString();
+            if (queryString) {
+              // Check if URL already has parameters
+              url += (url.includes('?') ? '&' : '?') + queryString;
+            }
           }
-          const response = await fetch(form.action, req);
-      
+
+          const response = await fetch(url, req);
           const html = await response.text();
           await handlePageTransition(html);
-      
-          const url = `${form.action}`;
+
+          // Update browser history with the complete URL including query params
           history.pushState({}, '', url);
         } catch (error) {
-          console.error('Search failed:', error);
+          console.error('Form submission failed:', error);
           form.submit();
-        }   
+        }
       });
     });
   }
