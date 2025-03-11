@@ -90,6 +90,71 @@
   display: none;
 }
 
+.track-actions {
+  position: relative;
+  right: 10px;
+  top: 0;
+  bottom: 0;
+  align-items: center;
+  height: 100%;
+  display: none;
+}
+
+.track:hover .track-actions {
+  display: flex;
+}
+
+.ellipsis-button {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #777;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  width: 24px;
+}
+
+.ellipsis-button:hover {
+  color: #333;
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 100;
+  min-width: 150px;
+  display: none;
+}
+
+.dropdown-menu.active {
+  display: block;
+}
+
+.dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: block;
+  text-align: left;
+  width: 100%;
+  border: none;
+  background: none;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+
 @media (min-width: 768px) {
   .now-playing {
       display: flex;

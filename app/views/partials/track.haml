@@ -13,3 +13,11 @@
       %a.sp.link{href: "#{url_for("/album/#{track.album.id}")}"}
         =track.album.title
     =track.duration
+  .track-actions
+    %button.ellipsis-button{onclick: "toggleDropdown('dropdown-#{track.id}')"}
+      ⋯
+    .dropdown-menu{id: "dropdown-#{track.id}"}
+      .dropdown-item{onclick: "playNext([#{track.to_json}])"}
+        Play Next
+      .dropdown-item{onclick: "enqueueTrack(#{track.to_json})"}
+        Add to Queue

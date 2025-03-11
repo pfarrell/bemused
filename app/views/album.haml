@@ -1,4 +1,5 @@
 //=haml :"partials/visualizer"
+%meta{name: "page-script", content: url_for("/js/pages/album.js")}
 .grid
   .twocol
     .col
@@ -12,11 +13,11 @@
           =album.artist.name
       .controls
         .btn
-          %input{type: "button", value: "Play Now", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, true)"}
+          %input{type: "button", value: "Play Now", onclick: "enqueueTracks([#{album.playlist(current_user)}], false, true)"}
         .btn
-          %input{type: "button", value: "Play Next", onclick: "enqueueAlbum([#{album.playlist(current_user)}], true, false)"}
+          %input{type: "button", value: "Play Next", onclick: "enqueueTracks([#{album.playlist(current_user)}], true, false)"}
         .btn
-          %input{type: "button", value: "Add to Queue", onclick: "enqueueAlbum([#{album.playlist(current_user)}], false, false)"}
+          %input{type: "button", value: "Add to Queue", onclick: "enqueueTracks([#{album.playlist(current_user)}], false, false)"}
       !=haml :"partials/player", layout: !request.xhr?, locals: { admin_url: "#{url_for("/admin/album/#{album.id}")}" }
       .summary#album_summary
         =summary['summary']

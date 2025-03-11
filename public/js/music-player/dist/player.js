@@ -394,10 +394,6 @@ AudioPlayer.prototype.addTrack = function(track) {
   }
   this.playlist.push(track);
   this.loadPlaylistUI();
-  if(this.currentTrackIndex == -1) {
-    this.currentTrackIndex = 0;
-    this.loadAndPlayTrack(0);
-  }
   return this.playlist.length - 1; // Return index of newly added track
 };
 
