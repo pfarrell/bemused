@@ -19,6 +19,7 @@ class Album < Sequel::Model
           url: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
           artist: "#{artist_name.shrink(25)}",
           favorited: "#{track.favorited?(user)}",
+          duration: "#{track.duration}",
           id: "#{track.id}"
         }
       )

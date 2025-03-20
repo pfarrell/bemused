@@ -3,7 +3,7 @@
     .player
       !=haml :"partials/player", locals: { admin_url: "#{url_for("/admin/playlist/#{playlist.id}")}" }
   .col-sm-7
-    %img.image-responsive.fit-image{src: url_for("/images/albums/#{playlist.image_path}")}
+    %img.image-responsive.fit-image{src: url_for("#{ENV["BEMUSED_PATH"]}/images/albums/#{playlist.image_path}")}
 :javascript
   //document.getElementById("content").style.minHeight="900px";
 

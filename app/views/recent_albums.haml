@@ -3,5 +3,5 @@
   -model[:data].each do |album|
     -next unless album.tracks.count > 0
     %a.item{href: "#{url_for "/album/#{album.id}"}", data: {"internal": "true"}}
-      %img.album{src: "#{url_for "/images/albums/#{album.image_path}"}", title: "#{album.title}"}
+      %img.album{src: "#{url_for "#{ENV["BEMUSED_PATH"]}/images/albums/#{album.image_path}"}", title: "#{album.title}"}
 :javascript

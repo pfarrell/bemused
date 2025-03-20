@@ -31,6 +31,7 @@ class Track < Sequel::Model
       title: self.title,
       album: self.album.nil? ? "" : self.album.title,
       artist: self.artist.nil? ? "" : self.artist.name,
+      duration: self.duration_sec,
       image: image,
       url: "#{ENV["BEMUSED_PATH"]}/stream/#{self.id}",
     }.to_json(opts)
@@ -39,6 +40,11 @@ class Track < Sequel::Model
   def image
     return self.album.image_path unless self.album.nil? || self.album.image_path.nil? || self.album.image_path == ""
     return "artists/#{self.artist.image_path}" unless self.artist.nil?
+  end
+
+  def duration
+    return unless self.duration_sec
+    "#{(self.duration_sec / 60).floor}:#{'%02i' % (self.duration_sec % 60)}"
   end
 
   def self.stats

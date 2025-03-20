@@ -2,6 +2,7 @@
 
 require 'id3tag'
 require './app'
+require 'mp3info'
 
 if not ARGV[0] or ARGV[0].nil?  then
   $stderr.puts 'usage: ruby ./single_import.rb [path to mp3 file]'
@@ -23,6 +24,7 @@ file = MediaFile.find_or_create(absolute_path: file_path)
 file.track = track;
 file.save
 track.media_file = file
+track.duration_sec = Mp3Info.new(file_path).length.to_i
 begin
   track.save
 rescue

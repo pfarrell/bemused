@@ -19,9 +19,6 @@ function AudioPlayer(playlist, audioElement, containerElement, playlistElement, 
   this.getTrackPrefix = config.getTrackPrefix || (() => '');
   this.draggedItem = null;
   this.draggedItemIndex = null;
-  this.nextAudio = new Audio();
-  this.nextAudio.preload = 'auto';
-  this.preloadTriggered = false;
 
   if (!this.container) {
     throw new Error('Container element not found');
@@ -48,7 +45,6 @@ AudioPlayer.prototype.init = function() {
   this.attachAudioPlayerListeners();
   this.loadPlaylistUI();
   this.loadAndPlayTrack(this.currentTrackIndex);
-
 };
 
 AudioPlayer.prototype.createControls = function() {
@@ -100,7 +96,6 @@ AudioPlayer.prototype.createPlayButton = function() {
   playButton.className = 'play-btn player-btn';
   playButton.addEventListener('click', () => {
     if (this.audioPlayer.paused) {
-      //this.audioPlayer.play();
       this.loadAndPlayTrack(this.currentTrackIndex);
     } else {
       this.audioPlayer.pause();
@@ -160,8 +155,7 @@ AudioPlayer.prototype.createProgressBar = function() {
   progressBar.style.width = '100%';
   progressBar.addEventListener('input', (e) => {
     const percent = e.target.value / 100;
-    const activePlayer = this.audioPlayer.src ? this.audioPlayer : this.nextAudio;
-    activePlayer.currentTime = percent * activePlayer.duration;
+    this.audioPlayer.currentTime = percent * this.audioPlayer.duration;
   });
 
   progressBarWrapper.appendChild(progressBar);
@@ -169,8 +163,9 @@ AudioPlayer.prototype.createProgressBar = function() {
 };
 
 AudioPlayer.prototype.attachAudioPlayerListeners = function() {
-  const handleEnded = () => this.playNextTrack();
-  const handleTimeUpdate = () => {
+  this.audioPlayer.addEventListener('ended', () => this.playNextTrack());
+  
+  this.audioPlayer.addEventListener('timeupdate', () => {
     if (this.audioPlayer.currentTime >= 5 && !this.fiveSecondCallbackTriggered) {
       this.onFiveSecondMark(this.playlist[this.currentTrackIndex]);
       this.fiveSecondCallbackTriggered = true;
@@ -182,55 +177,16 @@ AudioPlayer.prototype.attachAudioPlayerListeners = function() {
       this.timeElapsedDisplay.textContent = this.formatTime(this.audioPlayer.currentTime);
       this.trackLengthDisplay.textContent = this.formatTime(this.audioPlayer.duration);
     }
+  });
 
-    if(!this.preloadTriggered && this.audioPlayer.duration - this.audioPlayer.currentTime < 10) {
-      this.preloadNextTrack();
-      this.preloadTriggered = true;
-    }
-  };
-
-  // Add listeners to both audio elements
-  this.audioPlayer.addEventListener('ended', handleEnded);
-  this.nextAudio.addEventListener('ended', handleEnded);
-
-  this.audioPlayer.addEventListener('timeupdate', handleTimeUpdate);
-  this.nextAudio.addEventListener('timeupdate', handleTimeUpdate);
-
-  const handlePlay = () => {
+  this.audioPlayer.addEventListener('play', () => {
     this.fiveSecondCallbackTriggered = false;
     this.updatePlayButton();
-  };
+  });
 
-  this.audioPlayer.addEventListener('play', handlePlay);
-  this.nextAudio.addEventListener('play', handlePlay);
-
-  const handlePause = () => this.updatePlayButton();
-
-  this.audioPlayer.addEventListener('pause', handlePause);
-  this.nextAudio.addEventListener('pause', handlePause);
-
-};
-
-AudioPlayer.prototype.preloadNextTrack = function() {
-  let nextIndex;
-  if(this.shuffle) {
-    const remainingTracks = Array.from({ length: this.playlist.length }, (_, i) => i)
-      .filter(i => !this.shuffleHistory.includes(i));
-    
-    if (remainingTracks.length === 0) {
-      nextIndex = (this.currentTrackIndex + 1) % this.playlist.length;
-    } else {
-      nextIndex = remainingTracks[Math.floor(Math.random() * remainingTracks.length)];
-    }
-  } else {
-    nextIndex = (this.currentTrackIndex + 1) % this.playlist.length;
-  }
-
-  const nextTrack = this.playlist[nextIndex];
-  if(nextTrack) {
-    this.nextAudio.src = nextTrack.url;
-    this.nextAudio.load();
-  }
+  this.audioPlayer.addEventListener('pause', () => {
+    this.updatePlayButton();
+  });
 };
 
 AudioPlayer.prototype.formatTime = function(seconds) {
@@ -275,7 +231,7 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
 
     const trackText = document.createElement('span');
     trackText.style.flexGrow = '1';
-    trackText.textContent = `${index + 1}. ${track.title} - ${track.artist}`;
+    trackText.textContent = `${index + 1}. ${track.title} - ${track.artist} (${track.duration})`;
 
     listItem.appendChild(trackText);
     listItem.appendChild(dragHandle);
@@ -382,13 +338,7 @@ AudioPlayer.prototype.loadAndPlayTrack = function(index) {
       throw new Error('Invalid track index');
     }
 
-    if(this.nextAudio.src && this.nextAudio.src.endsWith(this.playlist[index].url)) {
-      [this.audioPlayer, this.nextAudio] = [this.nextAudio, this.audioPlayer];
-    } else {
-      this.audioPlayer.src = this.playlist[index].url;
-    }
-
-
+    this.audioPlayer.src = this.playlist[index].url;
     this.currentTrackIndex = index;
     this.audioPlayer.play();
     this.onTrackStart(this.playlist[index]);
@@ -402,8 +352,6 @@ AudioPlayer.prototype.loadAndPlayTrack = function(index) {
     if (this.shuffle && !this.shuffleHistory.includes(index)) {
       this.shuffleHistory.push(index);
     }
-    this.preloadTriggered = false;
-    this.preloadNextTrack();
   } catch (error) {
     console.error('Error loading track:', error);
   }
@@ -422,28 +370,11 @@ AudioPlayer.prototype.playNextTrack = function() {
     }
 
     nextIndex = remainingTracks[Math.floor(Math.random() * remainingTracks.length)];
-    this.loadAndPlayTrack(nextIndex);
   } else {
     nextIndex = (this.currentTrackIndex + 1) % this.playlist.length;
   }
 
-  // Use preloaded audio if available
-  if (this.nextAudio.src && this.nextAudio.src.endsWith(this.playlist[nextIndex].url)) {
-    [this.audioPlayer, this.nextAudio] = [this.nextAudio, this.audioPlayer];
-    this.currentTrackIndex = nextIndex;
-    this.audioPlayer.play();
-    this.onTrackStart(this.playlist[nextIndex]);
-
-    Array.from(this.trackListElement.children).forEach((item, idx) => {
-      item.classList.toggle('active', idx === nextIndex);
-    });
-
-    this.preloadTriggered = false;
-    this.preloadNextTrack();
-  } else {
-    this.loadAndPlayTrack(nextIndex);
-  }
-
+  this.loadAndPlayTrack(nextIndex);
 };
 
 AudioPlayer.prototype.playPrevTrack = function() {
@@ -463,10 +394,6 @@ AudioPlayer.prototype.addTrack = function(track) {
   }
   this.playlist.push(track);
   this.loadPlaylistUI();
-  if(this.currentTrackIndex == -1) {
-    this.currentTrackIndex = 0;
-    this.loadAndPlayTrack(0);
-  }
   return this.playlist.length - 1; // Return index of newly added track
 };
 
@@ -496,6 +423,9 @@ AudioPlayer.prototype.clearPlaylist = function() {
   this.shuffleHistory = [];
   this.loadPlaylistUI();
   this.audioPlayer.pause();
+  this.updatePlayButton();
+  this.timeElapsedDisplay.textContent = '0:00';
+  this.trackLengthDisplay.textContent = '0:00';
   this.audioPlayer.src = '';
 };
 

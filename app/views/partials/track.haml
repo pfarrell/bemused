@@ -1,0 +1,23 @@
+.track
+  .play-now
+    %a{onClick: "enqueueTrack(#{track.to_json})"}
+      &#9655;
+  .title 
+    -if show_track_number
+      ="#{track.track_number}. "
+    =track.title
+    -if show_artist and track.artist
+      %a.sp.link{href: "#{url_for("/artist/#{track.artist.id}")}"}
+        ="(#{track.artist.name})"
+    -if show_album and track.album
+      %a.sp.link{href: "#{url_for("/album/#{track.album.id}")}"}
+        =track.album.title
+    =track.duration
+  .track-actions
+    %button.ellipsis-button{onclick: "toggleDropdown('dropdown-#{track.id}')"}
+      ⋯
+    .dropdown-menu{id: "dropdown-#{track.id}"}
+      .dropdown-item{onclick: "playNext([#{track.to_json}])"}
+        Play Next
+      .dropdown-item{onclick: "enqueueTrack(#{track.to_json})"}
+        Add to Queue
