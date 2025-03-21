@@ -55,7 +55,7 @@ GEM
     net-sftp (4.0.0)
       net-ssh (>= 5.0.0, < 8.0.0)
     net-ssh (7.3.0)
-    nokogiri (1.17.2-x86_64-linux)
+    nokogiri (1.18.4-x86_64-linux-gnu)
       racc (~> 1.4)
     ostruct (0.6.1)
     pg (1.5.9)
