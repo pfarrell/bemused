@@ -4,7 +4,7 @@
       !=haml :"partials/artist", locals: { artist: artist, admin: true, use_small: false }
     .artist
       .name
-        %a{href: "#{url_for("/artist/#{artist.id}")}"}
+        %a{data: {"internal": "true"}, hhref: "#{url_for("/artist/#{artist.id}")}"}
           =artist.name
       .summary#summary
         =summary['summary']
