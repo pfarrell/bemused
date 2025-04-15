@@ -1,48 +1,19 @@
-.row
-  .col-sm-5#player
-    .player
-      !=haml :"partials/player", locals: { admin_url: "#{url_for("/admin/playlist/#{playlist.id}")}" }
-  .col-sm-7
-    %img.image-responsive.fit-image{src: url_for("#{ENV["BEMUSED_PATH"]}/images/albums/#{playlist.image_path}")}
-:javascript
-  //document.getElementById("content").style.minHeight="900px";
-
-  var myPlaylist
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.title = "#{playlist.name}";
-    const playlist = [#{playlist.track_list(current_user)}];
-    const audioElement = document.createElement('audio');
-    const containerElement = document.getElementById('player-container');
-    new AudioPlayer(playlist, audioElement, containerElement, {
-      onTrackStart: (track) => {
-        $('.navbar-info').html("                                   \
-          <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \
-          <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}' title='#{playlist.name}'>      \
-            <span class='album-title'>#{playlist.name}</span> \
-          </a> >                                                    \
-          <span class='track-title'>" + track.title + "</span>");
-        $(document).prop("title", track.title);
-      } ,
-      onFiveSecondMark: (track) => {
-        $.ajax({type: "GET", url: track.url.replace("stream","log")});
-        //get_summary("#{url_for("/track")}" + get_id(track.url) + '/summary', track_summary, "track_summary_available", "#track_summary");
-        notify(track);
-      },
-      getTrackPrefix: (track) => {
-        if(#{!current_user.nil?}) {
-          var favorite_url = "#{url_for('/track/')}" + track.id + "/favorite" ; 
-          track.favorite_url = favorite_url;
-          return build_favorites_entities(track);
-        }
-      }
-    });
-  });
-  
-  $(document).ready(function() {
-    $('.navbar-info').html("                        \
-      <a href='#{url_for("/playlists")}' title='playlists'<span class='album-title'>playlists</span></a> >      \
-      <a href='#{playlist.id.nil? ? "?" : url_for("/playlist/#{playlist.id}")}' title='#{playlist.name}'>      \
-        <span class='album-title'>#{playlist.name}</span> \
-      </a>");
-  });
+%meta{name: "page-script", content: url_for("/js/pages/album.js")}
+.grid
+  .twocol
+    .col
+      %img.fit-image{src: url_for("#{ENV["BEMUSED_DEV_PATH"]}/images/albums/#{playlist.image_path}")}
+    .album-info
+      .title
+        =playlist.name
+      .controls
+        .btn
+          %input{type: "button", value: "Play Now", onclick: "enqueueTracks([#{playlist.track_list(current_user)}], false, true)"}
+        .btn
+          %input{type: "button", value: "Play Next", onclick: "enqueueTracks([#{playlist.track_list(current_user)}], true, false)"}
+        .btn
+          %input{type: "button", value: "Add to Queue", onclick: "enqueueTracks([#{playlist.track_list(current_user)}], false, false)"}
+        !=haml :"partials/player", locals: { admin_url: "#{url_for("/admin/playlist/#{playlist.id}")}" }
+  .tracks
+    -playlist.playlist_tracks.sort_by{ |t| t.order.to_i }.each do |track|
+      !=haml :"partials/track", locals: {track: track.track, show_track_number: true, show_album: false, show_artist: false}
