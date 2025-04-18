@@ -12,7 +12,7 @@
     -if show_album and track.album
       %a.sp.link{data: {"internal": "true"}, hhref: "#{url_for("/album/#{track.album.id}")}"}
         =track.album.title
-    =track.duration
+    (<i>#{track.duration}</i>)
   .track-actions
     %button.ellipsis-button{onclick: "toggleDropdown('dropdown-#{track.id}')"}
       ⋯
