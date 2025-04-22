@@ -45,7 +45,7 @@ class Bemused < Sinatra::Application
 
   get "/album/:id/summary" do
     album = Album[params[:id]]
-    artist = coalesce(album.artist.wikipedia) || album.artist.name
+    artist = album.artist.name
     title = coalesce(album.wikipedia) || wp_fix(album.title)
 
     summary('albums', possible_titles(artist, title))

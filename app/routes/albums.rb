@@ -3,8 +3,9 @@ require 'open-uri'
 class Bemused < Sinatra::Application
 
   def summarize_album(album)
+    artist_name = (album.artist.wikipedia and !album.artist.wikipedia.empty?) ? album.artist.wikipedia : wp_fix(album.artist[:name])
     name = (album.wikipedia and !album.wikipedia.empty?) ? album.wikipedia : wp_fix(album[:title])
-    summ = summary('albums', possible_names(name))
+    summ = summary('albums', possible_titles(artist_name, name))
     !summ.empty? ?  JSON.parse(summ) : {}
   end
 
