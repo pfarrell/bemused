@@ -94,10 +94,9 @@ class Bemused < Sinatra::Application
 
   get "/meta" do
     query = params[:q] || ""
-    redirect(url_for("/#{AutoComplete.translate(query[1..-1])}")) if query =~ /^\//
-    tracks = query.length >= 2 ? Track.where(Sequel.ilike(:title, "%#{query}%")) : []
-    albums = query.length >= 2 ? Album.where(Sequel.ilike(:title, "%#{query}%")) : []
-    artists = query.length >= 2 ? Artist.where(Sequel.ilike(:name, "%#{query}%")) : []
+    tracks = query.length >= 2 ? Track.where(Sequel.ilike(Sequel.function(:f_unaccent, :title), "%#{query}%")) : []
+    albums = query.length >= 2 ? Album.where(Sequel.ilike(Sequel.function(:f_unaccent, :title), "%#{query}%")) : []
+    artists = query.length >= 2 ? Artist.where(Sequel.ilike(Sequel.function(:f_unaccent, :name), "%#{query}%")) : []
     haml :meta, layout: !request.xhr?, locals: { tracks: tracks, albums: albums, artists: artists }
   end
 
