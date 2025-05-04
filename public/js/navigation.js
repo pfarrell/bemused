@@ -88,10 +88,10 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           try {
-          document.querySelector('.main-content').classList.add('loading');
-          const response = await fetch(url, req);
-          const html = await response.text();
-          await handlePageTransition(html);
+            document.querySelector('.main-content').classList.add('loading');
+            const response = await fetch(url, req);
+            const html = await response.text();
+            await handlePageTransition(html);
           }finally {
             document.querySelector('.main-content').classList.remove('loading');
           }
