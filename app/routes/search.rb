@@ -1,34 +1,39 @@
 require 'json'
-require 'async'
-require 'async/http'
 
 class Bemused < Sinatra::Application
-  # Async search function
+
   def search_all_resources(query)
-    result = {}
+    db = Sequel::Model::db
 
-    Async do
+    sql = <<-SQL
+      SELECT 'Album' as model_type, id from albums where f_unaccent(lower(title)) ILIKE ?
+      UNION ALL
+      SELECT 'Artist' as model_type, id from artists where f_unaccent(lower(name)) ILIKE ?
+      UNION ALL
+      SELECT 'Playlist' as model_type, id from playlists where f_unaccent(lower(name)) ILIKE ?
+      UNION ALL
+      SELECT 'Track' as model_type, id from tracks where f_unaccent(lower(title)) ILIKE ?
+    SQL
 
-      albums_task = Async do
-        result[:albums] = albums_with_tracks(query)
-      end
-      artists_task = Async do
-        result[:artists] = artists_with_albums(query)
-      end
+    query_pattern = "%#{query}%"
 
-      playlists_task = Async do
-        result[:playlists] = Playlist.where(Sequel.ilike(:name, "%#{query}%"))
-      end
+    results = db.fetch(sql, query_pattern, query_pattern, query_pattern, query_pattern)
 
-      tracks_task = Async do
-        result[:tracks] = tracks_from_search(query)
-      end
+    grouped_ids = results.each_with_object({}) do |result,hash|
+      model_type = result[:model_type]
+      id = result[:id]
+      hash[model_type] ||= []
+      hash[model_type] << id
+    end
 
-      # Wait for all tasks to complete
-      [albums_task, artists_task, playlists_task, tracks_task].each(&:wait)
-    end.wait
-
-    return result
+    objects = {}
+    grouped_ids.each do |model_type, ids|
+      next if ids.empty?
+      model_class = Object.const_get(model_type)
+      model_objects = model_class.where(id: ids).all
+      objects[model_type.downcase.to_sym] = model_objects
+    end
+    objects
   end
 
   %w(get post).each do |meth|
@@ -37,11 +42,11 @@ class Bemused < Sinatra::Application
       results = search_all_resources(query)
 
       haml :search, layout: !request.xhr?, locals: {
-        :albums => results[:albums],
-        :artists => results[:artists],
-        :playlists => results[:playlists],
-        :tracks => results[:tracks][:tracks],
-        :count => results[:tracks][:count]
+        :albums => results[:album] || [],
+        :artists => results[:artist] || [],
+        :playlists => results[:playlist] || [],
+        :tracks => results[:track] || [],
+        :count => 0
       }
     end
   end

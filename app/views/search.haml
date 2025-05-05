@@ -14,9 +14,9 @@
   -playlists.each do |playlist|
     !=haml :"partials/playlist", locals: {playlist: playlist, admin: false}
 %h3
-  "Tracks (#{count})
+  "Tracks (#{tracks.count})
 .grid
-  -if count > 0
+  -if tracks.count > 0
     -tracks.each do |track|
       !=haml :"partials/track", locals: {track: track, show_track_number: false, show_album: true, show_artist: true}
     -if count > tracks.count
