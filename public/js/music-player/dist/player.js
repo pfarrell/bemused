@@ -315,9 +315,16 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
     });
 
     trackText.addEventListener('click', () => {
-      if (this.currentTrackIndex === index && !this.audioPlayer.paused) {
-        this.audioPlayer.pause();
+      // Modified: Check if we're clicking on the current track
+      if (index === this.currentTrackIndex) {
+        // If it's the same track, toggle play/pause instead of reloading
+        if (this.audioPlayer.paused) {
+          this.audioPlayer.play();
+        } else {
+          this.audioPlayer.pause();
+        }
       } else {
+        // Different track, load and play it from the beginning
         this.loadAndPlayTrack(index);
       }
     });
