@@ -38,10 +38,5 @@ gem "net-ssh", "~> 7.3"
 
 gem "mp3info", "~> 0.8.5"
 
-gem "async_sinatra", "~> 1.3"
 
-gem "async", "~> 2.24"
 
-gem "async-http", "~> 0.88.0"
-
-gem "puma", "~> 6.6"
