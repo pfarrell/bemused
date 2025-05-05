@@ -1,19 +1,47 @@
 require 'json'
+require 'async'
+require 'async/http'
+
 class Bemused < Sinatra::Application
+  # Async search function
+  def search_all_resources(query)
+    result = {}
+
+    Async do
+
+      albums_task = Async do
+        result[:albums] = albums_with_tracks(query)
+      end
+      artists_task = Async do
+        result[:artists] = artists_with_albums(query)
+      end
+
+      playlists_task = Async do
+        result[:playlists] = Playlist.where(Sequel.ilike(:name, "%#{query}%"))
+      end
+
+      tracks_task = Async do
+        result[:tracks] = tracks_from_search(query)
+      end
+
+      # Wait for all tasks to complete
+      [albums_task, artists_task, playlists_task, tracks_task].each(&:wait)
+    end.wait
+
+    return result
+  end
 
   %w(get post).each do |meth|
     send meth, "/search" do
       query = params[:q]
-      albums = albums_with_tracks(query)
-      artists = artists_with_albums(query)
-      playlists = Playlist.where(Sequel.ilike(:name, "%#{query}%"))
-      tracks = tracks_from_search(query)
+      results = search_all_resources(query)
+
       haml :search, layout: !request.xhr?, locals: {
-        :albums => albums,
-        :artists => artists,
-        :playlists => playlists,
-        :tracks => tracks[:tracks],
-        :count => tracks[:count]
+        :albums => results[:albums],
+        :artists => results[:artists],
+        :playlists => results[:playlists],
+        :tracks => results[:tracks][:tracks],
+        :count => results[:tracks][:count]
       }
     end
   end
