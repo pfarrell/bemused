@@ -96,7 +96,7 @@ AudioPlayer.prototype.createPlayButton = function() {
   playButton.className = 'play-btn player-btn';
   playButton.addEventListener('click', () => {
     if (this.audioPlayer.paused) {
-      this.loadAndPlayTrack(this.currentTrackIndex);
+      this.audioPlayer.play();
     } else {
       this.audioPlayer.pause();
     }
@@ -338,10 +338,16 @@ AudioPlayer.prototype.loadAndPlayTrack = function(index) {
       throw new Error('Invalid track index');
     }
 
-    this.audioPlayer.src = this.playlist[index].url;
-    this.currentTrackIndex = index;
+    if (this.currentTrackIndex !== index || this.audioPlayer.paused) {
+      this.audioPlayer.src = this.playlist[index].url;
+      this.currentTrackIndex = index;
+      this.onTrackStart(this.playlist[index]);
+      if (this.shuffle && !this.shuffleHistory.includes(index)) {
+        this.shuffleHistory.push(index);
+      }
+    }
+
     this.audioPlayer.play();
-    this.onTrackStart(this.playlist[index]);
 
     Array.from(this.trackListElement.children).forEach((item, idx) => {
       item.classList.toggle('active', idx === index);
@@ -349,9 +355,6 @@ AudioPlayer.prototype.loadAndPlayTrack = function(index) {
 
     this.updatePlayButton();
 
-    if (this.shuffle && !this.shuffleHistory.includes(index)) {
-      this.shuffleHistory.push(index);
-    }
   } catch (error) {
     console.error('Error loading track:', error);
   }
