@@ -19,6 +19,8 @@ function AudioPlayer(playlist, audioElement, containerElement, playlistElement, 
   this.getTrackPrefix = config.getTrackPrefix || (() => '');
   this.draggedItem = null;
   this.draggedItemIndex = null;
+  // Add a new property to track if playlist is finished
+  this.playlistFinished = false;
 
   if (!this.container) {
     throw new Error('Container element not found');
@@ -96,7 +98,14 @@ AudioPlayer.prototype.createPlayButton = function() {
   playButton.className = 'play-btn player-btn';
   playButton.addEventListener('click', () => {
     if (this.audioPlayer.paused) {
-      this.audioPlayer.play();
+      // If playlist has finished, start from the first track
+      if (this.playlistFinished) {
+        this.playlistFinished = false;
+        this.loadAndPlayTrack(0);
+      } else {
+        // Otherwise just play the current track
+        this.audioPlayer.play();
+      }
     } else {
       this.audioPlayer.pause();
     }
@@ -162,8 +171,33 @@ AudioPlayer.prototype.createProgressBar = function() {
   return progressBarWrapper;
 };
 
+AudioPlayer.prototype.highlightFirstTrack = function() {
+  // Only proceed if we have tracks in the playlist
+  if (this.playlist.length > 0) {
+    // Set visual indication that first track is selected
+    Array.from(this.trackListElement.children).forEach((item, idx) => {
+      item.classList.toggle('active', idx === 0);
+    });
+    
+    // Don't change actual current track index until play is pressed
+    // This way we don't lose our position in the playlist
+  }
+};
+
 AudioPlayer.prototype.attachAudioPlayerListeners = function() {
-  this.audioPlayer.addEventListener('ended', () => this.playNextTrack());
+  this.audioPlayer.addEventListener('ended', () => {
+    // Check if we're at the last track
+    if (!this.shuffle && this.currentTrackIndex === this.playlist.length - 1) {
+      this.playlistFinished = true;
+      // Don't automatically start over, just update the UI
+      this.updatePlayButton();
+      // Highlight the first track in the playlist
+      this.highlightFirstTrack();
+    } else {
+      // Not the last track or in shuffle mode, proceed to next track
+      this.playNextTrack();
+    }
+  });
   
   this.audioPlayer.addEventListener('timeupdate', () => {
     if (this.audioPlayer.currentTime >= 5 && !this.fiveSecondCallbackTriggered) {
@@ -181,6 +215,7 @@ AudioPlayer.prototype.attachAudioPlayerListeners = function() {
 
   this.audioPlayer.addEventListener('play', () => {
     this.fiveSecondCallbackTriggered = false;
+    this.playlistFinished = false;
     this.updatePlayButton();
   });
 
@@ -315,6 +350,9 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
     });
 
     trackText.addEventListener('click', () => {
+      // Reset playlist finished state when manually selecting a track
+      this.playlistFinished = false;
+      
       // Modified: Check if we're clicking on the current track
       if (index === this.currentTrackIndex) {
         // If it's the same track, toggle play/pause instead of reloading
@@ -355,13 +393,13 @@ AudioPlayer.prototype.loadAndPlayTrack = function(index) {
     }
 
     this.audioPlayer.play();
+    this.playlistFinished = false;
 
     Array.from(this.trackListElement.children).forEach((item, idx) => {
       item.classList.toggle('active', idx === index);
     });
 
     this.updatePlayButton();
-
   } catch (error) {
     console.error('Error loading track:', error);
   }
@@ -369,25 +407,44 @@ AudioPlayer.prototype.loadAndPlayTrack = function(index) {
 
 AudioPlayer.prototype.playNextTrack = function() {
   let nextIndex;
+  
   if (this.shuffle) {
     const remainingTracks = Array.from({ length: this.playlist.length }, (_, i) => i)
       .filter(i => !this.shuffleHistory.includes(i));
 
     if (remainingTracks.length === 0) {
-      this.shuffleHistory = [this.currentTrackIndex];
-      remainingTracks.push(...Array.from({ length: this.playlist.length }, (_, i) => i)
-        .filter(i => i !== this.currentTrackIndex));
+      // All tracks have been played in shuffle mode
+      this.playlistFinished = true;
+      this.audioPlayer.pause();
+      this.updatePlayButton();
+      this.highlightFirstTrack();
+      return;
     }
 
     nextIndex = remainingTracks[Math.floor(Math.random() * remainingTracks.length)];
+    this.shuffleHistory.push(nextIndex);
   } else {
-    nextIndex = (this.currentTrackIndex + 1) % this.playlist.length;
+    // Check if we're at the end of the playlist
+    if (this.currentTrackIndex === this.playlist.length - 1) {
+      // We've reached the end, don't loop back
+      this.playlistFinished = true;
+      this.audioPlayer.pause();
+      this.updatePlayButton();
+      this.highlightFirstTrack();
+      return;
+    }
+    
+    // Not at the end, so proceed to next track
+    nextIndex = this.currentTrackIndex + 1;
   }
 
   this.loadAndPlayTrack(nextIndex);
 };
 
 AudioPlayer.prototype.playPrevTrack = function() {
+  // Reset finished state when manually navigating
+  this.playlistFinished = false;
+  
   if (this.shuffle && this.shuffleHistory.length > 1) {
     this.shuffleHistory.pop();
     const prevIndex = this.shuffleHistory[this.shuffleHistory.length - 1];
@@ -431,6 +488,7 @@ AudioPlayer.prototype.clearPlaylist = function() {
   this.playlist = [];
   this.currentTrackIndex = 0;
   this.shuffleHistory = [];
+  this.playlistFinished = false;
   this.loadPlaylistUI();
   this.audioPlayer.pause();
   this.updatePlayButton();
