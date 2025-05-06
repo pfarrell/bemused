@@ -171,6 +171,19 @@ AudioPlayer.prototype.createProgressBar = function() {
   return progressBarWrapper;
 };
 
+AudioPlayer.prototype.highlightFirstTrack = function() {
+  // Only proceed if we have tracks in the playlist
+  if (this.playlist.length > 0) {
+    // Set visual indication that first track is selected
+    Array.from(this.trackListElement.children).forEach((item, idx) => {
+      item.classList.toggle('active', idx === 0);
+    });
+    
+    // Don't change actual current track index until play is pressed
+    // This way we don't lose our position in the playlist
+  }
+};
+
 AudioPlayer.prototype.attachAudioPlayerListeners = function() {
   this.audioPlayer.addEventListener('ended', () => {
     // Check if we're at the last track
@@ -178,6 +191,8 @@ AudioPlayer.prototype.attachAudioPlayerListeners = function() {
       this.playlistFinished = true;
       // Don't automatically start over, just update the UI
       this.updatePlayButton();
+      // Highlight the first track in the playlist
+      this.highlightFirstTrack();
     } else {
       // Not the last track or in shuffle mode, proceed to next track
       this.playNextTrack();
@@ -402,6 +417,7 @@ AudioPlayer.prototype.playNextTrack = function() {
       this.playlistFinished = true;
       this.audioPlayer.pause();
       this.updatePlayButton();
+      this.highlightFirstTrack();
       return;
     }
 
@@ -414,6 +430,7 @@ AudioPlayer.prototype.playNextTrack = function() {
       this.playlistFinished = true;
       this.audioPlayer.pause();
       this.updatePlayButton();
+      this.highlightFirstTrack();
       return;
     }
     
