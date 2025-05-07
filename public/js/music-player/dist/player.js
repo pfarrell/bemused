@@ -135,21 +135,60 @@ AudioPlayer.prototype.createShuffleToggle = function() {
     shuffleToggle.style.color = this.shuffle ? 'white' : '';
 
     if (this.shuffle) {
-      this.shuffleHistory = [];
-      // Select a random track different from current
-      let nextIndex;
-      do {
-        nextIndex = Math.floor(Math.random() * this.playlist.length);
-      } while (nextIndex === this.currentTrackIndex);
-
-      this.shuffleHistory.push(nextIndex);
-      this.loadAndPlayTrack(nextIndex);
+      this.shufflePlaylist();
+    } else {
+      this.unshufflePlaylist();
     }
-
-    this.shuffleHistory = [this.currentTrackIndex];
   });
   return shuffleToggle;
 };
+
+AudioPlayer.prototype.shufflePlaylist = function() {
+  // Save original order if not already saved
+  if (!this.originalPlaylist) {
+    this.originalPlaylist = [...this.playlist];
+  }
+
+  // Fisher-Yates shuffle algorithm
+  const shuffled = [...this.playlist];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  // Remember current track
+  const currentTrack = this.playlist[this.currentTrackIndex];
+
+  // Update playlist with shuffled version
+  this.playlist = shuffled;
+
+  // Find new index of current track
+  this.currentTrackIndex = this.playlist.findIndex(track =>
+    track.url === currentTrack.url && track.title === currentTrack.title);
+
+  // Update the UI
+  this.loadPlaylistUI();
+}
+
+AudioPlayer.prototype.unshufflePlaylist = function() {
+  if (this.originalPlaylist) {
+    // Remember current track
+    const currentTrack = this.playlist[this.currentTrackIndex];
+
+    // Restore original playlist
+    this.playlist = [...this.originalPlaylist];
+
+    // Find new position of current track
+    this.currentTrackIndex = this.playlist.findIndex(track =>
+      track.url === currentTrack.url && track.title === currentTrack.title);
+
+    // Update the UI
+    this.loadPlaylistUI();
+
+    // Clear original playlist reference
+    this.originalPlaylist = null;
+  }
+}
 
 AudioPlayer.prototype.createProgressBar = function() {
   const progressBarWrapper = document.createElement('div');
@@ -406,53 +445,13 @@ AudioPlayer.prototype.loadAndPlayTrack = function(index) {
 };
 
 AudioPlayer.prototype.playNextTrack = function() {
-  let nextIndex;
-  
-  if (this.shuffle) {
-    const remainingTracks = Array.from({ length: this.playlist.length }, (_, i) => i)
-      .filter(i => !this.shuffleHistory.includes(i));
-
-    if (remainingTracks.length === 0) {
-      // All tracks have been played in shuffle mode
-      this.playlistFinished = true;
-      this.audioPlayer.pause();
-      this.updatePlayButton();
-      this.highlightFirstTrack();
-      return;
-    }
-
-    nextIndex = remainingTracks[Math.floor(Math.random() * remainingTracks.length)];
-    this.shuffleHistory.push(nextIndex);
-  } else {
-    // Check if we're at the end of the playlist
-    if (this.currentTrackIndex === this.playlist.length - 1) {
-      // We've reached the end, don't loop back
-      this.playlistFinished = true;
-      this.audioPlayer.pause();
-      this.updatePlayButton();
-      this.highlightFirstTrack();
-      return;
-    }
-    
-    // Not at the end, so proceed to next track
-    nextIndex = this.currentTrackIndex + 1;
-  }
-
+  const nextIndex = (this.currentTrackIndex + 1) % this.playlist.length;
   this.loadAndPlayTrack(nextIndex);
 };
 
 AudioPlayer.prototype.playPrevTrack = function() {
-  // Reset finished state when manually navigating
-  this.playlistFinished = false;
-  
-  if (this.shuffle && this.shuffleHistory.length > 1) {
-    this.shuffleHistory.pop();
-    const prevIndex = this.shuffleHistory[this.shuffleHistory.length - 1];
-    this.loadAndPlayTrack(prevIndex);
-  } else {
-    const prevIndex = (this.currentTrackIndex - 1 + this.playlist.length) % this.playlist.length;
-    this.loadAndPlayTrack(prevIndex);
-  }
+  const nextIndex = (this.currentTrackIndex - 1) % this.playlist.length;
+  this.loadAndPlayTrack(nextIndex);
 };
 
 AudioPlayer.prototype.addTrack = function(track) {
