@@ -8,7 +8,8 @@
     %meta{:name=>"apple-mobile-web-app-capable", :content=>"yes"}
     %link{:rel => "stylesheet", :href => "#{url_for '/css/default.css'}", :type => "text/css", :media => "screen" }
     %link{:rel => "stylesheet", :href => "#{url_for '/css/player2.css'}", :type => "text/css", :media => "screen" }
-    %link{rel:"shortcut icon",href:"//patf.com/images/bemused.ico"}
+    %link{rel: "shortcut icon", href:"//patf.com/images/bemused.ico"}
+    %link{rel: "search", type:"application/opensearchdescription+xml", title: "PShare", href: "http://patf.com/bemused/opensearch.xml"}
     %script{:type => "text/javascript", :src => "#{url_for('/libs/jquery/dist/jquery.min.js')}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/navigation.js'}"}
     %script{:type => "text/javascript", :src => "#{url_for '/js/music-player/dist/player.js'}"}
