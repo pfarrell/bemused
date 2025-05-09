@@ -18,7 +18,7 @@ function del(url, success_cb, failure_cb) {
 function patch(form, url) {
   $.ajax( {
     url: url,
-    data: form.serialize(),
+    data: $(form).serialize(),
     method: 'patch'
   })
   .done(function(msg) {
@@ -28,7 +28,7 @@ function patch(form, url) {
 function put(form, url) {
   $.ajax( {
     url: url,
-    data: form.serialize(),
+    data: $(form).serialize(),
     method: 'put',
   })
   .done(function(msg) {
