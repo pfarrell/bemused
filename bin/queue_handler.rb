@@ -4,7 +4,7 @@ require 'id3tag'
 require 'redis'
 require 'json'
 require '../app'
-reqiure 'mp3info'
+require 'mp3info'
 
 def coalesce(first, second)
   return first.strip unless first.nil? || first == ""
@@ -16,6 +16,13 @@ def safe_strip(val)
   return "not set"
 end
 
+def number_or_nil(string)
+  Integer(string || '')
+rescue ArgumentError
+  nil
+end
+
+
 redis = Redis.new
 
 #while(redis.llen('bemused:incoming') > 0)
@@ -23,6 +30,7 @@ while(true)
   list, json = redis.blpop('bemused:incoming')
   hsh = JSON.parse(json)
   mp3 = Mp3.new(hsh["file_name"])
+
 
   #Read tags
   tags = mp3.tags
@@ -43,10 +51,13 @@ while(true)
   rescue Exception
   end
 
+  track_artist_id = number_or_nil(track_artist_name)
+  album_artist_id = number_or_nil(album_artist_name)
+  album_id = number_or_nil(album_name)
 
-  track_artist = Artist.find_or_create(name: track_artist_name)
-  album_artist = Artist.find_or_create(name: album_artist_name)
-  album = Album.find_or_create(artist: album_artist, title: album_name)
+  track_artist = track_artist_id ? Artist[track_artist_id] : Artist.find_or_create(name: track_artist_name)
+  album_artist = album_artist_id ? Artist[album_artist_id] : Artist.find_or_create(name: album_artist_name)
+  album = album_id ? Album[album_id] : Album.find_or_create(artist: album_artist, title: album_name)
   track = Track.find_or_create(artist: track_artist, album: album, title: safe_strip(tags.title), track_number: tags.track_nr)
   track.track_number = tags.track_nr
   track.save
@@ -54,7 +65,7 @@ while(true)
   file.track = track;
   file.save
   track.media_file = file
-  track.duration_sec = Mp3Info.new(file_path).length.to_i
+  track.duration_sec = Mp3Info.new(nas_location).length.to_i
   track.save
 
   unless(genre.nil? || genre == '')
