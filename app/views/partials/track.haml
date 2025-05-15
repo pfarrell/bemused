@@ -10,7 +10,7 @@
       %a.sp.link{data: {"internal": "true"}, href: "#{url_for("/artist/#{track.artist.id}")}"}
         ="(#{track.artist.name})"
     -if show_album and track.album
-      %a.sp.link{data: {"internal": "true"}, hhref: "#{url_for("/album/#{track.album.id}")}"}
+      %a.sp.link{data: {"internal": "true"}, href: "#{url_for("/album/#{track.album.id}")}"}
         =track.album.title
     (<i>#{track.duration}</i>)
   .track-actions
