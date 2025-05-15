@@ -25,9 +25,9 @@ group :development do
   gem 'pry'
   gem 'simplecov'
   gem 'rspec'
-  gem 'byebug'
   gem 'test-unit'
 end
+gem 'byebug'
 
 gem "ed25519", "~> 1.3"
 gem "bcrypt_pbkdf", "~> 1.1"
