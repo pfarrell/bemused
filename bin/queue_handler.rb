@@ -3,7 +3,7 @@
 require 'id3tag'
 require 'redis'
 require 'json'
-require '../app'
+require './app'
 require 'mp3info'
 
 def coalesce(first, second)
@@ -38,6 +38,8 @@ while(true)
   album_artist_name = coalesce hsh["artist_name"], tags.artist
   album_name = coalesce hsh["album_name"], tags.album
   genre = hsh["genre"]
+  track_pad = number_or_nil(hsh["track_pad"]) || 0
+
   src= hsh["file_name"]
 
   # mv to error dir if no tags, add to error queue
@@ -59,7 +61,7 @@ while(true)
   album_artist = album_artist_id ? Artist[album_artist_id] : Artist.find_or_create(name: album_artist_name)
   album = album_id ? Album[album_id] : Album.find_or_create(artist: album_artist, title: album_name)
   track = Track.find_or_create(artist: track_artist, album: album, title: safe_strip(tags.title), track_number: tags.track_nr)
-  track.track_number = tags.track_nr
+  track.track_number = tags.track_nr + track_pad
   track.save
   file = MediaFile.find_or_create(absolute_path: nas_location)
   file.track = track;
