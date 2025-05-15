@@ -22,6 +22,16 @@ rescue ArgumentError
   nil
 end
 
+def extract_track_number(tag)
+  number = nil
+  begin
+    number = tag.to_i
+  rescue
+    stripped_tag = tag.replace(/\/.*/, '')
+    number = stripped_tag.to_i
+  end
+  return number
+end
 
 redis = Redis.new
 
@@ -39,6 +49,7 @@ while(true)
   album_name = coalesce hsh["album_name"], tags.album
   genre = hsh["genre"]
   track_pad = number_or_nil(hsh["track_pad"]) || 0
+  track_number = (extract_track_number(tags.track_nr) + track_pad).to_s
 
   src= hsh["file_name"]
 
@@ -60,8 +71,8 @@ while(true)
   track_artist = track_artist_id ? Artist[track_artist_id] : Artist.find_or_create(name: track_artist_name)
   album_artist = album_artist_id ? Artist[album_artist_id] : Artist.find_or_create(name: album_artist_name)
   album = album_id ? Album[album_id] : Album.find_or_create(artist: album_artist, title: album_name)
-  track = Track.find_or_create(artist: track_artist, album: album, title: safe_strip(tags.title), track_number: tags.track_nr)
-  track.track_number = tags.track_nr + track_pad
+  track = Track.find_or_create(artist: track_artist, album: album, title: safe_strip(tags.title), track_number: track_number)
+  track.track_number = track_number
   track.save
   file = MediaFile.find_or_create(absolute_path: nas_location)
   file.track = track;
@@ -82,3 +93,4 @@ while(true)
     end
   end
 end
+
