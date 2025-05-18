@@ -47,6 +47,16 @@ while(true)
   track_artist_name = coalesce tags.artist, hsh["artist_name"]
   album_artist_name = coalesce hsh["artist_name"], tags.artist
   album_name = coalesce hsh["album_name"], tags.album
+
+  track_artist_id = number_or_nil(track_artist_name)
+  album_artist_id = number_or_nil(album_artist_name)
+  album_id = number_or_nil(album_name)
+
+  track_artist = track_artist_id ? Artist[track_artist_id] : Artist.find_or_create(name: track_artist_name)
+  album_artist = album_artist_id ? Artist[album_artist_id] : Artist.find_or_create(name: album_artist_name)
+  album = album_id ? Album[album_id] : Album.find_or_create(artist: album_artist, title: album_name)
+
+
   genre = hsh["genre"]
   track_pad = number_or_nil(hsh["track_pad"]) || 0
   track_number = (extract_track_number(tags.track_nr) + track_pad).to_s
@@ -56,7 +66,7 @@ while(true)
   # mv to error dir if no tags, add to error queue
 
   # mv to nas if tagged
-  nas_location = "#{ENV["BEMUSED_UPLOAD_PATH"]}/#{album_artist_name}/#{album_name}/#{File.basename(mp3.tags.source)}".gsub(/[ ]*:/, "").gsub(/[\(\)\?\"]/, "")
+  nas_location = "#{ENV["BEMUSED_UPLOAD_PATH"]}/#{artist.name}/#{album.name}/#{File.basename(mp3.tags.source)}".gsub(/[ ]*:/, "").gsub(/[\(\)\?\"]/, "")
 
   FileUtils.mkdir_p(File.dirname(nas_location))
   begin
@@ -64,13 +74,6 @@ while(true)
   rescue Exception
   end
 
-  track_artist_id = number_or_nil(track_artist_name)
-  album_artist_id = number_or_nil(album_artist_name)
-  album_id = number_or_nil(album_name)
-
-  track_artist = track_artist_id ? Artist[track_artist_id] : Artist.find_or_create(name: track_artist_name)
-  album_artist = album_artist_id ? Artist[album_artist_id] : Artist.find_or_create(name: album_artist_name)
-  album = album_id ? Album[album_id] : Album.find_or_create(artist: album_artist, title: album_name)
   track = Track.find_or_create(artist: track_artist, album: album, title: safe_strip(tags.title), track_number: track_number)
   track.track_number = track_number
   track.save
