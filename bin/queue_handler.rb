@@ -66,7 +66,7 @@ while(true)
   # mv to error dir if no tags, add to error queue
 
   # mv to nas if tagged
-  nas_location = "#{ENV["BEMUSED_UPLOAD_PATH"]}/#{artist.name}/#{album.name}/#{File.basename(mp3.tags.source)}".gsub(/[ ]*:/, "").gsub(/[\(\)\?\"]/, "")
+  nas_location = "#{ENV["BEMUSED_UPLOAD_PATH"]}/#{album_artist.name}/#{album.title}/#{File.basename(mp3.tags.source)}".gsub(/[ ]*:/, "").gsub(/[\(\)\?\"]/, "")
 
   FileUtils.mkdir_p(File.dirname(nas_location))
   begin
@@ -96,4 +96,3 @@ while(true)
     end
   end
 end
-
