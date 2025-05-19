@@ -19,8 +19,6 @@ class Bemused < Sinatra::Application
       hsh["file_name"] = File.absolute_path("public/tmp/uploads/#{f[:filename]}")
       hsh["genre"] = params["genre"] unless params["genre"].nil?
       hsh["track_pad"] = params["track_pad"] unless params["track_pad"].nil?
-      hsh["album_image"] = params["album_image"] unless params["album_image"].nil?
-      hsh["artist_image"] = params["artist_image"] unless params["artist_image"].nil?
       redis.rpush(key, hsh.to_json )
     end
 
