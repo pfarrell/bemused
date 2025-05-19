@@ -22,14 +22,6 @@ rescue ArgumentError
   nil
 end
 
-def underscore(camel_cased_word)
- camel_cased_word.to_s.gsub(/::/, '/').
-   gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
-   gsub(/([a-z\d])([A-Z])/,'\1_\2').
-   tr("-", "_").
-   downcase
-end
-
 def extract_track_number(tag)
   number = nil
   begin
@@ -55,8 +47,6 @@ while(true)
   track_artist_name = coalesce tags.artist, hsh["artist_name"]
   album_artist_name = coalesce hsh["artist_name"], tags.artist
   album_name = coalesce hsh["album_name"], tags.album
-  album_image = tags.album_image
-  artist_image = tags.artist_image
 
   track_artist_id = number_or_nil(track_artist_name)
   album_artist_id = number_or_nil(album_artist_name)
@@ -75,19 +65,6 @@ while(true)
 
   # mv to error dir if no tags, add to error queue
 
-  if src == album_image or src == artist_image) then
-    ext = File.extname(src)
-    img_location = "#{ENV["BEMUSED_IMG_PATH"]}"
-    if src == album_image then
-      img_location += "/albums/#{underscore(artist.name)}-#{underscore(album.title)}#{ext}"
-      album.image_path = img_location
-      album.save
-    else
-      img_location += "/artists/#{underscore(artist.name)}#{ext}"
-      album_artist.image_path = img_location
-      album_artist.save
-    end
-  end
   # mv to nas if tagged
   nas_location = "#{ENV["BEMUSED_UPLOAD_PATH"]}/#{album_artist.name}/#{album.title}/#{File.basename(mp3.tags.source)}".gsub(/[ ]*:/, "").gsub(/[\(\)\?\"]/, "")
 
@@ -119,4 +96,3 @@ while(true)
     end
   end
 end
-
