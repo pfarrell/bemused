@@ -40,6 +40,7 @@ while(true)
   list, json = redis.blpop('bemused:incoming')
   hsh = JSON.parse(json)
   mp3 = Mp3.new(hsh["file_name"])
+  src= hsh["file_name"]
 
 
   #Read tags
@@ -52,16 +53,16 @@ while(true)
   album_artist_id = number_or_nil(album_artist_name)
   album_id = number_or_nil(album_name)
 
+
   track_artist = track_artist_id ? Artist[track_artist_id] : Artist.find_or_create(name: track_artist_name)
   album_artist = album_artist_id ? Artist[album_artist_id] : Artist.find_or_create(name: album_artist_name)
   album = album_id ? Album[album_id] : Album.find_or_create(artist: album_artist, title: album_name)
-
+  track_title = tags.title ? safe_strip(tags.title) : File.basename(src, ".*")
 
   genre = hsh["genre"]
   track_pad = number_or_nil(hsh["track_pad"]) || 0
   track_number = (extract_track_number(tags.track_nr) + track_pad).to_s
 
-  src= hsh["file_name"]
 
   # mv to error dir if no tags, add to error queue
 
@@ -74,7 +75,7 @@ while(true)
   rescue Exception
   end
 
-  track = Track.find_or_create(artist: track_artist, album: album, title: safe_strip(tags.title), track_number: track_number)
+  track = Track.find_or_create(artist: track_artist, album: album, title: track_title, track_number: track_number)
   track.track_number = track_number
   track.save
   file = MediaFile.find_or_create(absolute_path: nas_location)
