@@ -6,13 +6,17 @@ class Bemused < Sinatra::Application
     db = Sequel::Model::db
 
     sql = <<-SQL
-      SELECT 'Album' as model_type, id from albums where f_unaccent(lower(title)) ILIKE ?
+      SELECT 'Album' as model_type, a.id from albums a
+        INNER JOIN tracks t on t.album_id = a.id
+        where f_unaccent(lower(a.title)) ILIKE ?
       UNION ALL
-      SELECT 'Artist' as model_type, id from artists where f_unaccent(lower(name)) ILIKE ?
+        SELECT 'Artist' as model_type, a.id from artists a
+          INNER JOIN albums al on al.artist_id = a.id
+          where f_unaccent(lower(a.name)) ILIKE ?
       UNION ALL
-      SELECT 'Playlist' as model_type, id from playlists where f_unaccent(lower(name)) ILIKE ?
+        SELECT 'Playlist' as model_type, id from playlists where f_unaccent(lower(name)) ILIKE ?
       UNION ALL
-      SELECT 'Track' as model_type, id from tracks where f_unaccent(lower(title)) ILIKE ?
+        SELECT 'Track' as model_type, id from tracks where f_unaccent(lower(title)) ILIKE ?
     SQL
 
     query_pattern = "%#{query}%"
