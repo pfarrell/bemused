@@ -44,7 +44,12 @@ while(true)
 
 
   #Read tags
-  tags = mp3.tags
+  begin
+    tags = mp3.tags
+  rescue Exception
+    $stderr.puts "#{src} not found"
+    next
+  end
   track_artist_name = coalesce tags.artist, hsh["artist_name"]
   album_artist_name = coalesce hsh["artist_name"], tags.artist
   album_name = coalesce hsh["album_name"], tags.album
