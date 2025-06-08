@@ -6,24 +6,35 @@ class Bemused < Sinatra::Application
     db = Sequel::Model::db
 
     sql = <<-SQL
-      (SELECT distinct on (similarity(f_unaccent(lower(a.title)), ?)) 'Album' as model_type, a.id,similarity(f_unaccent(lower(a.title)), ?)  from albums a
+      (select model_type, id, similarity_score from (
+        SELECT 'Album' as model_type,
+        a.id,
+        similarity(f_unaccent(lower(a.title)), ?) as similarity_score,
+        ROW_NUMBER() OVER(PARTITION BY a.id ORDER BY similarity(f_unaccent(lower(a.title)), ?) DESC) as rn
+      from albums a
         INNER JOIN tracks t on t.album_id = a.id
-        where similarity(f_unaccent(lower(a.title)), ?) > 0.2
-        order by similarity(f_unaccent(lower(a.title)), ?) desc)
+        where similarity(f_unaccent(lower(a.title)), ?) > 0.22
+        ) ranked where rn = 1 order by similarity_score desc)
       UNION ALL
-        (SELECT 'Artist' as model_type, a.id, similarity(f_unaccent(lower(a.name)), ?) from artists a
+        (SELECT model_type, id, similarity_score from (
+         select 'Artist' as model_type,
+          a.id,
+          similarity(f_unaccent(lower(a.name)), ?) as similarity_score,
+          ROW_NUMBER() OVER(PARTITION BY a.id ORDER BY similarity(f_unaccent(lower(a.name)), ?) DESC) as rn
+          from artists a
           INNER JOIN albums al on al.artist_id = a.id
-          where similarity(f_unaccent(lower(a.name)), ?) > 0.2
-          order by similarity(f_unaccent(lower(a.name)), ?) desc)
+          where similarity(f_unaccent(lower(a.name)), ?) > 0.22
+          )ranked where rn = 1 order by similarity_score desc)
       UNION ALL
         SELECT 'Playlist' as model_type, id, -1.0 from playlists where f_unaccent(lower(name)) ILIKE ?
       UNION ALL
         SELECT 'Track' as model_type, id, -1.0 from tracks where f_unaccent(lower(title)) ILIKE ?
     SQL
 
-    query_pattern = "%#{query}%"
+    qp = "#{query}"
+    lp = "%#{query}%"
 
-    results = db.fetch(sql, query_pattern, query_pattern, query_pattern, query_pattern, query_pattern, query_pattern, query_pattern, query_pattern, query_pattern)
+    results = db.fetch(sql, qp, qp, qp, qp, qp, qp, lp, lp)
 
     grouped_ids = results.each_with_object({}) do |result,hash|
       model_type = result[:model_type]
@@ -46,13 +57,21 @@ class Bemused < Sinatra::Application
     send meth, "/search" do
       query = params[:q]
       results, order = search_all_resources(query)
-      album_ids = order['Album']
-      album_id_to_idx = album_ids.each_with_index.to_h
-      artist_ids = order['Artist']
-      artist_id_to_idx = artist_ids.each_with_index.to_h
+      albums = []
+      artists = []
+      if order['Album'] then
+        album_ids = order['Album']
+        album_id_to_idx = album_ids.each_with_index.to_h
+        albums = results[:album].sort_by{|obj| album_id_to_idx[obj.id]}
+      end
+      if order['Artist'] then
+        artist_ids = order['Artist']
+        artist_id_to_idx = artist_ids.each_with_index.to_h
+        artists = results[:artist].sort_by{|obj| artist_id_to_idx[obj.id]}
+      end
       haml :search, layout: !request.xhr?, locals: {
-        :albums => results[:album].sort_by{|obj| album_id_to_idx[obj.id]} || [],
-        :artists => results[:artist].sort_by{|obj| artist_id_to_idx[obj.id]} || [],
+        :albums => albums || [],
+        :artists => artists || [],
         :playlists => results[:playlist] || [],
         :tracks => results[:track] || [],
         :count => 0
