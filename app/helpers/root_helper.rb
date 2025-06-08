@@ -15,17 +15,19 @@ module RootHelper
   end
 
   def artists_with_albums(query)
-    Artist.where(Sequel.ilike(Sequel.function(:f_unaccent, Sequel.function(:lower, :name)), "%#{query}%"))
+    Artist.where(Sequel.function(:similarity, Sequel.function(:f_unaccent, Sequel.function(:lower, :name)), "#{query}") > 0.15)
         .join(:albums, artist_id: :id)
+        .order(Sequel.desc(Sequel.function(:similarity, Sequel.function(:f_unaccent, Sequel.function(:lower, :name)), "#{query}")))
+        .distinct(Sequel.function(:similarity, Sequel.function(:f_unaccent, Sequel.function(:lower, Sequel[:artists][:name])), "#{query}"))
         .qualify
-        .distinct(:id)
   end
 
   def albums_with_tracks(query)
-    Album.where(Sequel.ilike(Sequel.function(:f_unaccent, Sequel.function(:lower, :title)), "%#{query}%"))
+    Album.where(Sequel.function(:similarity, Sequel.function(:f_unaccent, Sequel.function(:lower, Sequel[:albums][:title])), "#{query}") > 0.15)
       .join(:tracks, album_id: :id)
+      .order(Sequel.desc(Sequel.function(:similarity, Sequel.function(:f_unaccent, Sequel.function(:lower, :title)), "#{query}")))
+      .distinct(Sequel.function(:similarity, Sequel.function(:f_unaccent, Sequel.function(:lower, Sequel[:albums][:title])), "#{query}"))
       .qualify
-      .distinct(:id)
   end
 
   def tracks_from_search(query)
