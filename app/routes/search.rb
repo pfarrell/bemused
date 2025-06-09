@@ -6,35 +6,49 @@ class Bemused < Sinatra::Application
     db = Sequel::Model::db
 
     sql = <<-SQL
+        SELECT distinct on (a.id) 'Album' as model_type,
+        a.id,
+        .2  as similarity_score
+        from albums a
+        INNER JOIN tracks t on t.album_id = a.id
+        where f_unaccent(lower(a.title)) ILIKE lower(?)
+      UNION ALL
       (select model_type, id, similarity_score from (
         SELECT 'Album' as model_type,
         a.id,
-        similarity(f_unaccent(lower(a.title)), ?) as similarity_score,
-        ROW_NUMBER() OVER(PARTITION BY a.id ORDER BY similarity(f_unaccent(lower(a.title)), ?) DESC) as rn
+        similarity(f_unaccent(lower(a.title)), lower(?)) as similarity_score,
+        ROW_NUMBER() OVER(PARTITION BY a.id ORDER BY similarity(f_unaccent(lower(a.title)), lower(?)) DESC) as rn
       from albums a
         INNER JOIN tracks t on t.album_id = a.id
-        where similarity(f_unaccent(lower(a.title)), ?) > 0.22
+        where similarity(f_unaccent(lower(a.title)), lower(?)) > 0.24
         ) ranked where rn = 1 order by similarity_score desc)
       UNION ALL
         (SELECT model_type, id, similarity_score from (
          select 'Artist' as model_type,
           a.id,
-          similarity(f_unaccent(lower(a.name)), ?) as similarity_score,
-          ROW_NUMBER() OVER(PARTITION BY a.id ORDER BY similarity(f_unaccent(lower(a.name)), ?) DESC) as rn
+          similarity(f_unaccent(lower(a.name)), lower(?)) as similarity_score,
+          ROW_NUMBER() OVER(PARTITION BY a.id ORDER BY similarity(f_unaccent(lower(a.name)), lower(?)) DESC) as rn
           from artists a
           INNER JOIN albums al on al.artist_id = a.id
-          where similarity(f_unaccent(lower(a.name)), ?) > 0.22
+          where similarity(f_unaccent(lower(a.name)), lower(?)) > 0.24
           )ranked where rn = 1 order by similarity_score desc)
       UNION ALL
-        SELECT 'Playlist' as model_type, id, -1.0 from playlists where f_unaccent(lower(name)) ILIKE ?
+        SELECT 'Artist' as model_type,
+        a.id,
+        .2
+        from artists a
+        INNER JOIN albums al on al.artist_id = a.id
+        where f_unaccent(lower(a.name)) ILIKE lower(?)
       UNION ALL
-        SELECT 'Track' as model_type, id, -1.0 from tracks where f_unaccent(lower(title)) ILIKE ?
+        SELECT 'Playlist' as model_type, id, -1.0 from playlists where f_unaccent(lower(name)) ILIKE lower(?)
+      UNION ALL
+        SELECT 'Track' as model_type, id, -1.0 from tracks where f_unaccent(lower(title)) ILIKE lower(?)
     SQL
 
     qp = "#{query}"
     lp = "%#{query}%"
 
-    results = db.fetch(sql, qp, qp, qp, qp, qp, qp, lp, lp)
+    results = db.fetch(sql, lp, qp, qp, qp, qp, qp, qp, lp, lp, lp)
 
     grouped_ids = results.each_with_object({}) do |result,hash|
       model_type = result[:model_type]
