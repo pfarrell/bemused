@@ -2,13 +2,30 @@ require 'json'
 
 class Bemused < Sinatra::Application
 
+    STOP_WORDS = %w[
+      a an and are as at be by for from
+      has he in is it its of on that the
+      to was will with the of an a
+    ].freeze
+
+  def filter_query(qu)
+    return "" if qu.nil? || qu.empty?
+    words = qu.gsub(/[^\w\s]/,"").downcase.split(/\s+/)
+    filtered = words.reject{|word| STOP_WORDS.include?(word) || word.empty?}
+    filtered.join(' ')
+  end
+
   def search_all_resources(query)
+    filtered_q = filter_query(query)
+    return nil unless filtered_q.length > 3
+
     db = Sequel::Model::db
 
     sql = <<-SQL
+    select q.model_type, q.id, q.similarity_score from (
         SELECT distinct on (a.id) 'Album' as model_type,
         a.id,
-        .2  as similarity_score
+        .8  as similarity_score
         from albums a
         INNER JOIN tracks t on t.album_id = a.id
         where f_unaccent(lower(a.title)) ILIKE lower(?)
@@ -23,6 +40,12 @@ class Bemused < Sinatra::Application
         where similarity(f_unaccent(lower(a.title)), lower(?)) > 0.24
         ) ranked where rn = 1 order by similarity_score desc)
       UNION ALL
+        SELECT 'Artist' as model_type, a.id,
+          .8
+          from artists a
+          INNER JOIN albums al on al.artist_id = a.id
+          where f_unaccent(lower(a.name)) ILIKE lower(?)
+      UNION ALL
         (SELECT model_type, id, similarity_score from (
          select 'Artist' as model_type,
           a.id,
@@ -33,22 +56,16 @@ class Bemused < Sinatra::Application
           where similarity(f_unaccent(lower(a.name)), lower(?)) > 0.24
           )ranked where rn = 1 order by similarity_score desc)
       UNION ALL
-        SELECT 'Artist' as model_type,
-        a.id,
-        .2
-        from artists a
-        INNER JOIN albums al on al.artist_id = a.id
-        where f_unaccent(lower(a.name)) ILIKE lower(?)
-      UNION ALL
         SELECT 'Playlist' as model_type, id, -1.0 from playlists where f_unaccent(lower(name)) ILIKE lower(?)
       UNION ALL
         SELECT 'Track' as model_type, id, -1.0 from tracks where f_unaccent(lower(title)) ILIKE lower(?)
+        ) q order by q.similarity_score desc
     SQL
 
-    qp = "#{query}"
+    qp = "#{filtered_q}"
     lp = "%#{query}%"
 
-    results = db.fetch(sql, lp, qp, qp, qp, qp, qp, qp, lp, lp, lp)
+    results = db.fetch(sql, lp, qp, qp, qp, lp, qp, qp, qp, lp, lp)
 
     grouped_ids = results.each_with_object({}) do |result,hash|
       model_type = result[:model_type]
@@ -74,7 +91,7 @@ class Bemused < Sinatra::Application
       albums = []
       artists = []
       if order['Album'] then
-        album_ids = order['Album']
+        album_ids = order['Album'].uniq
         album_id_to_idx = album_ids.each_with_index.to_h
         albums = results[:album].sort_by{|obj| album_id_to_idx[obj.id]}
       end
