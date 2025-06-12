@@ -1,15 +1,22 @@
 .pull-right.dropdown
-  -user = current_user
-  -if user
-    .playlist-button
-      =user.username
-      %svg{width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2"}
-        %path{d:"M6 9l6 6 6-6"}
-    .dropdown-content
-      %a{data: {"internal": true}, href: "#{url_for("/profile")}"}
-        Profile
-      %a{href: "#{url_for("/logout")}"}
-        Logout
-  -else
-    %a.btn{data: {"internal": "true"}, href:"#{url_for("/login")}"}
-      Login
+  %button.dropdown-toggle{onclick: "toggleDropdown()", style: "background: none; border: none; color: white; cursor: pointer; padding: 0.5rem;"}
+    -user = current_user
+    -if user
+      .playlist-button
+        =user.username
+        %svg{width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2"}
+          %path{d:"M6 9l6 6 6-6"}
+      .dropdown-content
+        %a{data: {"internal": true}, href: "#{url_for("/profile")}"}
+          Profile
+        %a{href: "#{url_for('/random')}"} Random
+        %a{href: "#{url_for('/logs')}"} Logs
+        %a{href: "#{url_for('/stats')}"} Stats
+        %a{href: "#{url_for('/playlists')}"} Playlists
+        %a{href: "#{url_for('/favorites')}"} Favorites
+        %a{href: "#{url_for('/uploads')}"} Upload
+        %a{href: "#{url_for("/logout")}"}
+          Logout
+    -else
+      %a.btn{data: {"internal": "true"}, href:"#{url_for("/login")}"}
+        Login

@@ -11,11 +11,6 @@
     %link{rel: "shortcut icon", href:"//patf.com/images/bemused.ico"}
     %link{rel: "search", type:"application/opensearchdescription+xml", title: "PShare", href: "http://patf.com/bemused/opensearch.xml"}
     %script{:type => "text/javascript", :src => "#{url_for('/libs/jquery/dist/jquery.min.js')}"}
-    %script{:type => "text/javascript", :src => "#{url_for '/js/navigation.js'}"}
-    %script{:type => "text/javascript", :src => "#{url_for '/js/music-player/dist/player.js'}"}
-    %script{:type => "text/javascript", :src => "#{url_for '/js/player-controls.js'}"}
-    %script{:type => "text/javascript", :src => "#{url_for '/js/form_actions.js'}"}
-    %script{:type => "text/javascript", :src => "#{url_for '/js/notifications.js'}"}
     %script
       //default is to enable keypress functions unless page opts out
       //var keypress_enable=true;
@@ -55,10 +50,17 @@
         #tracklist
 
 //%script{:type => "text/javascript", :src => "#{url_for '/js/keypress.js'}"}
+%script{:type => "text/javascript", :src => "#{url_for '/js/navigation.js'}"}
+%script{:type => "text/javascript", :src => "#{url_for '/js/music-player/dist/player.js'}"}
+%script{:type => "text/javascript", :src => "#{url_for '/js/player-controls.js'}"}
+%script{:type => "text/javascript", :src => "#{url_for '/js/form_actions.js'}"}
+%script{:type => "text/javascript", :src => "#{url_for '/js/notifications.js'}"}
+
 :javascript
   window.player
 
   var myPlaylist;
+
 
   function album_summary(data) {
     $('#album_summary').append(data.summary);
