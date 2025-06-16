@@ -13,6 +13,12 @@ set :deploy_to, '/var/www/bemused'
 #set :rvm_map_bins, %w{bundle gem rake ruby}
 #set :rvm_type, :auto
 
+set :npm_flags, '--production=false --silent'
+set :npm_roles, :web
+set :default_env, {
+  'PATH' => '$HOME/.nvm/versions/node/v18.17.0/bin:$PATH'
+}
+
 
 # Default value for :format is :pretty
 # set :format, :pretty
@@ -42,6 +48,19 @@ set :deploy_via, :remote_cache
 
 # Default value for keep_releases is 5
 # set :keep_releases, 5
+
+after 'npm:install', 'react-build'
+
+namespace :react do
+  desc 'Build React bundle'
+  task :build do
+    on roles(:web) do
+      within release_path do
+        execute :npm, 'run build'
+      end
+    end
+  end
+end
 
 namespace :deploy do
 

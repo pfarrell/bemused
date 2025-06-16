@@ -35,7 +35,7 @@ const Stats = () => {
       <ul>
         {Object.keys(data.props).map((p, index) => (
           <li key={index}>
-            <a key={index} onClick={() =>handleClick(p)}>{p} prop</a>
+            <a key={index} onClick={() =>handleClick(p)}>{p}</a>
           </li>
         ))}
       </ul>

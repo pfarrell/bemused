@@ -40,3 +40,5 @@ gem "mp3info", "~> 0.8.5"
 
 
 
+
+gem "capistrano-npm", "~> 1.0"
