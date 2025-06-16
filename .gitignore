@@ -7,7 +7,7 @@ public/share
 public/libs
 public/media
 public/dist/
-node_modules/
+node_modules/*
 .byebug_history
 .bundle/*
 /.bundle/config
