@@ -31,12 +31,12 @@ set :deploy_via, :remote_cache
 # set :linked_files, %w{config/database.yml}
 
 # Default value for linked_dirs is []
-set :linked_dirs, %w{log tmp public/tmp public/images public/mp3s}
+set :linked_dirs, %w{log tmp public/tmp public/images public/mp3s node_modules}
 
 # Default value for keep_releases is 5
 # set :keep_releases, 5
 
-# React build hook - FIXED: changed react-build to react:build
+# React build hook
 after 'npm:install', 'react:build'
 
 namespace :react do
@@ -44,7 +44,14 @@ namespace :react do
   task :build do
     on roles(:web) do
       within release_path do
-        execute :npm, 'run build'
+        begin
+          execute :npm, 'run build'
+          info 'React build completed successfully'
+        rescue StandardError => e
+          erro 'React build failed'
+          error e.message
+          exit 1
+        end
       end
     end
   end
