@@ -48,7 +48,7 @@ namespace :react do
           execute :npm, 'run build'
           info 'React build completed successfully'
         rescue StandardError => e
-          erro 'React build failed'
+          error 'React build failed'
           error e.message
           exit 1
         end
@@ -77,3 +77,25 @@ namespace :deploy do
     end
   end
 end
+
+namespace :npm do
+  desc 'Handle node_modules manually'
+  task :setup do
+    on roles(:web) do
+      # Create persistent node_modules in shared
+      execute :mkdir, '-p', shared_path.join('node_modules')
+
+      within release_path do
+        # Remove any existing node_modules
+        execute :rm, '-rf', 'node_modules'
+        # Create symlink manually
+        execute :ln, '-sf', shared_path.join('node_modules'), 'node_modules'
+        # Install packages
+        execute :npm, 'install --production=false'
+      end
+    end
+  end
+end
+
+after 'deploy:updated', 'npm:setup'
+after 'npm:setup', 'react:build'
