@@ -68,8 +68,12 @@ class Bemused < Sinatra::Application
     lookup(params[:category], params[:search])
   end
 
+#  get "/stats" do
+#    haml :stats, layout: !request.xhr?
+#  end
+
   get "/stats" do
-    haml :stats, layout: !request.xhr?
+    haml :stats_r, layout:false
   end
 
   get "/stats/albums" do
