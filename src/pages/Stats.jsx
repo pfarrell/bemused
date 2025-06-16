@@ -31,7 +31,7 @@ const Stats = () => {
 
   return (
     <div>
-      <h1>Stats</h1>
+      <h1>Stats React</h1>
       <ul>
         {Object.keys(data.props).map((p, index) => (
           <li key={index}>
