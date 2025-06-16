@@ -6,6 +6,8 @@ public/tmp
 public/share
 public/libs
 public/media
+public/dist/
+node_modules/
 .byebug_history
 .bundle/*
 /.bundle/config

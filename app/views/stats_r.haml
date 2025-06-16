@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+%html
+  %head
+    %title
+      BemusedReact
+  %body
+    #root
+      %script
+        :plain
+          window.APP_CONFIG = { 
+            baseURL: "#{url_for('/')}" 
+          };
+      %script{src: "#{url_for('/dist/bundle.js')}"}
+
