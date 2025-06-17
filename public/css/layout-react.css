@@ -1,0 +1,83 @@
+/* public/css/react-layout.css */
+/* SPA-specific styles - matches your Haml layout */
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background: #333;
+  color: white;
+  padding: 1rem 0;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 2rem;
+  margin: 0;
+  padding: 0 2rem;
+  flex-wrap: wrap;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+nav a:hover {
+  background-color: rgba(255,255,255,0.1);
+}
+
+main {
+  flex: 1;
+  padding: 2rem;
+}
+
+footer {
+  background: #f8f9fa;
+  padding: 1rem;
+  text-align: center;
+  color: #666;
+  border-top: 1px solid #dee2e6;
+}
+
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 18px;
+  color: #666;
+}
+
+/* Additional styles for better mobile responsiveness */
+@media (max-width: 768px) {
+  nav ul {
+    padding: 0 1rem;
+    gap: 1rem;
+  }
+  
+  nav a {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.9rem;
+  }
+  
+  main {
+    padding: 1rem;
+  }
+  
+  .page {
+    padding: 0 0.5rem;
+  }
+}

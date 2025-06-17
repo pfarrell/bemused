@@ -6,7 +6,7 @@ class Bemused < Sinatra::Application
   end
 
   get "/logs" do
-    redirect url_for("/logs/1")
+    haml :logs_r, layout:false
   end
 
   get "/logs/:page" do

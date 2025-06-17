@@ -5,7 +5,16 @@ require 'bcrypt'
 class Bemused < Sinatra::Application
   include RootHelper
   get "/" do
-    haml :index, layout: !request.xhr?, locals: {artists: random_artists(60)}
+    @title = "Bemused"
+    @react_page = "index"
+    @artists = random_artists(60)
+    #haml :index, layout: !request.xhr?, locals: {artists: random_artists(60)}
+    haml :spa_layout
+  end
+
+  get "/app/?*" do
+    @title = "Bemused"
+    haml :react_layout
   end
 
   get "/resume" do

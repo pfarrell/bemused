@@ -1,6 +1,7 @@
 require 'open-uri'
 
 class Bemused < Sinatra::Application
+  include RootHelper
 
   def summarize_album(album)
     artist_name = (album.artist.wikipedia and !album.artist.wikipedia.empty?) ? album.artist.wikipedia : wp_fix(album.artist[:name])
@@ -82,6 +83,9 @@ class Bemused < Sinatra::Application
      page = params[:page].to_i
      haml :recent_albums, layout: !request.xhr?, locals: {model: {data: Album.order(Sequel.desc(:id)).paginate(page, 24)}}
   end
+
+
+
 
   get "/albums/words" do
     words= params[:size] || 100

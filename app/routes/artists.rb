@@ -81,4 +81,11 @@ class Bemused < Sinatra::Application
       artist.save
     end
   end
+
+  get "/artists/random" do
+    content_type :json
+    count = params[:size] || 10
+    random_artists(60).to_json
+  end
+
 end

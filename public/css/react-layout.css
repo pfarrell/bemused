@@ -1,0 +1,55 @@
+/* public/css/react-layout.css */
+/* Styles for React content within the existing layout */
+
+.react-page-content {
+  /* Ensure React content fits well within existing layout */
+  width: 100%;
+  min-height: 400px;
+}
+
+.loading-react {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 18px;
+  color: #666;
+  background: rgba(248, 249, 250, 0.5);
+  border-radius: 8px;
+  margin: 2rem 0;
+}
+
+/* Ensure React content works well with existing player bar */
+.main-content {
+  /* Add some bottom padding so content doesn't hide behind fixed player */
+  padding-bottom: 100px;
+}
+
+/* Responsive adjustments for React content */
+@media (max-width: 768px) {
+  .react-page-content {
+    padding: 0;
+  }
+  
+  .main-content {
+    padding-bottom: 120px; /* More space on mobile for player */
+  }
+}
+
+/* Make sure React tables are responsive */
+.react-page-content table {
+  width: 100%;
+  min-width: 600px; /* Ensures table doesn't get too cramped */
+}
+
+@media (max-width: 768px) {
+  .react-page-content table {
+    min-width: 500px;
+    font-size: 0.9rem;
+  }
+  
+  .react-page-content th,
+  .react-page-content td {
+    padding: 0.5rem !important;
+  }
+}

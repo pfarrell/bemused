@@ -1,17 +1,30 @@
 module RootHelper
   def random_artists(size)
-    artists = context? ? Artist.where(tags: @tags) : Artist
-    Artist.from(
-      artists
-        .join(:albums, artist_id: :id)
-        .exclude(image_path: nil)
-        .qualify
-        .select_all(:artists)
-        .distinct
-    )
-    .select_append(Sequel.lit('RANDOM() as random_order'))
-    .order(:random_order)
-    .limit(size)
+#    artists = context? ? Artist.where(tags: @tags) : Artist
+#    Artist.from(
+#      artists
+#        .join(:albums, artist_id: :id)
+#        .exclude(image_path: nil)
+#        .qualify
+#        .select_all(:artists)
+#        .distinct
+#    )
+#    .select_append(Sequel.lit('RANDOM() as random_order'))
+#    .order(:random_order)
+#    .limit(size)
+    artists = Artist
+      .join(:albums, artist_id: :id)
+      .exclude(Sequel[:artists][:image_path] => nil)
+      .select_all(:artists)
+      .select_append(Sequel.function(:random).as(:random_order))
+      .distinct
+      .order(:random_order)
+      .limit(size)
+    artists.map do |artist|
+      values = artist.values.dup
+      values.delete(:random_order)
+      values
+    end
   end
 
   def artists_with_albums(query)

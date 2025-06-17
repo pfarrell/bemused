@@ -73,7 +73,9 @@ class Bemused < Sinatra::Application
 #  end
 
   get "/stats" do
-    haml :stats_r, layout:false
+    @title = "Stats - Bemused"
+    @react_page = "stats"
+    haml :spa_layout
   end
 
   get "/stats/albums" do

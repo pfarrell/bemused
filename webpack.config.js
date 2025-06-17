@@ -5,9 +5,8 @@ module.exports = {
   entry: './src/index.js',
   
   output: {
-    path: path.resolve(__dirname, 'public/dist'),
-    filename: 'bundle.js',
-    clean: true,
+    path: path.resolve(__dirname, 'public/js'),
+    filename: 'react-pages.js',
   },
   
   module: {

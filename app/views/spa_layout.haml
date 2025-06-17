@@ -17,6 +17,8 @@
       //var keypress_enable=true;
       var album_summary_available=false;
       var track_summary_available=true;
+      // Tell React which page to render
+      window.REACT_PAGE = "#{@react_page}";
   %body
     %header.search-header
       %a.btn.logo{data: {"internal": "true"}, href:"#{url_for("/")}"}
@@ -29,7 +31,10 @@
         != haml :'partials/profile', locals: {user: current_user}.merge(locals)
     %main.main-content
       .content-container
-        !=yield
+        -# This is where React will mount instead of !=yield
+        %div#react-app
+          .loading-react
+            Loading...
     %footer.player-bar
       .now-playing
         %svg{width: "24", height: "24", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg"}
@@ -57,11 +62,13 @@
 %script{:type => "text/javascript", :src => "#{url_for '/js/form_actions.js'}"}
 %script{:type => "text/javascript", :src => "#{url_for '/js/notifications.js'}"}
 
+-# Load React for this page
+%script{:type => "text/javascript", :src => "#{url_for '/js/react-pages.js'}"}
+
 :javascript
   window.player
 
   var myPlaylist;
-
 
   function album_summary(data) {
     $('#album_summary').append(data.summary);
@@ -104,7 +111,6 @@
     });
 
   });
-
 
   function setCurrent(artist_name, track_name) {
     setTextByClass("track-artist", artist_name);
@@ -161,5 +167,3 @@
         return false;
     }
   }
-
- 
