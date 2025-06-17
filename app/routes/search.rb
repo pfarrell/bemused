@@ -100,13 +100,27 @@ class Bemused < Sinatra::Application
         artist_id_to_idx = artist_ids.each_with_index.to_h
         artists = results[:artist].sort_by{|obj| artist_id_to_idx[obj.id]}
       end
-      haml :search, layout: !request.xhr?, locals: {
-        :albums => albums || [],
-        :artists => artists || [],
-        :playlists => results[:playlist] || [],
-        :tracks => results[:track] || [],
-        :count => 0
-      }
+
+      respond_to do |wants|
+        wants.js {
+          {albums: albums,
+           artists: artists,
+           playlists: results[:playlists],
+           tracks: results[:tracks],
+           count: 0
+          }.to_json
+        }
+        wants.html {
+          haml :search, layout: !request.xhr?, locals: {
+            :albums => albums || [],
+            :artists => artists || [],
+            :playlists => results[:playlist] || [],
+            :tracks => results[:track] || [],
+            :count => 0
+          }
+        }
+      end
+
     end
   end
 
