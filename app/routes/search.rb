@@ -105,8 +105,8 @@ class Bemused < Sinatra::Application
         wants.js {
           {albums: albums,
            artists: artists,
-           playlists: results[:playlists],
-           tracks: results[:tracks],
+           playlists: results[:playlist],
+           tracks: results[:track],
            count: 0
           }.to_json
         }

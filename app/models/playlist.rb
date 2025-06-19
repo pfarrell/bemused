@@ -12,6 +12,7 @@ class Playlist < Sequel::Model
         {
           title: "#{track.title}",
           url: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
+          logurl: "#{ENV["BEMUSED_PATH"]}/log/#{track.id}",
           artist: "#{artist_name}",
           favorited: "#{track.favorited?(user)}",
           duration: "#{track.duration}",
