@@ -5,11 +5,12 @@ require 'bcrypt'
 class Bemused < Sinatra::Application
   include RootHelper
   get "/" do
-    data = {artists: random_artists(60)}
-    respond_to do |wants|
-      wants.json { data.to_json }
-      wants.html { haml :index, layout: !request.xhr?, locals: data }
-    end
+    redirect url_for "/app"
+#    data = {artists: random_artists(60)}
+#    respond_to do |wants|
+#      wants.json { data.to_json }
+#      wants.html { haml :index, layout: !request.xhr?, locals: data }
+#    end
   end
 
   # Serve the React frontend assets
