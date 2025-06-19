@@ -34,7 +34,6 @@ class Track < Sequel::Model
       duration: self.duration_sec,
       image: image,
       url: "#{ENV["BEMUSED_PATH"]}/stream/#{self.id}",
-      logurl: "#{ENV["BEMUSED_PATH"]}/log/#{self.id}",
     }.to_json(opts)
   end
 

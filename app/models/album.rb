@@ -17,7 +17,6 @@ class Album < Sequel::Model
         {
           title: "#{title}",
           url: "#{ENV["BEMUSED_PATH"]}/stream/#{track.id}",
-          logurl: "#{ENV["BEMUSED_PATH"]}/log/#{track.id}",
           artist: "#{artist_name.shrink(25)}",
           favorited: "#{track.favorited?(user)}",
           duration: "#{track.duration}",

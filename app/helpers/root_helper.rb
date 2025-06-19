@@ -4,14 +4,15 @@ module RootHelper
       .join(:albums, artist_id: :id)
       .exclude(Sequel[:artists][:image_path] => nil)
       .select_all(:artists)
-      .select_append(Sequel.function(:row_number).over(partition: Sequel[:artists][:id], order: Sequel.function(:random)).as(:rn))
-      .from_self
-      .where(rn: 1)
-      .order(Sequel.function(:random))
+      .select_append(Sequel.function(:random).as(:random_order))
+      .distinct
+      .order(:random_order)
       .limit(size)
+
     artists.map do |artist|
-      artist.values.delete(:rn)
-      artist
+      values = artist.values.dup
+      values.delete(:random_order)
+      values
     end
   end
 

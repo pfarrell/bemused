@@ -1,7 +1,6 @@
 # encoding 'utf-8'
 require 'open-uri'
 require 'json'
-require 'helpers/root_helper'
 
 class Bemused < Sinatra::Application
 
@@ -16,11 +15,7 @@ class Bemused < Sinatra::Application
     artist = Artist[params[:id]]
     summary = summarize_artist(artist)
     albums = Album.where(artist_id: artist.id).qualify.association_join(:tracks).select_all(:albums).distinct
-    data = { artist: artist, summary: summary, albums: albums }
-    respond_to do |wants|
-      wants.json { data.to_json }
-      wants.html { haml :artist, layout: !request.xhr?, locals: data }
-    end
+    haml :artist, layout: !request.xhr?, locals: {artist: artist, summary: summary, albums: albums}
   end
 
   get "/admin/artist/:id" do
