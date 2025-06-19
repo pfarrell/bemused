@@ -11,6 +11,15 @@ class Bemused < Sinatra::Application
       wants.html { haml :index, layout: !request.xhr?, locals: data }
     end
   end
+  # Serve the React frontend
+  get '/frontend/*' do
+    send_file File.join(settings.public_folder, 'frontend', params['splat'].first)
+  end
+
+  # Serve the main frontend app
+  get '/app' do
+    send_file File.join(settings.public_folder, 'frontend', 'index.html')
+  end
 
   get "/resume" do
     if current_user
