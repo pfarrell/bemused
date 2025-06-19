@@ -31,24 +31,10 @@ set :deploy_via, :remote_cache
 # set :linked_files, %w{config/database.yml}
 
 # Default value for linked_dirs is []
-set :linked_dirs, %w{log tmp public/tmp public/images public/mp3s}
+set :linked_dirs, %w{log tmp public/tmp public/images public/mp3s public/frontend}
 
 # Default value for keep_releases is 5
 # set :keep_releases, 5
-
-# React build hook - FIXED: changed react-build to react:build
-after 'npm:install', 'react:build'
-
-namespace :react do
-  desc 'Build React bundle'
-  task :build do
-    on roles(:web) do
-      within release_path do
-        execute :npm, 'run build'
-      end
-    end
-  end
-end
 
 namespace :deploy do
   desc 'Restart application'

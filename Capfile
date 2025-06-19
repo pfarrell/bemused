@@ -5,7 +5,6 @@ require 'capistrano/setup'
 require 'capistrano/deploy'
 require 'capistrano/bundler'
 require 'capistrano/bower'
-require 'capistrano/npm'
 require "capistrano/deploy"
 
 require "capistrano/scm/git"
