@@ -5,7 +5,11 @@ require 'bcrypt'
 class Bemused < Sinatra::Application
   include RootHelper
   get "/" do
-    haml :index, layout: !request.xhr?, locals: {artists: random_artists(60)}
+    data = {artists: random_artists(60)}
+    respond_to do |wants|
+      wants.json { data.to_json }
+      wants.html { haml :index, layout: !request.xhr?, locals: data }
+    end
   end
 
   get "/resume" do

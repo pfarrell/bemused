@@ -10,9 +10,8 @@ module RootHelper
       .limit(size)
 
     artists.map do |artist|
-      values = artist.values.dup
-      values.delete(:random_order)
-      values
+      artist.values.delete(:random_order)
+      artist
     end
   end
 
