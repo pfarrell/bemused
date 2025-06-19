@@ -42,3 +42,5 @@ gem "mp3info", "~> 0.8.5"
 
 
 gem "capistrano-npm", "~> 1.0"
+
+gem "sinatra-cross_origin", "~> 0.4.0"

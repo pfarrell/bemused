@@ -117,6 +117,7 @@ GEM
       rack-protection (= 3.2.0)
       sinatra (= 3.2.0)
       tilt (~> 2.0)
+    sinatra-cross_origin (0.4.0)
     sshkit (1.24.0)
       base64
       logger
@@ -169,6 +170,7 @@ DEPENDENCIES
   simplecov
   sinatra
   sinatra-contrib
+  sinatra-cross_origin (~> 0.4.0)
   test-unit
   thin
   wikipedia-client

@@ -5,6 +5,7 @@ require 'sinatra/url_for'
 require 'rack/mobile-detect'
 require 'sinatra/respond_with'
 require 'sinatra/cookies'
+require 'sinatra/cross_origin'
 require 'securerandom'
 require 'haml'
 require 'logger'
@@ -81,12 +82,16 @@ class Bemused < Sinatra::Application
   configure do
     info = development? || test? ? Wikipedia : ::Wikipedia
     set :info, Info.new(info)
+    enable :cross_origin
   end
 
   before do
     #response.set_cookie(:bmc, value: SecureRandom.uuid, expires: Time.now + 3600 * 24 * 365 * 10) if request.cookies["bmc"].nil?
     @tags = user_tags
     Resume.log_location(current_user.id, request.path) if current_user && resumeable?(request.path)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
   end
 
   not_found do
