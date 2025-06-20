@@ -29,8 +29,8 @@ class Track < Sequel::Model
     {
       id: self.id,
       title: self.title,
-      album: self.album.nil? ? "" : self.album.title,
-      artist: self.artist.nil? ? "" : self.artist.name,
+      album: self.album.nil? ? "" : self.album,
+      artist: self.artist.nil? ? "" : self.artist,
       duration: self.duration_sec,
       image: image,
       url: "#{ENV["BEMUSED_PATH"]}/stream/#{self.id}",
