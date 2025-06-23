@@ -40,5 +40,16 @@ class Album < Sequel::Model
     stats.values[:count] = Album.count
     stats
   end
+
+  def to_json(opts={})
+    {
+      id: self.id,
+      title: self.title,
+      artist: self.artist,
+      release_year: self.release_year,
+      wikipedia: self.wikipedia,
+      image: image,
+    }.to_json(opts)
+  end
 end
 
