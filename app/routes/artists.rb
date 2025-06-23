@@ -15,7 +15,7 @@ class Bemused < Sinatra::Application
     artist = Artist[params[:id]]
     summary = summarize_artist(artist)
     albums = Album.where(artist_id: artist.id).qualify.association_join(:tracks).select_all(:albums).distinct
-    data = {artist: artist, summary: summary, albums: albums}
+    data = {artist: artist, summary: summary, albums: albums.all}
     respond_to do |wants|
       wants.json { data.to_json }
       wants.html { haml :artist, layout: !request.xhr?, locals: data }
