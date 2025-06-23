@@ -48,7 +48,7 @@ class Album < Sequel::Model
       artist: self.artist,
       release_year: self.release_year,
       wikipedia: self.wikipedia,
-      image: image,
+      image_path: image,
     }.to_json(opts)
   end
 end
