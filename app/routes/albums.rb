@@ -16,7 +16,7 @@ class Bemused < Sinatra::Application
   get "/album/:id" do
     album = Album[params[:id]]
     summary = summarize_album(album)
-    data = {album: album, summary: summary, tracks: album.tracks, artist: album.artist}
+    data = {album: album, summary: summary, tracks: album.tracks.sort_by{ |t| t.track_number.to_i }, artist: album.artist}
     respond_to do |wants|
       wants.html { haml :album, layout: !request.xhr?, locals: data }
       wants.json { data.to_json }

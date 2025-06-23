@@ -20,7 +20,8 @@ class Album < Sequel::Model
           artist: "#{artist_name.shrink(25)}",
           favorited: "#{track.favorited?(user)}",
           duration: "#{track.duration}",
-          id: "#{track.id}"
+          id: "#{track.id}",
+          track_number: "#{track.track_number}"
         }
       )
     end

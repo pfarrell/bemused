@@ -32,7 +32,8 @@ class Track < Sequel::Model
       album: self.album.nil? ? "" : self.album,
       artist: self.artist.nil? ? "" : self.artist,
       duration: self.duration_sec,
-      image: image,
+      image_path: image,
+      track_number: self.track_number,
       url: "#{ENV["BEMUSED_PATH"]}/stream/#{self.id}",
     }.to_json(opts)
   end
