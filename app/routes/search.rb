@@ -86,23 +86,25 @@ class Bemused < Sinatra::Application
 
   %w(get post).each do |meth|
     send meth, "/search" do
+      param :q, String, required: true, min_length: 3, message: "Search query must be 3 characters or longer"
       query = params[:q]
+
       results, order = search_all_resources(query)
       albums = []
       artists = []
-      if order['Album'] then
+      if order && order['Album'] then
         album_ids = order['Album'].uniq
         album_id_to_idx = album_ids.each_with_index.to_h
         albums = results[:album].sort_by{|obj| album_id_to_idx[obj.id]}
       end
-      if order['Artist'] then
+      if order && order['Artist'] then
         artist_ids = order['Artist']
         artist_id_to_idx = artist_ids.each_with_index.to_h
         artists = results[:artist].sort_by{|obj| artist_id_to_idx[obj.id]}
       end
 
       respond_to do |wants|
-        wants.js {
+        wants.json {
           {albums: albums,
            artists: artists,
            playlists: results[:playlist] || [],

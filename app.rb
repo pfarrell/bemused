@@ -2,6 +2,7 @@ $: << File.expand_path('../app', __FILE__)
 
 require 'sinatra'
 require 'sinatra/url_for'
+require 'sinatra/param'
 require 'rack/mobile-detect'
 require 'sinatra/respond_with'
 require 'sinatra/cookies'
@@ -22,6 +23,7 @@ require 'jwt'
 class Bemused < Sinatra::Application
   helpers Sinatra::UrlForHelper
   helpers Sinatra::Cookies
+  helpers Sinatra::Param
   use Rack::MobileDetect
   register Sinatra::RespondWith
 
