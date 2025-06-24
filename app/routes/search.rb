@@ -17,7 +17,7 @@ class Bemused < Sinatra::Application
 
   def search_all_resources(query)
     filtered_q = filter_query(query)
-    return nil unless filtered_q.length > 3
+    return {} unless filtered_q.length > 2
 
     db = Sequel::Model::db
 
