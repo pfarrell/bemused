@@ -76,6 +76,12 @@ export default function Playlists() {
                     src={apiService.getImageUrl(playlist.image_path, 'album_small')}
                     alt={playlist.name}
                     onClick={(e) => { e.stopPropagation(); setZoomedPlaylist(playlist); }}
+                    onError={(e) => {
+                      if (e.target.src.includes('/sm/')) {
+                        e.target.src = e.target.src.replace('/sm/', '/');
+                        e.target.onerror = null;
+                      }
+                    }}
                     style={{
                       position: 'absolute',
                       top: 0,

@@ -1,6 +1,6 @@
 // src/pages/Login.jsx
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 
 const Login = () => {
@@ -31,10 +31,9 @@ const Login = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#1a252f', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', paddingBottom: '6rem' }}>
+    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
       <div style={{ width: '100%', maxWidth: '400px' }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white', margin: 0 }}>P·Share</h1>
           <p style={{ color: '#9ca3af', marginTop: '0.5rem' }}>Sign in to your account</p>
         </div>
 
@@ -46,7 +45,7 @@ const Login = () => {
           )}
 
           <div>
-            <label htmlFor="username" style={{ display: 'block', color: '#d1d5db', fontSize: '0.875rem', marginBottom: '0.375rem' }}>
+            <label htmlFor="username" style={{ display: 'block', color: '#111827', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.375rem' }}>
               Username
             </label>
             <input
@@ -58,12 +57,12 @@ const Login = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter your username"
-              style={{ width: '100%', padding: '0.625rem 0.75rem', backgroundColor: '#2c3e50', border: '1px solid #374151', borderRadius: '6px', color: 'white', fontSize: '1rem', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '0.625rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db', borderRadius: '6px', color: '#111827', fontSize: '1rem', boxSizing: 'border-box' }}
             />
           </div>
 
           <div>
-            <label htmlFor="password" style={{ display: 'block', color: '#d1d5db', fontSize: '0.875rem', marginBottom: '0.375rem' }}>
+            <label htmlFor="password" style={{ display: 'block', color: '#111827', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.375rem' }}>
               Password
             </label>
             <input
@@ -75,7 +74,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              style={{ width: '100%', padding: '0.625rem 0.75rem', backgroundColor: '#2c3e50', border: '1px solid #374151', borderRadius: '6px', color: 'white', fontSize: '1rem', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '0.625rem 0.75rem', backgroundColor: '#f9fafb', border: '1px solid #d1d5db', borderRadius: '6px', color: '#111827', fontSize: '1rem', boxSizing: 'border-box' }}
             />
           </div>
 
@@ -87,6 +86,12 @@ const Login = () => {
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
+        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+          <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
+            Don't have an account?{' '}
+            <Link to="/signup" style={{ color: '#3b82f6', textDecoration: 'none' }}>Sign up</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

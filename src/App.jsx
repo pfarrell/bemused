@@ -23,6 +23,7 @@ import AdminAlbum from './pages/AdminAlbum';
 import AdminUpload from './pages/AdminUpload';
 import AdminPlaylist from './pages/AdminPlaylist';
 import AdminLogs from './pages/AdminLogs';
+import AdminNew from './pages/AdminNew';
 import ProtectedRoute from './components/ProtectedRoute';
 import MusicPlayerWrapper from './components/player/MusicPlayerWrapper';
 import NowPlaying from './components/NowPlaying';
@@ -185,14 +186,12 @@ function App() {
 
       <div className="app h-screen overflow-hidden">
         <Routes>
-          {/* Auth pages without layout */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-
-          {/* All other pages use the shared layout */}
+          {/* All pages use the shared layout */}
           <Route path="/*" element={
             <Layout>
               <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
                 <Route path="/" element={<Home />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/artist/:id" element={<Artist />} />
@@ -223,6 +222,11 @@ function App() {
                 <Route path="/admin/logs" element={
                   <ProtectedRoute requireAdmin>
                     <AdminLogs />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/new" element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminNew />
                   </ProtectedRoute>
                 } />
               </Routes>

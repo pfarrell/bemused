@@ -135,6 +135,7 @@ artists.get('/:id', async (c) => {
     .innerJoin('artists as ra', 'ra.id', 'artist_relations.related_artist_id')
     .select(['ra.id', 'ra.name', 'artist_relations.kind', 'artist_relations.source'])
     .where('artist_relations.artist_id', '=', id)
+    .where('artist_relations.is_hidden', '=', false)
     .orderBy('ra.name', 'asc')
     .execute()
 
@@ -166,7 +167,14 @@ artists.get('/:id', async (c) => {
     ])
     .where('ar.artist_id', '=', id)
     .where('ar.kind', '=', 'similar')
-    .where('ar.similarity', '>=', SIMILAR_ARTIST_MIN_SIMILARITY)
+    .where(eb => eb.or([
+      eb.and([
+        eb('ar.source', '=', 'lastfm'),
+        eb('ar.similarity', '>=', SIMILAR_ARTIST_MIN_SIMILARITY),
+      ]),
+      eb('ar.force_show', '=', true),
+    ]))
+    .where('ar.is_hidden', '=', false)
     .orderBy('ar.similarity', 'desc')
     .execute()
 

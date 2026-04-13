@@ -13,6 +13,7 @@ const Layout = ({ children }) => {
   const mainContentRef = useRef(null);
   const [pullDistance, setPullDistance] = useState(0);
   const [isPulling, setIsPulling] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const pullStartY = useRef(0);
 
   // Close dropdown when clicking outside
@@ -69,8 +70,8 @@ const Layout = ({ children }) => {
 
     const handleTouchEnd = () => {
       if (isPulling && pullDistance > 60) {
-        // Trigger refresh
-        window.location.reload();
+        // Remount the current page to re-fetch data without reloading the app
+        setRefreshKey(k => k + 1);
       }
       setIsPulling(false);
       setPullDistance(0);
@@ -131,7 +132,7 @@ const Layout = ({ children }) => {
                   padding: '0.5rem 1rem',
                   borderRadius: '0.25rem'
                 }}>
-                  Login
+                  Login / Sign Up
                 </span>
               )}
               {/* Hamburger icon on mobile (always) */}
@@ -230,6 +231,26 @@ const Layout = ({ children }) => {
                           <button
                             onClick={() => {
                               setShowDropdown(false);
+                              navigate('/admin/new');
+                            }}
+                            style={{
+                              width: '100%',
+                              textAlign: 'left',
+                              padding: '0.5rem 1rem',
+                              background: 'none',
+                              border: 'none',
+                              color: 'inherit',
+                              cursor: 'pointer',
+                              fontSize: '0.875rem'
+                            }}
+                            onMouseEnter={(e) => e.target.style.backgroundColor = '#3a4853'}
+                            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                          >
+                            New
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowDropdown(false);
                               navigate('/admin/logs');
                             }}
                             style={{
@@ -273,6 +294,26 @@ const Layout = ({ children }) => {
                     <button
                       onClick={() => {
                         setShowDropdown(false);
+                        navigate('/');
+                      }}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '0.5rem 1rem',
+                        background: 'none',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem'
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#3a4853'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                    >
+                      Home
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowDropdown(false);
                         navigate('/login', { state: { from: location.pathname + location.search } });
                       }}
                       style={{
@@ -288,27 +329,7 @@ const Layout = ({ children }) => {
                       onMouseEnter={(e) => e.target.style.backgroundColor = '#3a4853'}
                       onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                     >
-                      Login
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowDropdown(false);
-                        navigate('/signup');
-                      }}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '0.5rem 1rem',
-                        background: 'none',
-                        border: 'none',
-                        color: 'inherit',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem'
-                      }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#3a4853'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >
-                      Sign Up
+                      Login / Sign Up
                     </button>
                   </div>
                 )}
@@ -345,7 +366,7 @@ const Layout = ({ children }) => {
             </div>
           </div>
         )}
-        <div style={{
+        <div key={refreshKey} style={{
           transform: `translateY(${pullDistance}px)`,
           transition: isPulling ? 'none' : 'transform 0.3s ease-out'
         }}>

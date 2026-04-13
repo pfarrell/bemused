@@ -39,6 +39,13 @@ const AdminArtist = () => {
 
   // Related artists state
   const [relatedArtists, setRelatedArtists] = useState([]);
+  const [showHiddenRelations, setShowHiddenRelations] = useState(false);
+
+  // Merge stubs state
+  const [stubCandidates, setStubCandidates] = useState(null); // null = not open, [] = no candidates
+  const [selectedStubIds, setSelectedStubIds] = useState(new Set());
+  const [loadingStubs, setLoadingStubs] = useState(false);
+  const [mergingStubs, setMergingStubs] = useState(false);
 
   // Unified relations add form state
   const [showAddRelationSection, setShowAddRelationSection] = useState(false);
@@ -199,6 +206,36 @@ const AdminArtist = () => {
     }
   };
 
+  const handlePreviewStubs = async () => {
+    setLoadingStubs(true);
+    try {
+      const res = await apiService.previewArtistStubs(id);
+      setStubCandidates(res.data);
+      setSelectedStubIds(new Set(res.data.map(s => s.id)));
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to load candidates');
+    } finally {
+      setLoadingStubs(false);
+    }
+  };
+
+  const handleMergeStubs = async () => {
+    if (selectedStubIds.size === 0) return;
+    setMergingStubs(true);
+    try {
+      await apiService.mergeArtistStubs(id, [...selectedStubIds]);
+      toast.success(`Merged ${selectedStubIds.size} stub(s)`);
+      setStubCandidates(null);
+      setSelectedStubIds(new Set());
+      const response = await apiService.getRelatedArtists(id);
+      setRelatedArtists(response.data);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to merge stubs');
+    } finally {
+      setMergingStubs(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!window.confirm(`Are you sure you want to delete "${artistData.name}"? This cannot be undone.`)) {
       return;
@@ -257,8 +294,8 @@ const AdminArtist = () => {
     if (moveArtistQuery.length < 2) return;
     setMoveArtistSearching(true);
     try {
-      const response = await apiService.search(moveArtistQuery);
-      setMoveArtistResults((response.data.artists || []).filter(a => String(a.id) !== String(id)));
+      const response = await apiService.searchAdminArtists(moveArtistQuery);
+      setMoveArtistResults((response.data || []).filter(a => String(a.id) !== String(id)));
     } catch (error) {
       console.error('Error searching artists:', error);
     } finally {
@@ -281,10 +318,11 @@ const AdminArtist = () => {
     if (addRelationQuery.length < 2) return;
     setAddRelationSearching(true);
     try {
-      const response = await apiService.search(addRelationQuery);
       if (relationTypeToAdd === 'related_artist' || relationTypeToAdd === 'member') {
-        setAddRelationResults((response.data.artists || []).filter(a => String(a.id) !== String(id)));
+        const response = await apiService.searchAdminArtists(addRelationQuery);
+        setAddRelationResults((response.data || []).filter(a => String(a.id) !== String(id)));
       } else {
+        const response = await apiService.search(addRelationQuery);
         setAddRelationResults(response.data.albums || []);
       }
     } catch (error) {
@@ -321,6 +359,28 @@ const AdminArtist = () => {
       setRelatedArtists(prev => prev.filter(ra => ra.id !== relatedArtistId));
     } catch (error) {
       alert(error.response?.data?.error || 'Failed to remove related artist');
+    }
+  };
+
+  const handleToggleHideRelation = async (relatedArtistId, currentlyHidden) => {
+    try {
+      await apiService.hideArtistRelation(id, relatedArtistId, !currentlyHidden);
+      setRelatedArtists(prev => prev.map(ra =>
+        ra.id === relatedArtistId ? { ...ra, is_hidden: !currentlyHidden } : ra
+      ));
+    } catch (error) {
+      alert(error.response?.data?.error || 'Failed to update relation');
+    }
+  };
+
+  const handleToggleForceShow = async (relatedArtistId, currentForceShow) => {
+    try {
+      await apiService.forceShowArtistRelation(id, relatedArtistId, !currentForceShow);
+      setRelatedArtists(prev => prev.map(ra =>
+        ra.id === relatedArtistId ? { ...ra, force_show: !currentForceShow } : ra
+      ));
+    } catch (error) {
+      alert(error.response?.data?.error || 'Failed to update relation');
     }
   };
 
@@ -448,7 +508,7 @@ const AdminArtist = () => {
           {loadingImages ? (
             <p>Loading images...</p>
           ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '12px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
               {images.map(img => (
                 <div key={img.id} style={{
                   border: img.is_primary ? '2px solid #4ade80' : '2px solid #444',
@@ -636,6 +696,73 @@ const AdminArtist = () => {
             Cancel
           </button>
 
+          <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+            <button
+              type="button"
+              onClick={stubCandidates !== null ? () => { setStubCandidates(null); setSelectedStubIds(new Set()); } : handlePreviewStubs}
+              disabled={saving || loadingStubs}
+              style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: '#6b7280',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '1rem',
+                cursor: (saving || loadingStubs) ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loadingStubs ? 'Loading...' : stubCandidates !== null ? 'Cancel' : 'Merge Stubs'}
+            </button>
+
+            {stubCandidates !== null && (
+              <div style={{ backgroundColor: '#1e2d3a', border: '1px solid #374151', borderRadius: '6px', padding: '0.75rem', minWidth: '240px' }}>
+                {stubCandidates.length === 0 ? (
+                  <p style={{ color: '#9ca3af', fontSize: '0.875rem', margin: 0 }}>No matching stubs found.</p>
+                ) : (
+                  <>
+                    <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+                      Select stubs to merge into this artist:
+                    </div>
+                    {stubCandidates.map(stub => (
+                      <label key={stub.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0', cursor: 'pointer', fontSize: '0.875rem', color: 'white' }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedStubIds.has(stub.id)}
+                          onChange={e => {
+                            const next = new Set(selectedStubIds);
+                            e.target.checked ? next.add(stub.id) : next.delete(stub.id);
+                            setSelectedStubIds(next);
+                          }}
+                        />
+                        <span style={{ flex: 1 }}>{stub.name}</span>
+                        <span style={{ color: '#9ca3af', fontSize: '0.7rem' }}>{stub.album_count} {stub.album_count === 1 ? 'album' : 'albums'}</span>
+                        <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>{(stub.similarity * 100).toFixed(0)}%</span>
+                      </label>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={handleMergeStubs}
+                      disabled={mergingStubs || selectedStubIds.size === 0}
+                      style={{
+                        marginTop: '0.5rem',
+                        width: '100%',
+                        padding: '0.5rem',
+                        backgroundColor: selectedStubIds.size === 0 ? '#374151' : '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        fontSize: '0.875rem',
+                        cursor: (mergingStubs || selectedStubIds.size === 0) ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {mergingStubs ? 'Merging...' : `Merge ${selectedStubIds.size} selected`}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={handleDelete}
@@ -648,7 +775,6 @@ const AdminArtist = () => {
               borderRadius: '4px',
               fontSize: '1rem',
               cursor: saving ? 'not-allowed' : 'pointer',
-              marginLeft: 'auto',
             }}
           >
             Delete
@@ -771,28 +897,63 @@ const AdminArtist = () => {
         <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
 
         {/* Similar Artists (manual) */}
-        {relatedArtists.filter(r => r.kind === 'similar').length > 0 && (
-          <div style={{ marginBottom: '1rem' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: '#166534', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              Similar Artists
-              <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', backgroundColor: '#bbf7d0', borderRadius: '9999px', fontWeight: '600', color: '#166534', textTransform: 'none', letterSpacing: 0 }}>manual</span>
-            </div>
-            {relatedArtists.filter(r => r.kind === 'similar').map(ra => (
-              <div key={ra.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px solid #bbf7d0' }}>
-                <span style={{ fontWeight: '500', color: '#7c3aed', cursor: 'pointer' }} onClick={() => navigate(`/artist/${ra.id}`)}>
-                  {ra.name}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveRelatedArtist(ra.id)}
-                  style={{ padding: '0.25rem 0.5rem', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}
-                >
-                  Remove
-                </button>
+        {(() => {
+          const allSimilar = relatedArtists.filter(r => r.kind === 'similar');
+          const visibleSimilar = showHiddenRelations ? allSimilar : allSimilar.filter(r => !r.is_hidden);
+          const hiddenCount = allSimilar.filter(r => r.is_hidden).length;
+          if (allSimilar.length === 0) return null;
+          return (
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: '600', color: '#166534', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                Similar Artists
+                {hiddenCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowHiddenRelations(v => !v)}
+                    style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', backgroundColor: '#374151', borderRadius: '9999px', color: '#9ca3af', border: 'none', cursor: 'pointer', textTransform: 'none', letterSpacing: 0 }}
+                  >
+                    {showHiddenRelations ? `hide ${hiddenCount} hidden` : `show ${hiddenCount} hidden`}
+                  </button>
+                )}
               </div>
-            ))}
-          </div>
-        )}
+              {visibleSimilar.map(ra => (
+                <div key={ra.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px solid #bbf7d0', opacity: ra.is_hidden ? 0.45 : 1 }}>
+                  <span style={{ fontWeight: '500', color: ra.is_hidden ? '#9ca3af' : '#7c3aed', cursor: 'pointer', textDecoration: ra.is_hidden ? 'line-through' : 'none' }} onClick={() => navigate(`/artist/${ra.id}`)}>
+                    {ra.name}
+                    {ra.similarity != null && <span style={{ fontSize: '0.65rem', color: '#6b7280', marginLeft: '0.4rem' }}>{(ra.similarity * 100).toFixed(0)}%</span>}
+                    {ra.source !== 'manual' && <span style={{ fontSize: '0.65rem', color: '#4b5563', marginLeft: '0.3rem' }}>({ra.source})</span>}
+                  </span>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleForceShow(ra.id, ra.force_show)}
+                      title={ra.force_show ? 'Unpin (remove force-show)' : 'Pin (always include in similar artists)'}
+                      style={{ padding: '0.25rem 0.5rem', backgroundColor: ra.force_show ? '#7c3aed' : '#374151', color: 'white', border: 'none', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}
+                    >
+                      {ra.force_show ? 'Pinned' : 'Pin'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleHideRelation(ra.id, ra.is_hidden)}
+                      style={{ padding: '0.25rem 0.5rem', backgroundColor: ra.is_hidden ? '#4b5563' : '#6b7280', color: 'white', border: 'none', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}
+                    >
+                      {ra.is_hidden ? 'Unhide' : 'Hide'}
+                    </button>
+                    {ra.source === 'manual' && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveRelatedArtist(ra.id)}
+                        style={{ padding: '0.25rem 0.5rem', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Members */}
         {relatedArtists.filter(r => r.kind === 'member').length > 0 && (

@@ -41,6 +41,9 @@ export const apiService = {
   getLogs: (page = 1, limit = 25) => api.get(`/log/admin?page=${page}&limit=${limit}`),
 
   // Admin
+  createArtist: (name) => api.post('/admin/artist', { name }),
+  createAlbum: (title, artist_id) => api.post('/admin/album', { title, artist_id }),
+  searchAdminArtists: (q) => api.get(`/admin/artists/search?q=${encodeURIComponent(q)}`),
   updateArtist: (id, data) => api.put(`/admin/artist/${id}`, data),
   deleteArtist: (id) => api.delete(`/admin/artist/${id}`),
   updateAlbum: (id, data) => api.put(`/admin/album/${id}`, data),
@@ -60,6 +63,10 @@ export const apiService = {
   addAlbumToArtist: (artistId, albumId, role) => api.post(`/admin/artist/${artistId}/albums`, { album_id: albumId, role }),
   removeAlbumFromArtist: (artistId, albumId) => api.delete(`/admin/artist/${artistId}/albums/${albumId}`),
   getRelatedArtists: (id) => api.get(`/admin/artist/${id}/related`),
+  hideArtistRelation: (artistId, relatedId, hidden) => api.patch(`/admin/artist/${artistId}/related/${relatedId}/hide`, { hidden }),
+  forceShowArtistRelation: (artistId, relatedId, force_show) => api.patch(`/admin/artist/${artistId}/related/${relatedId}/force-show`, { force_show }),
+  previewArtistStubs: (id) => api.get(`/admin/artist/${id}/merge-stubs`),
+  mergeArtistStubs: (id, stub_ids) => api.post(`/admin/artist/${id}/merge-stubs`, { stub_ids }),
   addRelatedArtist: (artistId, relatedArtistId, kind = 'related') => api.post(`/admin/artist/${artistId}/related`, { related_artist_id: relatedArtistId, kind }),
   removeRelatedArtist: (artistId, relatedArtistId) => api.delete(`/admin/artist/${artistId}/related/${relatedArtistId}`),
 

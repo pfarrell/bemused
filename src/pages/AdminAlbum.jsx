@@ -331,11 +331,12 @@ const AdminAlbum = () => {
     if (transferQuery.length < 2) return;
     setTransferSearching(true);
     try {
-      const response = await apiService.search(transferQuery);
       if (transferMode === 'move') {
+        const response = await apiService.searchAdminArtists(transferQuery);
         const currentArtistId = albumData?.album?.artist_id;
-        setTransferResults((response.data.artists || []).filter(a => a.id !== currentArtistId));
+        setTransferResults((response.data || []).filter(a => a.id !== currentArtistId));
       } else {
+        const response = await apiService.search(transferQuery);
         const currentArtistId = albumData?.album?.artist_id;
         const filtered = (response.data.albums || []).filter(a => String(a.id) !== String(id));
         filtered.sort((a, b) => {
@@ -592,7 +593,7 @@ const AdminAlbum = () => {
           {loadingImages ? (
             <p>Loading images...</p>
           ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '12px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
               {images.map(img => (
                 <div key={img.id} style={{
                   border: img.is_primary ? '2px solid #4ade80' : '2px solid #444',

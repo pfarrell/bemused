@@ -225,8 +225,11 @@ const Artist = () => {
 
           {similar_artists && similar_artists.length > 0 && (() => {
             const cap = isMobile ? 3 : 10;
-            const displayed = showAllSimilar ? similar_artists : similar_artists.slice(0, cap);
-            const hasMore = similar_artists.length > cap;
+            const expandedCap = 25;
+            const displayed = showAllSimilar
+              ? similar_artists.slice(0, expandedCap)
+              : similar_artists.slice(0, cap);
+            const hasMore = !showAllSimilar && similar_artists.length > cap;
             return (
               <p style={{ fontSize: '0.95rem', margin: '0.5rem 0 0 0', color: '#6b7280' }}>
                 Similar artists:{' '}
@@ -250,7 +253,7 @@ const Artist = () => {
                     style={{ color: '#7c3aed', cursor: 'pointer', marginLeft: '0.5rem' }}
                     onClick={() => setShowAllSimilar(true)}
                   >
-                    {' '}+{similar_artists.length - cap} more
+                    {' '}+{Math.min(similar_artists.length, expandedCap) - cap} more
                   </span>
                 )}
                 {showAllSimilar && (
@@ -274,14 +277,12 @@ const Artist = () => {
           <div className="artist-grid-container">
             {albums.map((album) => {
               const imageUrl = apiService.getImageUrl(album.image_path, 'album_small')
-              const fullImageUrl = apiService.getImageUrl(album.image_path, 'album_page')
               return (
                 <AlbumCard
                   key={album.id}
                   album={album}
                   artist={album.artist}
                   imageUrl={imageUrl}
-                  fullImageUrl={fullImageUrl}
                   onClick={handleAlbumClick}
                 />
               )
@@ -340,14 +341,12 @@ const Artist = () => {
           <div className="artist-grid-container">
             {appears_on.map((album) => {
               const imageUrl = apiService.getImageUrl(album.image_path, 'album_small')
-              const fullImageUrl = apiService.getImageUrl(album.image_path, 'album_page')
               return (
                 <AlbumCard
                   key={`appears-${album.id}`}
                   album={album}
                   artist={album.artist}
                   imageUrl={imageUrl}
-                  fullImageUrl={fullImageUrl}
                   onClick={handleAlbumClick}
                 />
               )

@@ -1,6 +1,9 @@
 import { Hono } from 'hono'
 import { db } from '../db/database.js'
 import { sql } from 'kysely'
+import pg from 'pg'
+
+const pool = new pg.Pool({ connectionString: process.env.BEMUSED_DB })
 import { lookupAlbumMBID, lookupArtistMBID } from '../services/musicbrainz.js'
 import { fetchArtistImageFromFanart } from '../services/fanart.js'
 import { fetchSimilarArtists } from '../services/lastfmSimilar.js'
@@ -63,16 +66,21 @@ admin.put('/artist/:id', async (c) => {
       return c.json({ error: 'Artist not found' }, 404)
     }
 
-    // Re-trigger MBID → image → similar-artists chain if name changed and status is retryable
-    if (current && current.name !== name && MBID_RETRYABLE.includes(current.mbid_status ?? 'unmatched')) {
-      const imagesDir = path.join(projectRoot, 'public', 'images')
-      lookupArtistMBID(id, name).then(async result => {
-        if (!result.mbid) return
-        await fetchArtistImageFromFanart(id, result.mbid, imagesDir)
-        await fetchSimilarArtists(id, name)
-      }).catch(err =>
-        console.warn(`Post-update lookup chain failed for artist ${id}:`, err.message)
+    // If name changed: merge stubs and re-trigger lookup chain
+    if (current && current.name !== name) {
+      mergeArtistStubs(id, name).catch(err =>
+        console.warn(`mergeArtistStubs failed for artist ${id}:`, err.message)
       )
+      if (MBID_RETRYABLE.includes(current.mbid_status ?? 'unmatched')) {
+        const imagesDir = path.join(projectRoot, 'public', 'images')
+        lookupArtistMBID(id, name).then(async result => {
+          if (!result.mbid) return
+          await fetchArtistImageFromFanart(id, result.mbid, imagesDir)
+          await fetchSimilarArtists(id, name)
+        }).catch(err =>
+          console.warn(`Post-update lookup chain failed for artist ${id}:`, err.message)
+        )
+      }
     }
 
     return c.json(updated)
@@ -213,6 +221,220 @@ admin.delete('/album/:id', async (c) => {
   } catch (error) {
     console.error('Error deleting album:', error)
     return c.json({ error: 'Failed to delete album' }, 500)
+  }
+})
+
+// Merge stub artists whose name is highly similar to the given artist into it.
+// Stubs are artists with no albums and no tracks, created by the similar-artist lookup.
+async function mergeArtistStubs(artistId: number, name: string): Promise<void> {
+  const nameLower = name.toLowerCase()
+  const { rows: stubs } = await pool.query<{ id: number; name: string }>(
+    `SELECT id, name FROM artists
+     WHERE id != $1
+       AND NOT EXISTS (SELECT 1 FROM albums WHERE albums.artist_id = artists.id)
+       AND NOT EXISTS (SELECT 1 FROM tracks WHERE tracks.artist_id = artists.id)
+       AND (
+         similarity(lower(name), lower($2)) >= 0.5
+         OR lower(name) LIKE $3
+         OR $4 LIKE '%' || lower(name) || '%'
+       )`,
+    [artistId, name, `%${nameLower}%`, nameLower]
+  )
+
+  for (const stub of stubs) {
+    console.log(`  Merging stub artist "${stub.name}" (id=${stub.id}) into "${name}" (id=${artistId})`)
+
+    // Delete relations that would conflict when we update related_artist_id
+    await db.deleteFrom('artist_relations').where(eb =>
+      eb.and([
+        eb('related_artist_id', '=', stub.id),
+        eb('artist_id', 'in',
+          db.selectFrom('artist_relations').select('artist_id').where('related_artist_id', '=', artistId)
+        )
+      ])
+    ).execute()
+    // Also avoid creating a self-relation
+    await db.deleteFrom('artist_relations')
+      .where('related_artist_id', '=', stub.id)
+      .where('artist_id', '=', artistId)
+      .execute()
+
+    // Delete relations that would conflict when we update artist_id
+    await db.deleteFrom('artist_relations').where(eb =>
+      eb.and([
+        eb('artist_id', '=', stub.id),
+        eb('related_artist_id', 'in',
+          db.selectFrom('artist_relations').select('related_artist_id').where('artist_id', '=', artistId)
+        )
+      ])
+    ).execute()
+    await db.deleteFrom('artist_relations')
+      .where('artist_id', '=', stub.id)
+      .where('related_artist_id', '=', artistId)
+      .execute()
+
+    // Redirect remaining relations to the real artist
+    await db.updateTable('artist_relations').set({ related_artist_id: artistId }).where('related_artist_id', '=', stub.id).execute()
+    await db.updateTable('artist_relations').set({ artist_id: artistId }).where('artist_id', '=', stub.id).execute()
+
+    // Delete the stub
+    await db.deleteFrom('artists').where('id', '=', stub.id).execute()
+    console.log(`  Merged stub artist ${stub.id} into ${artistId}`)
+  }
+}
+
+// POST /admin/artist — create a new artist stub
+admin.post('/artist', async (c) => {
+  const body = await c.req.json()
+  const { name } = body
+
+  if (!name?.trim()) {
+    return c.json({ error: 'Name is required' }, 400)
+  }
+
+  try {
+    const artist = await db
+      .insertInto('artists')
+      .values({ name: name.trim() })
+      .returningAll()
+      .executeTakeFirst()
+
+    if (!artist) return c.json({ error: 'Failed to create artist' }, 500)
+
+    // Merge any matching stubs, then trigger lookup chain
+    mergeArtistStubs(artist.id, artist.name).catch(err =>
+      console.warn(`mergeArtistStubs failed for new artist ${artist.id}:`, err.message)
+    )
+
+    const imagesDir = path.join(projectRoot, 'public', 'images')
+    lookupArtistMBID(artist.id, artist.name).then(async result => {
+      if (!result.mbid) return
+      await fetchArtistImageFromFanart(artist.id, result.mbid, imagesDir)
+      await fetchSimilarArtists(artist.id, artist.name)
+    }).catch(err =>
+      console.warn(`Post-create lookup chain failed for artist ${artist.id}:`, err.message)
+    )
+
+    return c.json(artist, 201)
+  } catch (error) {
+    console.error('Error creating artist:', error)
+    return c.json({ error: 'Failed to create artist' }, 500)
+  }
+})
+
+// POST /admin/album — create a new album stub
+admin.post('/album', async (c) => {
+  const body = await c.req.json()
+  const { title, artist_id } = body
+
+  if (!title?.trim()) return c.json({ error: 'Title is required' }, 400)
+  if (!artist_id) return c.json({ error: 'Artist ID is required' }, 400)
+
+  try {
+    const artist = await db.selectFrom('artists').select('id').where('id', '=', artist_id).executeTakeFirst()
+    if (!artist) return c.json({ error: 'Artist not found' }, 404)
+
+    const album = await db
+      .insertInto('albums')
+      .values({ title: title.trim(), artist_id })
+      .returningAll()
+      .executeTakeFirst()
+
+    return c.json(album, 201)
+  } catch (error) {
+    console.error('Error creating album:', error)
+    return c.json({ error: 'Failed to create album' }, 500)
+  }
+})
+
+// GET /admin/artists/search?q= — artist search including stubs (no albums required)
+admin.get('/artists/search', async (c) => {
+  const q = (c.req.query('q') ?? '').trim()
+  if (q.length < 2) return c.json([])
+
+  const rows = await db
+    .selectFrom('artists')
+    .select(['id', 'name', 'image_path'])
+    .where(sql<boolean>`lower(name) LIKE ${'%' + q.toLowerCase() + '%'}`)
+    .orderBy(sql<number>`similarity(lower(name), lower(${q}))`, 'desc')
+    .limit(20)
+    .execute()
+
+  return c.json(rows)
+})
+
+// GET /admin/artist/:id/merge-stubs — preview which stubs would be merged
+admin.get('/artist/:id/merge-stubs', async (c) => {
+  const id = parseInt(c.req.param('id'))
+  try {
+    const artist = await db.selectFrom('artists').select(['id', 'name']).where('id', '=', id).executeTakeFirst()
+    if (!artist) return c.json({ error: 'Artist not found' }, 404)
+
+    const { rows } = await pool.query<{ id: number; name: string; similarity: number; album_count: number }>(
+      `SELECT a.id, a.name,
+              similarity(lower(a.name), lower($1)) AS similarity,
+              COUNT(al.id) AS album_count
+       FROM artists a
+       LEFT JOIN albums al ON al.artist_id = a.id
+       WHERE a.id != $2
+         AND similarity(lower(a.name), lower($1)) >= 0.5
+       GROUP BY a.id, a.name
+       ORDER BY similarity DESC`,
+      [artist.name, id]
+    )
+
+    return c.json(rows)
+  } catch (error) {
+    console.error('Error previewing stubs:', error)
+    return c.json({ error: 'Failed to preview stubs' }, 500)
+  }
+})
+
+// POST /admin/artist/:id/merge-stubs — merge selected stubs into this artist
+admin.post('/artist/:id/merge-stubs', async (c) => {
+  const id = parseInt(c.req.param('id'))
+  const body = await c.req.json()
+  const stubIds: number[] = body.stub_ids ?? []
+  if (stubIds.length === 0) return c.json({ error: 'No stub IDs provided' }, 400)
+
+  try {
+    const artist = await db.selectFrom('artists').select(['id', 'name']).where('id', '=', id).executeTakeFirst()
+    if (!artist) return c.json({ error: 'Artist not found' }, 404)
+
+    for (const stubId of stubIds) {
+      const stub = await db.selectFrom('artists').select(['id', 'name']).where('id', '=', stubId).executeTakeFirst()
+      if (!stub) continue
+
+      console.log(`  Merging relations from "${stub.name}" (id=${stub.id}) into "${artist.name}" (id=${artist.id})`)
+
+      await db.deleteFrom('artist_relations').where(eb =>
+        eb.and([
+          eb('related_artist_id', '=', stub.id),
+          eb('artist_id', 'in',
+            db.selectFrom('artist_relations').select('artist_id').where('related_artist_id', '=', artist.id)
+          )
+        ])
+      ).execute()
+      await db.deleteFrom('artist_relations').where('related_artist_id', '=', stub.id).where('artist_id', '=', artist.id).execute()
+      await db.deleteFrom('artist_relations').where(eb =>
+        eb.and([
+          eb('artist_id', '=', stub.id),
+          eb('related_artist_id', 'in',
+            db.selectFrom('artist_relations').select('related_artist_id').where('artist_id', '=', artist.id)
+          )
+        ])
+      ).execute()
+      await db.deleteFrom('artist_relations').where('artist_id', '=', stub.id).where('related_artist_id', '=', artist.id).execute()
+
+      await db.updateTable('artist_relations').set({ related_artist_id: artist.id }).where('related_artist_id', '=', stub.id).execute()
+      await db.updateTable('artist_relations').set({ artist_id: artist.id }).where('artist_id', '=', stub.id).execute()
+      await db.deleteFrom('artists').where('id', '=', stub.id).execute()
+    }
+
+    return c.json({ success: true, merged: stubIds.length })
+  } catch (error) {
+    console.error('Error merging stubs:', error)
+    return c.json({ error: 'Failed to merge stubs' }, 500)
   }
 })
 
@@ -846,16 +1068,15 @@ admin.delete('/artist/:id/albums/:album_id', async (c) => {
   }
 })
 
-// GET /admin/artist/:id/related — list related artists and members
+// GET /admin/artist/:id/related — list related artists, members, and similar artists
 admin.get('/artist/:id/related', async (c) => {
   const id = parseInt(c.req.param('id'))
   try {
     const rows = await db
       .selectFrom('artist_relations')
       .innerJoin('artists', 'artists.id', 'artist_relations.related_artist_id')
-      .select(['artists.id', 'artists.name', 'artist_relations.kind', 'artist_relations.source', 'artist_relations.similarity'])
+      .select(['artists.id', 'artists.name', 'artist_relations.kind', 'artist_relations.source', 'artist_relations.similarity', 'artist_relations.is_hidden', 'artist_relations.force_show'])
       .where('artist_relations.artist_id', '=', id)
-      .where('artist_relations.source', '=', 'manual')
       .orderBy('artist_relations.similarity', 'desc')
       .orderBy('artists.name', 'asc')
       .execute()
@@ -863,6 +1084,55 @@ admin.get('/artist/:id/related', async (c) => {
   } catch (error) {
     console.error('Error fetching related artists:', error)
     return c.json({ error: 'Failed to fetch related artists' }, 500)
+  }
+})
+
+// PATCH /admin/artist/:id/related/:related_id/force-show — toggle force_show on a relation
+admin.patch('/artist/:id/related/:related_id/force-show', async (c) => {
+  const artistId = parseInt(c.req.param('id'))
+  const relatedId = parseInt(c.req.param('related_id'))
+  const body = await c.req.json()
+  const forceShow: boolean = body.force_show ?? true
+
+  try {
+    await db
+      .updateTable('artist_relations')
+      .set({ force_show: forceShow })
+      .where(eb => eb.or([
+        eb.and([eb('artist_id', '=', artistId), eb('related_artist_id', '=', relatedId)]),
+        eb.and([eb('artist_id', '=', relatedId), eb('related_artist_id', '=', artistId)]),
+      ]))
+      .execute()
+
+    return c.json({ success: true, force_show: forceShow })
+  } catch (error) {
+    console.error('Error toggling force_show:', error)
+    return c.json({ error: 'Failed to update relation' }, 500)
+  }
+})
+
+// PATCH /admin/artist/:id/related/:related_id/hide — toggle is_hidden on a relation
+admin.patch('/artist/:id/related/:related_id/hide', async (c) => {
+  const artistId = parseInt(c.req.param('id'))
+  const relatedId = parseInt(c.req.param('related_id'))
+  const body = await c.req.json()
+  const hidden: boolean = body.hidden ?? true
+
+  try {
+    // Toggle both directions so the relation is hidden symmetrically
+    await db
+      .updateTable('artist_relations')
+      .set({ is_hidden: hidden })
+      .where(eb => eb.or([
+        eb.and([eb('artist_id', '=', artistId), eb('related_artist_id', '=', relatedId)]),
+        eb.and([eb('artist_id', '=', relatedId), eb('related_artist_id', '=', artistId)]),
+      ]))
+      .execute()
+
+    return c.json({ success: true, hidden })
+  } catch (error) {
+    console.error('Error toggling relation visibility:', error)
+    return c.json({ error: 'Failed to update relation' }, 500)
   }
 })
 

@@ -5,8 +5,10 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, fullImageUrl }) => {
   const [showModal, setShowModal] = useState(false);
 
   const handleImageClick = (e) => {
-    e.stopPropagation();
-    if (fullImageUrl) setShowModal(true);
+    if (fullImageUrl) {
+      e.stopPropagation();
+      setShowModal(true);
+    }
   };
 
   return (
@@ -23,7 +25,10 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, fullImageUrl }) => {
             onClick={handleImageClick}
             style={{ cursor: fullImageUrl ? 'zoom-in' : 'pointer' }}
             onError={(e) => {
-              console.log(`Failed to load album image: ${e.target.src}`);
+              if (e.target.src.includes('/sm/')) {
+                e.target.src = e.target.src.replace('/sm/', '/');
+                e.target.onerror = null;
+              }
             }}
           />
         </div>

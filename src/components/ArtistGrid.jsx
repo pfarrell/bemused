@@ -31,8 +31,10 @@ const ArtistGrid = ({ artists, onArtistClick, imageContext = 'base' }) => {
                   src={imageUrl}
                   alt={artist.name}
                   onError={(e) => {
-                    console.log(`Failed to load image: ${e.target.src}`);
-                    console.log(`Artist: ${artist.name}, Image path: ${artist.image_path}`);
+                    if (e.target.src.includes('/sm/')) {
+                      e.target.src = e.target.src.replace('/sm/', '/');
+                      e.target.onerror = null;
+                    }
                   }}
                 />
               </div>

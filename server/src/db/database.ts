@@ -156,6 +156,8 @@ interface ArtistRelationTable {
   kind: string
   source: string        // 'manual' | 'lastfm' | 'listenbrainz' | 'musicbrainz'
   similarity: number | null
+  is_hidden: boolean
+  force_show: boolean
   created_at: ColumnType<Date, string | Date | undefined, never>
 }
 
