@@ -16,6 +16,9 @@ import Album from './pages/Album';
 import Library from './pages/Library';
 import Playlists from './pages/Playlists';
 import Playlist from './pages/Playlist';
+import Collections from './pages/Collections';
+import Collection from './pages/Collection';
+import AdminCollection from './pages/AdminCollection';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import AdminArtist from './pages/AdminArtist';
@@ -199,6 +202,13 @@ function App() {
                 <Route path="/library" element={<Library />} />
                 <Route path="/playlists" element={<Playlists />} />
                 <Route path="/playlist/:id" element={<Playlist />} />
+                <Route path="/collections" element={<Collections />} />
+                <Route path="/collection/:id" element={<Collection />} />
+                <Route path="/admin/collection/:id" element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminCollection />
+                  </ProtectedRoute>
+                } />
                 <Route path="/admin/artist/:id" element={
                   <ProtectedRoute requireAdmin>
                     <AdminArtist />

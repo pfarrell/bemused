@@ -612,6 +612,42 @@ admin.post('/playlist/:id/image', async (c) => {
   }
 })
 
+// POST /admin/collection/:id/image — download and save collection image
+admin.post('/collection/:id/image', async (c) => {
+  const id = parseInt(c.req.param('id'))
+  const body = await c.req.json()
+  const { image_url, image_name } = body
+
+  if (!image_url || !image_name) {
+    return c.json({ error: 'image_url and image_name are required' }, 400)
+  }
+
+  try {
+    const response = await fetch(image_url)
+    if (!response.ok) return c.json({ error: 'Failed to download image from URL' }, 400)
+
+    const buffer = Buffer.from(await response.arrayBuffer())
+    const imageDir = path.join(projectRoot, 'public', 'images', 'albums')
+    if (!fs.existsSync(imageDir)) fs.mkdirSync(imageDir, { recursive: true })
+
+    const imagePath = path.join(imageDir, image_name)
+    fs.writeFileSync(imagePath, buffer)
+
+    const updated = await db
+      .updateTable('collections')
+      .set({ image_path: image_name, updated_at: new Date() })
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirst()
+
+    if (!updated) return c.json({ error: 'Collection not found' }, 404)
+    return c.json({ success: true, collection: updated })
+  } catch (error) {
+    console.error('Error downloading/saving collection image:', error)
+    return c.json({ error: 'Failed to save image' }, 500)
+  }
+})
+
 // PUT /admin/track/:id — update a track
 admin.put('/track/:id', async (c) => {
   const id = parseInt(c.req.param('id'))

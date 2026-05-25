@@ -9,6 +9,7 @@ import search from './routes/search.js'
 import streams from './routes/streams.js'
 import logs from './routes/logs.js'
 import playlists from './routes/playlists.js'
+import collections from './routes/collections.js'
 import admin from './routes/admin.js'
 import upload from './routes/upload.js'
 import auth from './routes/auth.js'
@@ -63,6 +64,8 @@ app.route('/stream', streams)
 app.route('/log', logs)
 app.route('/playlist', playlists)
 app.route('/playlists', playlists)
+app.route('/collection', collections)
+app.route('/collections', collections)
 app.route('/top', playlists)
 app.route('/newborns', playlists)
 app.route('/surprise', playlists)

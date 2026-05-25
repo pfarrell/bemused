@@ -182,6 +182,22 @@ interface ImageTable {
   created_at: ColumnType<Date, string | Date | undefined, never>
 }
 
+interface CollectionTable {
+  id: Generated<number>
+  name: string
+  user_id: number | null
+  image_path: string | null
+  created_at: ColumnType<Date, string | Date | undefined, never>
+  updated_at: ColumnType<Date, string | Date | undefined, string | Date>
+}
+
+interface CollectionAlbumTable {
+  id: Generated<number>
+  collection_id: number
+  album_id: number
+  order: number | null
+}
+
 export interface Database {
   artists: ArtistTable
   albums: AlbumTable
@@ -198,6 +214,8 @@ export interface Database {
   artist_relations: ArtistRelationTable
   external_lookups: ExternalLookupTable
   images: ImageTable
+  collections: CollectionTable
+  collection_albums: CollectionAlbumTable
 }
 
 // ---- DB instance ----
