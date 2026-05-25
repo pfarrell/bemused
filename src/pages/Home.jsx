@@ -1,51 +1,79 @@
 // src/pages/Home.jsx
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useInfiniteItems } from '../hooks/useInfiniteItems';
+import { useHomeModeStore } from '../stores/homeModeStore';
 import { apiService } from '../services/api';
 import ArtistGrid from '../components/ArtistGrid';
-import SearchBar from '../components/SearchBar';
-import Retry from '../components/Retry';
+import AlbumGrid from '../components/AlbumGrid';
 import Loading from '../components/Loading';
+import Retry from '../components/Retry';
 
-const Home = () => {
-  const [artists, setArtists] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const HomeFeed = ({ mode }) => {
+  const fetchFn = mode === 'albums'
+    ? (size) => apiService.getRandomAlbums(size)
+    : (size) => apiService.getRandomArtists(size);
 
+  const { items, isLoading, error, loadMore } = useInfiniteItems(fetchFn);
+  const gridRef     = useRef(null);
+  const sentinelRef = useRef(null);
+
+  // Scroll to top when this feed mounts (i.e. on mode switch)
   useEffect(() => {
-    const fetchRandomArtists = async () => {
-      try {
-        setLoading(true);
-        const response = await apiService.getRandomArtists(60);
-        console.log('API Response:', response.data);
-        setArtists(response.data);
-      } catch (error) {
-        console.error('Error fetching random artists:', error);
-        setError('Failed to load artists');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRandomArtists();
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) mainContent.scrollTop = 0;
   }, []);
 
-  // Remove the handleArtistClick function since ArtistGrid will handle navigation internally
+  // Initial load
+  useEffect(() => {
+    loadMore(gridRef);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (loading) {
-    return (
-      <Loading message='Loading artists' />
+  // Infinite scroll: re-run when items.length changes so the observer
+  // picks up the real sentinel after the initial <Loading> unmounts.
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore(gridRef);
+      },
+      {
+        root: document.querySelector('.main-content'),
+        threshold: 0,
+      }
     );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore, items.length]);
+
+  if (items.length === 0 && isLoading) {
+    return <Loading message={`Loading ${mode}`} />;
   }
 
-  if (error) {
-    return (
-      <Retry error={error}/>
-    );
+  if (error && items.length === 0) {
+    return <Retry error={error} />;
   }
 
   return (
-    <ArtistGrid artists={artists} imageContext="artist_search" />
+    <>
+      {mode === 'albums'
+        ? <AlbumGrid albums={items} gridRef={gridRef} sentinelRef={sentinelRef} />
+        : <ArtistGrid artists={items} imageContext="artist_search" gridRef={gridRef} sentinelRef={sentinelRef} />
+      }
+      {isLoading && (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '1.5rem' }}>
+          <div className="loading-spinner" />
+        </div>
+      )}
+    </>
   );
+};
+
+const Home = () => {
+  const { mode } = useHomeModeStore();
+  return <HomeFeed key={mode} mode={mode} />;
 };
 
 export default Home;

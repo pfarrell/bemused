@@ -937,10 +937,6 @@
     display: none !important;
   }
 
-  .hamburger-mobile {
-    display: block !important;
-  }
-  
   .app-header {
     padding: 0 1rem;
     padding-top: env(safe-area-inset-top, 0);

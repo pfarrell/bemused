@@ -30,9 +30,10 @@ export const apiService = {
   getRandomArtists: (size = 60) => api.get(`/artists/random?size=${size}`),
   getArtist: (id) => api.get(`/artist/${id}`), // Returns { artist, summary, albums }
   
-  // Albums  
+  // Albums
   getAlbum: (id) => api.get(`/album/${id}`), // Returns { artist, album, tracks }
-  
+  getRandomAlbums: (size = 30) => api.get(`/albums/random?size=${size}`),
+
   // Search
   search: (query) => api.get(`/search?q=${encodeURIComponent(query)}`),
 
@@ -86,6 +87,16 @@ export const apiService = {
   reorderPlaylistTracks: (playlistId, track_orders) => api.patch(`/playlist/${playlistId}/tracks/reorder`, { track_orders }),
   updatePlaylist: (id, data) => api.put(`/playlist/${id}`, data),
   downloadPlaylistImage: (id, image_url, image_name) => api.post(`/admin/playlist/${id}/image`, { image_url, image_name }),
+
+  // Collections
+  getCollections: () => api.get('/collections'),
+  getCollection: (id) => api.get(`/collection/${id}`),
+  createCollection: (name) => api.post('/collections', { name }),
+  updateCollection: (id, data) => api.put(`/collection/${id}`, data),
+  addAlbumToCollection: (collectionId, albumId) => api.post(`/collection/${collectionId}/albums`, { album_id: albumId }),
+  removeAlbumFromCollection: (collectionId, albumId) => api.delete(`/collection/${collectionId}/albums/${albumId}`),
+  reorderCollectionAlbums: (collectionId, album_orders) => api.patch(`/collection/${collectionId}/albums/reorder`, { album_orders }),
+  downloadCollectionImage: (id, image_url, image_name) => api.post(`/admin/collection/${id}/image`, { image_url, image_name }),
 
   // Image management
   getAlbumImages: (albumId) => api.get(`/admin/album/${albumId}/images`),

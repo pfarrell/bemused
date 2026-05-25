@@ -2,12 +2,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { useHomeModeStore } from '../stores/homeModeStore';
 import SearchBar from './SearchBar';
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated, isAdmin, logout } = useAuthStore();
+  const { mode, setMode } = useHomeModeStore();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
   const mainContentRef = useRef(null);
@@ -125,26 +127,10 @@ const Layout = ({ children }) => {
               {isAuthenticated && user && (
                 <span className="username-desktop">{user.username}</span>
               )}
-              {/* Login button on desktop (only when logged out) */}
-              {!isAuthenticated && (
-                <span className="login-desktop" style={{
-                  border: '1px solid currentColor',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '0.25rem'
-                }}>
-                  Login / Sign Up
-                </span>
-              )}
               {/* Hamburger icon on mobile (always) */}
-              <svg className="hamburger-mobile" style={{ width: '1.5rem', height: '1.5rem', display: 'none' }} fill="currentColor" viewBox="0 0 20 20">
+              <svg className="hamburger-mobile" style={{ width: '1.5rem', height: '1.5rem' }} fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
               </svg>
-              {/* Chevron on desktop (only when logged in) */}
-              {isAuthenticated && user && (
-                <svg className="chevron-desktop" style={{ width: '1rem', height: '1rem' }} fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              )}
             </button>
 
             {showDropdown && (
@@ -163,6 +149,37 @@ const Layout = ({ children }) => {
                   <>
                     <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #3a4853' }}>
                       <div style={{ fontSize: '0.875rem', fontWeight: 500 }}>{user.username}</div>
+                    </div>
+                    <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #3a4853' }}>
+                      <div style={{ color: '#9ca3af', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+                        Home View
+                      </div>
+                      <div style={{ display: 'inline-flex', background: '#1a252f', borderRadius: '20px', padding: '3px' }}>
+                        <button
+                          onClick={() => { setMode('artists'); setShowDropdown(false); }}
+                          style={{
+                            background: mode === 'artists' ? '#3b82f6' : 'none',
+                            color: mode === 'artists' ? 'white' : '#9ca3af',
+                            padding: '4px 14px', borderRadius: '18px',
+                            fontSize: '0.75rem', fontWeight: '600',
+                            border: 'none', cursor: 'pointer',
+                          }}
+                        >
+                          Artists
+                        </button>
+                        <button
+                          onClick={() => { setMode('albums'); setShowDropdown(false); }}
+                          style={{
+                            background: mode === 'albums' ? '#3b82f6' : 'none',
+                            color: mode === 'albums' ? 'white' : '#9ca3af',
+                            padding: '4px 14px', borderRadius: '18px',
+                            fontSize: '0.75rem', fontWeight: '600',
+                            border: 'none', cursor: 'pointer',
+                          }}
+                        >
+                          Albums
+                        </button>
+                      </div>
                     </div>
 
                     <div style={{ padding: '0.5rem 0' }}>
@@ -205,6 +222,26 @@ const Layout = ({ children }) => {
                         onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                       >
                         Playlists
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          navigate('/collections');
+                        }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '0.5rem 1rem',
+                          background: 'none',
+                          border: 'none',
+                          color: 'inherit',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#3a4853'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                      >
+                        Collections
                       </button>
                       {isAdmin && (
                         <>
@@ -290,47 +327,80 @@ const Layout = ({ children }) => {
                     </div>
                   </>
                 ) : (
-                  <div style={{ padding: '0.5rem 0' }}>
-                    <button
-                      onClick={() => {
-                        setShowDropdown(false);
-                        navigate('/');
-                      }}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '0.5rem 1rem',
-                        background: 'none',
-                        border: 'none',
-                        color: 'inherit',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem'
-                      }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#3a4853'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >
-                      Home
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowDropdown(false);
-                        navigate('/login', { state: { from: location.pathname + location.search } });
-                      }}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '0.5rem 1rem',
-                        background: 'none',
-                        border: 'none',
-                        color: 'inherit',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem'
-                      }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#3a4853'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >
-                      Login / Sign Up
-                    </button>
+                  <div>
+                    <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #3a4853' }}>
+                      <div style={{ color: '#9ca3af', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+                        Home View
+                      </div>
+                      <div style={{ display: 'inline-flex', background: '#1a252f', borderRadius: '20px', padding: '3px' }}>
+                        <button
+                          onClick={() => { setMode('artists'); setShowDropdown(false); }}
+                          style={{
+                            background: mode === 'artists' ? '#3b82f6' : 'none',
+                            color: mode === 'artists' ? 'white' : '#9ca3af',
+                            padding: '4px 14px', borderRadius: '18px',
+                            fontSize: '0.75rem', fontWeight: '600',
+                            border: 'none', cursor: 'pointer',
+                          }}
+                        >
+                          Artists
+                        </button>
+                        <button
+                          onClick={() => { setMode('albums'); setShowDropdown(false); }}
+                          style={{
+                            background: mode === 'albums' ? '#3b82f6' : 'none',
+                            color: mode === 'albums' ? 'white' : '#9ca3af',
+                            padding: '4px 14px', borderRadius: '18px',
+                            fontSize: '0.75rem', fontWeight: '600',
+                            border: 'none', cursor: 'pointer',
+                          }}
+                        >
+                          Albums
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{ padding: '0.5rem 0' }}>
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          navigate('/');
+                        }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '0.5rem 1rem',
+                          background: 'none',
+                          border: 'none',
+                          color: 'inherit',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#3a4853'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                      >
+                        Home
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          navigate('/login', { state: { from: location.pathname + location.search } });
+                        }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '0.5rem 1rem',
+                          background: 'none',
+                          border: 'none',
+                          color: 'inherit',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#3a4853'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                      >
+                        Login / Sign Up
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

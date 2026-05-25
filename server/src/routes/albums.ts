@@ -1,9 +1,42 @@
 import { Hono } from 'hono'
+import { sql } from 'kysely'
 import { db } from '../db/database.js'
 import { getAlbumSummary } from '../services/wikipedia.js'
 import { streamBase } from '../db/streamUrl.js'
 
 const albums = new Hono()
+
+// GET /albums/random?size=N
+albums.get('/random', async (c) => {
+  const size = Math.min(parseInt(c.req.query('size') ?? '10'), 200)
+
+  const rows = await sql<any>`
+    WITH eligible_album_ids AS (
+      SELECT DISTINCT al.id
+      FROM albums al
+      INNER JOIN tracks t ON t.album_id = al.id
+      WHERE al.image_path IS NOT NULL AND al.image_path != ''
+    ),
+    random_ids AS (
+      SELECT id
+      FROM eligible_album_ids
+      ORDER BY random()
+      LIMIT ${size}
+    )
+    SELECT al.id, al.title, al.image_path,
+           ar.id AS artist_id, ar.name AS artist_name
+    FROM albums al
+    INNER JOIN random_ids r ON al.id = r.id
+    INNER JOIN artists ar ON ar.id = al.artist_id
+  `.execute(db)
+
+  return c.json(rows.rows.map((row: any) => ({
+    id: row.id,
+    title: row.title,
+    image_path: row.image_path,
+    artist: { id: row.artist_id, name: row.artist_name },
+  })))
+})
 
 // GET /album/:id
 albums.get('/:id', async (c) => {
