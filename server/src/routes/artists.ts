@@ -10,30 +10,42 @@ const SIMILAR_ARTIST_MIN_SIMILARITY = 0.8
 
 const artists = new Hono()
 
-// GET /artists/random?size=N
+// GET /artists/random?size=N&tag=slug
 artists.get('/random', async (c) => {
   const size = Math.min(parseInt(c.req.query('size') ?? '10'), 200)
+  const tag = c.req.query('tag')
 
-  // Optimized random selection for large datasets (tens of thousands of artists)
-  // First get all eligible IDs, then select random subset
-  // This is faster than sorting full artist records
-  const rows = await sql<any>`
-    WITH eligible_artist_ids AS (
-      SELECT DISTINCT a.id
-      FROM artists a
-      INNER JOIN albums al ON al.artist_id = a.id
-      WHERE a.image_path IS NOT NULL
-    ),
-    random_ids AS (
-      SELECT id
-      FROM eligible_artist_ids
-      ORDER BY random()
-      LIMIT ${size}
-    )
-    SELECT a.*
-    FROM artists a
-    INNER JOIN random_ids r ON a.id = r.id
-  `.execute(db)
+  const rows = tag
+    ? await sql<any>`
+        WITH eligible_artist_ids AS (
+          SELECT DISTINCT a.id
+          FROM artists a
+          INNER JOIN albums al ON al.artist_id = a.id
+          INNER JOIN artists_tags at ON at.artist_id = a.id
+          INNER JOIN tags tg ON tg.id = at.tag_id AND tg.name = ${tag}
+          WHERE a.image_path IS NOT NULL
+        ),
+        random_ids AS (
+          SELECT id FROM eligible_artist_ids ORDER BY random() LIMIT ${size}
+        )
+        SELECT a.*
+        FROM artists a
+        INNER JOIN random_ids r ON a.id = r.id
+      `.execute(db)
+    : await sql<any>`
+        WITH eligible_artist_ids AS (
+          SELECT DISTINCT a.id
+          FROM artists a
+          INNER JOIN albums al ON al.artist_id = a.id
+          WHERE a.image_path IS NOT NULL
+        ),
+        random_ids AS (
+          SELECT id FROM eligible_artist_ids ORDER BY random() LIMIT ${size}
+        )
+        SELECT a.*
+        FROM artists a
+        INNER JOIN random_ids r ON a.id = r.id
+      `.execute(db)
 
   return c.json(rows.rows)
 })

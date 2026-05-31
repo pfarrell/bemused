@@ -6,29 +6,46 @@ import { streamBase } from '../db/streamUrl.js'
 
 const albums = new Hono()
 
-// GET /albums/random?size=N
+// GET /albums/random?size=N&tag=slug
 albums.get('/random', async (c) => {
   const size = Math.min(parseInt(c.req.query('size') ?? '10'), 200)
+  const tag = c.req.query('tag')
 
-  const rows = await sql<any>`
-    WITH eligible_album_ids AS (
-      SELECT DISTINCT al.id
-      FROM albums al
-      INNER JOIN tracks t ON t.album_id = al.id
-      WHERE al.image_path IS NOT NULL AND al.image_path != ''
-    ),
-    random_ids AS (
-      SELECT id
-      FROM eligible_album_ids
-      ORDER BY random()
-      LIMIT ${size}
-    )
-    SELECT al.id, al.title, al.image_path,
-           ar.id AS artist_id, ar.name AS artist_name
-    FROM albums al
-    INNER JOIN random_ids r ON al.id = r.id
-    INNER JOIN artists ar ON ar.id = al.artist_id
-  `.execute(db)
+  const rows = tag
+    ? await sql<any>`
+        WITH eligible_album_ids AS (
+          SELECT DISTINCT al.id
+          FROM albums al
+          INNER JOIN tracks t ON t.album_id = al.id
+          INNER JOIN albums_tags at ON at.album_id = al.id
+          INNER JOIN tags tg ON tg.id = at.tag_id AND tg.name = ${tag}
+          WHERE al.image_path IS NOT NULL AND al.image_path != ''
+        ),
+        random_ids AS (
+          SELECT id FROM eligible_album_ids ORDER BY random() LIMIT ${size}
+        )
+        SELECT al.id, al.title, al.image_path,
+               ar.id AS artist_id, ar.name AS artist_name
+        FROM albums al
+        INNER JOIN random_ids r ON al.id = r.id
+        INNER JOIN artists ar ON ar.id = al.artist_id
+      `.execute(db)
+    : await sql<any>`
+        WITH eligible_album_ids AS (
+          SELECT DISTINCT al.id
+          FROM albums al
+          INNER JOIN tracks t ON t.album_id = al.id
+          WHERE al.image_path IS NOT NULL AND al.image_path != ''
+        ),
+        random_ids AS (
+          SELECT id FROM eligible_album_ids ORDER BY random() LIMIT ${size}
+        )
+        SELECT al.id, al.title, al.image_path,
+               ar.id AS artist_id, ar.name AS artist_name
+        FROM albums al
+        INNER JOIN random_ids r ON al.id = r.id
+        INNER JOIN artists ar ON ar.id = al.artist_id
+      `.execute(db)
 
   return c.json(rows.rows.map((row: any) => ({
     id: row.id,
