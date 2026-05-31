@@ -1,8 +1,9 @@
 // src/stores/authStore.js
 import { create } from 'zustand';
 import { apiService } from '../services/api';
+import { useTagFilterStore } from './tagFilterStore';
 
-export const useAuthStore = create((set, get) => ({
+export const useAuthStore = create((set) => ({
   user: null,
   isAuthenticated: false,
   isAdmin: false,
@@ -45,6 +46,10 @@ export const useAuthStore = create((set, get) => ({
       const response = await apiService.login(username, password);
       const { user } = response.data;
 
+      if (user.default_tag) {
+        useTagFilterStore.getState().setTag(user.default_tag);
+      }
+
       set({
         user,
         isAuthenticated: true,
@@ -68,6 +73,7 @@ export const useAuthStore = create((set, get) => ({
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      useTagFilterStore.getState().clearTag();
       set({
         user: null,
         isAuthenticated: false,
@@ -84,6 +90,11 @@ export const useAuthStore = create((set, get) => ({
       const response = await apiService.getMe();
       const { user } = response.data;
       console.log('Auth initialized with user:', user);
+
+      if (user.default_tag) {
+        useTagFilterStore.getState().setTag(user.default_tag);
+      }
+
       set({
         user,
         isAuthenticated: true,

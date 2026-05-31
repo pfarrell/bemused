@@ -27,12 +27,23 @@ export const apiService = {
   getMe: () => api.get('/auth/me'),
   
   // Artists
-  getRandomArtists: (size = 60) => api.get(`/artists/random?size=${size}`),
+  getRandomArtists: (size = 60, tag = null) => api.get(`/artists/random?size=${size}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`),
   getArtist: (id) => api.get(`/artist/${id}`), // Returns { artist, summary, albums }
-  
+
   // Albums
   getAlbum: (id) => api.get(`/album/${id}`), // Returns { artist, album, tracks }
-  getRandomAlbums: (size = 30) => api.get(`/albums/random?size=${size}`),
+  getRandomAlbums: (size = 30, tag = null) => api.get(`/albums/random?size=${size}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`),
+
+  // Tags
+  getTags: () => api.get('/tags'),
+  getAlbumTags: (id) => api.get(`/tags/album/${id}`),
+  getArtistTags: (id) => api.get(`/tags/artist/${id}`),
+  getTagContent: (tagName) => api.get(`/tags/${encodeURIComponent(tagName)}/content`),
+  addTagToAlbum: (id, name) => api.post(`/tags/album/${id}`, { name }),
+  removeTagFromAlbum: (id, tagName) => api.delete(`/tags/album/${id}/${encodeURIComponent(tagName)}`),
+  addTagToArtist: (id, name) => api.post(`/tags/artist/${id}`, { name }),
+  removeTagFromArtist: (id, tagName) => api.delete(`/tags/artist/${id}/${encodeURIComponent(tagName)}`),
+  setDefaultTag: (tag) => api.put('/auth/default-tag', { tag }),
 
   // Search
   search: (query) => api.get(`/search?q=${encodeURIComponent(query)}`),
