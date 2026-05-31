@@ -11,6 +11,16 @@ npm run lint      # Run ESLint
 npm run deploy    # Build and rsync to patf.com via SSH on port 10022
 ```
 
+## Specs and Plans
+
+Design specs live in `docs/superpowers/specs/` and implementation plans in `docs/superpowers/plans/`. Never commit these files to git.
+
+After writing a spec or plan, always push it to Recall using the same title for both so they land in the same folio:
+
+```bash
+~/.local/bin/recall push <file_path> --title "<Feature Name>" --tags "bemused,<topic>,specs" --type writing
+```
+
 There are no tests.
 
 ## Architecture
