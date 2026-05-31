@@ -90,6 +90,7 @@ auth.post('/signup', async (c) => {
         username: user.username,
         email: user.email,
         admin: user.admin,
+        default_tag: user.default_tag ?? null,
       },
     })
   } catch (error: any) {
@@ -148,6 +149,7 @@ auth.post('/login', async (c) => {
         username: user.username,
         email: user.email,
         admin: user.admin,
+        default_tag: user.default_tag ?? null,
       },
     })
   } catch (error: any) {
@@ -181,12 +183,33 @@ auth.get('/me', async (c) => {
         username: user.username,
         email: user.email,
         admin: user.admin,
+        default_tag: user.default_tag ?? null,
       },
     })
   } catch (error: any) {
     console.error('Get user error:', error)
     return c.json({ error: 'Failed to get user info' }, 500)
   }
+})
+
+// PUT /auth/default-tag — save a default tag for the current user
+auth.put('/default-tag', async (c) => {
+  const user = c.get('user')
+  if (!user) return c.json({ error: 'Authentication required' }, 401)
+
+  const body = await c.req.json()
+  const raw = body.tag ?? null
+  const tag = raw
+    ? raw.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || null
+    : null
+
+  await db
+    .updateTable('users')
+    .set({ default_tag: tag, updated_at: new Date().toISOString() })
+    .where('id', '=', user.id)
+    .execute()
+
+  return c.json({ default_tag: tag })
 })
 
 export default auth

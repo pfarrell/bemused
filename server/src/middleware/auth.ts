@@ -31,7 +31,7 @@ export async function authMiddleware(c: AppContext, next: Next) {
     // Fetch user from database
     const user = await db
       .selectFrom('users')
-      .select(['id', 'username', 'email', 'admin'])
+      .select(['id', 'username', 'email', 'admin', 'default_tag'])
       .where('id', '=', decoded.id)
       .executeTakeFirst()
 
