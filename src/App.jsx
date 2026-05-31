@@ -27,6 +27,7 @@ import AdminUpload from './pages/AdminUpload';
 import AdminPlaylist from './pages/AdminPlaylist';
 import AdminLogs from './pages/AdminLogs';
 import AdminNew from './pages/AdminNew';
+import TagPage from './pages/TagPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import MusicPlayerWrapper from './components/player/MusicPlayerWrapper';
 import NowPlaying from './components/NowPlaying';
@@ -204,6 +205,7 @@ function App() {
                 <Route path="/playlist/:id" element={<Playlist />} />
                 <Route path="/collections" element={<Collections />} />
                 <Route path="/collection/:id" element={<Collection />} />
+                <Route path="/tags/:name" element={<TagPage />} />
                 <Route path="/admin/collection/:id" element={
                   <ProtectedRoute requireAdmin>
                     <AdminCollection />

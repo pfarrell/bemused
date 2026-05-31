@@ -3,7 +3,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
 import Loading from '../components/Loading';
+import TagsSection from '../components/TagsSection';
 import toast from 'react-hot-toast';
+
+const toFilename = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
 
 const AdminAlbum = () => {
   const { id } = useParams();
@@ -65,6 +68,7 @@ const AdminAlbum = () => {
         setAlbumData({ album, artist });
         setTitle(album.title || '');
         setArtistId(String(album.artist_id) || '');
+        setNewImageName(toFilename(artist.name || '') + '-' + toFilename(album.title || '') + '.jpg');
         setReleaseYear(album.release_year || '');
         setImagePath(album.image_path || '');
         setWikipedia(album.wikipedia || '');
@@ -673,7 +677,7 @@ const AdminAlbum = () => {
                   const res = await apiService.getAlbumImages(id);
                   setImages(res.data);
                   setNewImageUrl('');
-                  setNewImageName('');
+                  setNewImageName(toFilename(albumData?.artist?.name || '') + '-' + toFilename(title) + '.jpg');
                 } finally {
                   setAddingImage(false);
                 }
@@ -693,6 +697,12 @@ const AdminAlbum = () => {
               {addingImage ? 'Adding...' : 'Add Image'}
             </button>
           </div>
+        </div>
+
+        {/* Tags */}
+        <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: '0.5rem', marginTop: 0 }}>Tags</h3>
+          <TagsSection entityType="album" entityId={parseInt(id)} isLoggedIn={true} />
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>

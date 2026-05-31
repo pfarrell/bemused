@@ -7,12 +7,13 @@ import { usePlayerStore } from '../stores/playerStore';
 import { useAuthStore } from '../stores/authStore';
 import Wikipedia from '../components/Wikipedia';
 import Track from '../components/Track';
+import TagsSection from '../components/TagsSection';
 
 const Album = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { playerInstance, currentTrack } = usePlayerStore();
-  const { isAdmin } = useAuthStore();
+  const { isAdmin, isAuthenticated } = useAuthStore();
   const [albumData, setAlbumData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -294,15 +295,17 @@ const Album = () => {
         overflowY: 'visible'
       }}>
         {tracks.map((track, index) => (
-          <Track 
+          <Track
             key={track.id || index}
-            track={track} 
-            index={index} 
+            track={track}
+            index={index}
             trackCount={tracks.length}
             isPlaying={isTrackPlaying(track)}
           />
         ))}
       </div>
+
+      <TagsSection entityType="album" entityId={parseInt(id)} isLoggedIn={isAuthenticated} />
     </div>
   );
 };

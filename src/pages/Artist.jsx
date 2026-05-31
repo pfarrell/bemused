@@ -10,11 +10,12 @@ import Track from '../components/Track';
 import Wikipedia from '../components/Wikipedia';
 import Loading from '../components/Loading';
 import Retry from '../components/Retry';
+import TagsSection from '../components/TagsSection';
 
 const Artist = () => {
   const { id, name } = useParams();
   const navigate = useNavigate();
-  const { isAdmin } = useAuthStore();
+  const { isAdmin, isAuthenticated } = useAuthStore();
   const { playerInstance, currentTrack } = usePlayerStore();
   const [artistData, setArtistData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -354,6 +355,8 @@ const Artist = () => {
           </div>
         </div>
       )}
+
+      <TagsSection entityType="artist" entityId={parseInt(id)} isLoggedIn={isAuthenticated} />
     </div>
   );
 };

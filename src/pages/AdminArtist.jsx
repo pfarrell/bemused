@@ -3,7 +3,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
 import Loading from '../components/Loading';
+import TagsSection from '../components/TagsSection';
 import toast from 'react-hot-toast';
+
+const toFilename = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
 
 const AdminArtist = () => {
   const { id } = useParams();
@@ -67,6 +70,7 @@ const AdminArtist = () => {
         setArtistData(artist);
         setName(artist.name || '');
         setImagePath(artist.image_path || '');
+        setNewImageName(toFilename(artist.name || '') + '.jpg');
         setWikipedia(artist.wikipedia || '');
         setMusicbrainzId(artist.musicbrainz_id || '');
         setMbidStatus(artist.mbid_status || '');
@@ -588,7 +592,7 @@ const AdminArtist = () => {
                   const res = await apiService.getArtistImages(id);
                   setImages(res.data);
                   setNewImageUrl('');
-                  setNewImageName('');
+                  setNewImageName(toFilename(name) + '.jpg');
                   toast.success('Image added');
                 } catch (err) {
                   const msg = err?.response?.data?.error || err?.message || 'Failed to add image';
@@ -612,6 +616,12 @@ const AdminArtist = () => {
               {addingImage ? 'Adding...' : 'Add Image'}
             </button>
           </div>
+        </div>
+
+        {/* Tags */}
+        <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: '0.5rem', marginTop: 0 }}>Tags</h3>
+          <TagsSection entityType="artist" entityId={parseInt(id)} isLoggedIn={true} />
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
