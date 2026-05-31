@@ -136,7 +136,11 @@ const Album = () => {
   const { artist, album, tracks, summary, secondary_artists } = albumData;
 
   return (
-    <div style={{ padding: '.5rem', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="album-page">
+      {album.image_path && (
+        <div className="album-bg" style={{ backgroundImage: `url(${apiService.getImageUrl(album.image_path, 'album_page')})` }} />
+      )}
+      <div style={{ padding: '.5rem', maxWidth: '1400px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
       {/* Album Header */}
       <div className='media-page-header'>
         {/* Album Cover */}
@@ -182,25 +186,25 @@ const Album = () => {
         
         {/* Album Info */}
         <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0 0 0.5rem 0', color: '#7c3aed', cursor: 'pointer' }}
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0 0 0.5rem 0', color: 'white', cursor: 'pointer' }}
             onClick = {reload}
           >
             {album.title}
           </h1>
-          
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'normal', margin: '0 0 0.5rem 0', color: '#7c3aed', cursor: 'pointer' }}
+
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'normal', margin: '0 0 0.5rem 0', color: 'white', cursor: 'pointer' }}
             onClick={() => navigate(`/artist/${artist.id}`)}
           >
             {artist.name}
           </h2>
           {secondary_artists && secondary_artists.length > 0 && artist.id !== 161 && (
-            <p style={{ fontSize: '0.95rem', margin: '0 0 1rem 0', color: '#6b7280' }}>
+            <p style={{ fontSize: '0.95rem', margin: '0 0 1rem 0', color: '#d1d5db' }}>
               Also featuring:{' '}
               {secondary_artists.map((sa, i) => (
                 <span key={sa.id}>
                   {i > 0 && ' · '}
                   <span
-                    style={{ color: '#7c3aed', cursor: 'pointer' }}
+                    style={{ color: '#d1d5db', cursor: 'pointer' }}
                     onClick={() => navigate(`/artist/${sa.id}`)}
                   >
                     {sa.name}
@@ -250,11 +254,12 @@ const Album = () => {
               onClick={handlePlayNext}
               style={{
                 padding: '0.5rem 1rem',
-                backgroundColor: 'white',
-                border: '1px solid #d1d5db',
+                backgroundColor: 'transparent',
+                border: '1px solid rgba(255,255,255,0.5)',
                 borderRadius: '4px',
                 cursor: 'pointer',
-                fontSize: '0.875rem'
+                fontSize: '0.875rem',
+                color: 'white'
               }}
             >
               Play Next
@@ -263,11 +268,12 @@ const Album = () => {
               onClick={handleAddToQueue}
               style={{
                 padding: '0.5rem 1rem',
-                backgroundColor: 'white',
-                border: '1px solid #d1d5db',
+                backgroundColor: 'transparent',
+                border: '1px solid rgba(255,255,255,0.5)',
                 borderRadius: '4px',
                 cursor: 'pointer',
-                fontSize: '0.875rem'
+                fontSize: '0.875rem',
+                color: 'white'
               }}
             >
               Add to Queue
@@ -277,7 +283,7 @@ const Album = () => {
           {/* Album Description */}
           {album.description && (
             <div>
-              <p style={{ lineHeight: '1.6', color: '#374151', margin: '0 0 1rem 0' }}>
+              <p style={{ lineHeight: '1.6', color: '#e5e7eb', margin: '0 0 1rem 0' }}>
                 {album.description}
               </p>
             </div>
@@ -294,14 +300,15 @@ const Album = () => {
         overflowY: 'visible'
       }}>
         {tracks.map((track, index) => (
-          <Track 
+          <Track
             key={track.id || index}
-            track={track} 
-            index={index} 
+            track={track}
+            index={index}
             trackCount={tracks.length}
             isPlaying={isTrackPlaying(track)}
           />
         ))}
+      </div>
       </div>
     </div>
   );
