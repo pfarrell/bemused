@@ -2,16 +2,17 @@
 import { useEffect, useRef } from 'react';
 import { useInfiniteItems } from '../hooks/useInfiniteItems';
 import { useHomeModeStore } from '../stores/homeModeStore';
+import { useTagFilterStore } from '../stores/tagFilterStore';
 import { apiService } from '../services/api';
 import ArtistGrid from '../components/ArtistGrid';
 import AlbumGrid from '../components/AlbumGrid';
 import Loading from '../components/Loading';
 import Retry from '../components/Retry';
 
-const HomeFeed = ({ mode }) => {
+const HomeFeed = ({ mode, activeTag }) => {
   const fetchFn = mode === 'albums'
-    ? (size) => apiService.getRandomAlbums(size)
-    : (size) => apiService.getRandomArtists(size);
+    ? (size) => apiService.getRandomAlbums(size, activeTag)
+    : (size) => apiService.getRandomArtists(size, activeTag);
 
   const { items, isLoading, error, loadMore } = useInfiniteItems(fetchFn);
   const gridRef     = useRef(null);
@@ -49,7 +50,7 @@ const HomeFeed = ({ mode }) => {
   }, [loadMore, items.length]);
 
   if (items.length === 0 && isLoading) {
-    return <Loading message={`Loading ${mode}`} />;
+    return <Loading message={`Loading ${mode}${activeTag ? ` tagged #${activeTag}` : ''}`} />;
   }
 
   if (error && items.length === 0) {
@@ -73,7 +74,8 @@ const HomeFeed = ({ mode }) => {
 
 const Home = () => {
   const { mode } = useHomeModeStore();
-  return <HomeFeed key={mode} mode={mode} />;
+  const { activeTag } = useTagFilterStore();
+  return <HomeFeed key={`${mode}:${activeTag ?? ''}`} mode={mode} activeTag={activeTag} />;
 };
 
 export default Home;
