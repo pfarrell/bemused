@@ -128,6 +128,7 @@ interface UserTable {
   email: string | null
   password: string
   admin: boolean
+  default_tag: string | null
   created_at: ColumnType<Date, never, never>
   updated_at: ColumnType<Date, never, string | Date>
 }
@@ -198,6 +199,37 @@ interface CollectionAlbumTable {
   order: number | null
 }
 
+interface TagTable {
+  id: Generated<number>
+  name: string
+  created_at: ColumnType<Date, string | undefined, never>
+  updated_at: ColumnType<Date, string | undefined, string | Date>
+}
+
+interface AlbumTagTable {
+  id: Generated<number>
+  album_id: number
+  tag_id: number
+  created_at: ColumnType<Date, string | undefined, never>
+  updated_at: ColumnType<Date, string | undefined, string | Date>
+}
+
+interface ArtistTagTable {
+  id: Generated<number>
+  artist_id: number
+  tag_id: number
+  created_at: ColumnType<Date, string | undefined, never>
+  updated_at: ColumnType<Date, string | undefined, string | Date>
+}
+
+interface TrackTagTable {
+  id: Generated<number>
+  track_id: number
+  tag_id: number
+  created_at: ColumnType<Date, string | undefined, never>
+  updated_at: ColumnType<Date, string | undefined, string | Date>
+}
+
 export interface Database {
   artists: ArtistTable
   albums: AlbumTable
@@ -216,6 +248,10 @@ export interface Database {
   images: ImageTable
   collections: CollectionTable
   collection_albums: CollectionAlbumTable
+  tags: TagTable
+  albums_tags: AlbumTagTable
+  artists_tags: ArtistTagTable
+  tags_tracks: TrackTagTable
 }
 
 // ---- DB instance ----
