@@ -536,7 +536,7 @@
 
 /* Now playing with fixed width */
 .now-playing {
-  display: none; /* Hidden on mobile by default */
+  display: flex;
   align-items: center;
   gap: 0.75rem;
   color: white;
@@ -551,6 +551,14 @@
   color: #ffffff;
   width: 24px;
   height: 24px;
+}
+
+.now-playing-art {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 3px;
+  flex-shrink: 0;
 }
 
 .now-playing .track-info {
@@ -981,11 +989,11 @@
     padding: 0 1rem;
   }
   
-  /* Hide now-playing on mobile */
+  /* now-playing visible on mobile: shows album art alongside player controls */
   .now-playing {
-    display: none !important;
+    max-width: 48px;
   }
-  
+
   .playlist-button {
     padding: 0.25rem;
     font-size: 0.875rem;
