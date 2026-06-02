@@ -1025,7 +1025,8 @@ CREATE TABLE public.users (
     password text,
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
-    admin boolean DEFAULT false
+    admin boolean DEFAULT false,
+    default_tag character varying(255)
 );
 
 
