@@ -16,35 +16,34 @@ type AppContext = Context<{ Variables: Variables }>
 
 // Middleware to extract and verify JWT from cookie
 export async function authMiddleware(c: AppContext, next: Next) {
-  try {
-    const token = getCookie(c, 'auth')
+  const token = getCookie(c, 'auth')
 
-    if (!token) {
-      // No token, continue without user
-      await next()
-      return
-    }
-
-    // Verify and decode token
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload
-
-    // Fetch user from database
-    const user = await db
-      .selectFrom('users')
-      .select(['id', 'username', 'email', 'admin', 'default_tag'])
-      .where('id', '=', decoded.id)
-      .executeTakeFirst()
-
-    if (user) {
-      // Set user in context for downstream handlers
-      c.set('user', user)
-    }
-
+  if (!token) {
     await next()
-  } catch (error) {
-    // Invalid token, continue without user
-    await next()
+    return
   }
+
+  let decoded: JWTPayload
+  try {
+    decoded = jwt.verify(token, JWT_SECRET) as JWTPayload
+  } catch {
+    // Invalid or expired token — proceed without user
+    await next()
+    return
+  }
+
+  // DB errors propagate rather than silently clearing the user context
+  const user = await db
+    .selectFrom('users')
+    .select(['id', 'username', 'email', 'admin', 'default_tag'])
+    .where('id', '=', decoded.id)
+    .executeTakeFirst()
+
+  if (user) {
+    c.set('user', user)
+  }
+
+  await next()
 }
 
 // Middleware to require authentication
