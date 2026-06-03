@@ -28,9 +28,15 @@ This guide covers developing and deploying the Bemused Node.js/Hono backend.
 
    The API will be available at `http://localhost:3000`
 
-4. **Start the frontend** (in a separate terminal):
+4. **Start the upload queue worker** (in a separate terminal, required for uploads):
    ```bash
-   cd /home/pfarrell/proj/bemused-spa
+   cd server
+   npm run worker
+   ```
+
+5. **Start the frontend** (in a separate terminal):
+   ```bash
+   cd /home/pfarrell/proj/bemused
    npm run dev
    ```
 
@@ -40,7 +46,7 @@ This guide covers developing and deploying the Bemused Node.js/Hono backend.
 
 - **Backend changes**: The dev server (tsx watch) will automatically reload when you save TypeScript files
 - **Frontend changes**: Vite dev server has hot module replacement (HMR) for instant updates
-- **Database changes**: Use raw SQL or create migrations in `db/migrations/` if needed
+- **Database changes**: Create migrations in `migrations/` — they run automatically on deploy
 
 ### Testing API Endpoints
 
@@ -64,6 +70,7 @@ curl -I http://localhost:3000/stream/12345
 
 - **Server**: Ubuntu server at patf.com, SSH port 10022
 - **Backend**: Node.js/Hono app running on port 3000, managed by systemd
+- **Queue worker**: Separate systemd service processing the upload queue
 - **Frontend**: React SPA served as static files by nginx
 - **Database**: PostgreSQL (already running in production)
 - **Web Server**: nginx (proxies API requests to Node, serves static files directly)
@@ -108,11 +115,12 @@ This creates `/var/www/bemused-node/shared/.env` with:
 ```bash
 BEMUSED_DB=postgres://user:password@localhost:5432/bemused
 PORT=3000
-BEMUSED_PATH=https://patf.com/bemused
+BEMUSED_PATH=/bemused
+BEMUSED_UPLOAD_PATH=/path/to/nas/mp3s
 NODE_ENV=production
 ```
 
-### 2. Install systemd service
+### 2. Install the API systemd service
 
 SSH to the server and install the service file:
 
@@ -127,9 +135,24 @@ sudo systemctl daemon-reload
 sudo systemctl enable bemused-api
 ```
 
-**Note**: Don't start the service yet - it will start automatically after the first deployment.
+### 3. Install the queue worker systemd service
 
-### 3. Configure nginx
+The upload queue worker runs as a separate long-lived process:
+
+```bash
+ssh -p 10022 pfarrell@patf.com
+
+# Copy service file
+sudo cp /var/www/bemused-node/current/bemused-queue-worker.service /etc/systemd/system/
+
+# Reload systemd and enable service
+sudo systemctl daemon-reload
+sudo systemctl enable --now bemused-queue-worker
+```
+
+**Note**: The queue worker must be running for uploaded audio files to be processed. The API server accepts uploads and writes them to `upload_queue`; the worker polls that table every 5 seconds.
+
+### 4. Configure nginx
 
 SSH to the server and install the nginx configuration:
 
@@ -149,7 +172,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### 4. Link shared images to nginx-served location
+### 5. Link shared images to nginx-served location
 
 Run the one-time setup script to create the symlink from `shared/public/images` to the nginx-served images directory:
 
@@ -164,7 +187,7 @@ After this is set up once, the deploy script will automatically:
 - Create `releases/<timestamp>/public/images` as a symlink to `shared/public/images`
 - Downloaded images will be saved to the shared location and persist across deployments
 
-### 5. Verify database access
+### 6. Verify database access
 
 Ensure the Node app can connect to the PostgreSQL database:
 
@@ -189,9 +212,16 @@ This will:
 2. Create a new timestamped release directory on the server
 3. Upload built code and dependencies via rsync
 4. Install production dependencies on the server
-5. Update the `current` symlink to the new release
-6. Restart the systemd service
-7. Clean up old releases (keeps last 5)
+5. Run database migrations
+6. Update the `current` symlink to the new release
+7. Restart the `bemused-api` systemd service
+8. Clean up old releases (keeps last 5)
+
+The queue worker (`bemused-queue-worker`) is **not** restarted automatically — restart it manually if the worker code changed:
+
+```bash
+ssh -p 10022 pfarrell@patf.com 'sudo systemctl restart bemused-queue-worker'
+```
 
 ## Deployment Workflow
 
@@ -200,36 +230,16 @@ Typical deployment workflow after making changes:
 ### Backend Deployment
 
 ```bash
-# In the server directory
 cd server
-
-# Test locally first
-npm run dev
-# Visit http://localhost:3000/artists/random to verify
-
-# Deploy to production
 npm run deploy
-
-# SSH to server and restart the service
-ssh -p 10022 pfarrell@patf.com
-sudo systemctl stop bemused-api
-sudo systemctl start bemused-api
-sudo systemctl status bemused-api
 ```
 
-**Note**: Use `stop` then `start` instead of `restart` to ensure the code fully reloads.
+The deploy script builds, uploads, migrates, and restarts the API service automatically.
 
 ### Frontend Deployment
 
 ```bash
-# In the frontend directory
-cd /home/pfarrell/proj/bemused-spa
-
-# Test locally first
-npm run dev
-# Visit http://localhost:5173 to verify
-
-# Deploy to production
+# From the repo root
 npm run deploy
 ```
 
@@ -237,21 +247,16 @@ The frontend deploys to `/var/www/bemused/shared/public/frontend` and is served 
 
 ### Full Stack Deployment
 
-When you've made changes to both frontend and backend:
+```bash
+# From the repo root
+npm run full-deploy
+```
+
+Or individually:
 
 ```bash
-# Deploy backend
-cd server
-npm run deploy
-
-# Deploy frontend
-cd ..
-npm run deploy
-
-# Restart backend service
-ssh -p 10022 pfarrell@patf.com
-sudo systemctl stop bemused-api
-sudo systemctl start bemused-api
+cd server && npm run deploy   # backend
+cd .. && npm run deploy       # frontend
 ```
 
 ## Monitoring and Troubleshooting
@@ -260,13 +265,17 @@ sudo systemctl start bemused-api
 
 ```bash
 ssh -p 10022 pfarrell@patf.com 'sudo systemctl status bemused-api'
+ssh -p 10022 pfarrell@patf.com 'sudo systemctl status bemused-queue-worker'
 ```
 
 ### View logs
 
 ```bash
-# Real-time logs
+# Real-time API logs
 ssh -p 10022 pfarrell@patf.com 'sudo journalctl -u bemused-api -f'
+
+# Real-time queue worker logs
+ssh -p 10022 pfarrell@patf.com 'sudo journalctl -u bemused-queue-worker -f'
 
 # Recent logs
 ssh -p 10022 pfarrell@patf.com 'sudo journalctl -u bemused-api -n 100'
@@ -278,14 +287,11 @@ ssh -p 10022 pfarrell@patf.com 'sudo journalctl -u bemused-api --since "10 minut
 ### Manual service control
 
 ```bash
-# Start service
-ssh -p 10022 pfarrell@patf.com 'sudo systemctl start bemused-api'
-
-# Stop service
-ssh -p 10022 pfarrell@patf.com 'sudo systemctl stop bemused-api'
-
-# Restart service
+# API service
 ssh -p 10022 pfarrell@patf.com 'sudo systemctl restart bemused-api'
+
+# Queue worker
+ssh -p 10022 pfarrell@patf.com 'sudo systemctl restart bemused-queue-worker'
 ```
 
 ### Test API endpoints
@@ -325,8 +331,9 @@ sudo systemctl restart bemused-api
 |----------|-------------|-----------|------------|
 | `BEMUSED_DB` | PostgreSQL connection string | `postgres://user:pass@localhost/bemused` | Server DB credentials |
 | `PORT` | Port for Node.js API | `3000` | `3000` |
-| `BEMUSED_PATH` | Base URL for stream links in responses | _(empty - uses localhost)_ | `https://patf.com/bemused` |
-| `BEMUSED_DEV` | Proxy target when NAS unavailable in dev | `https://patf.net/bemused` | _(not used in prod)_ |
+| `BEMUSED_PATH` | Base path prefix for stream URLs in responses | _(empty)_ | `/bemused` |
+| `BEMUSED_UPLOAD_PATH` | Filesystem path where processed audio files are stored | _(local path)_ | NAS mount path |
+| `BEMUSED_DEV` | Proxy target for streams when NAS unavailable in dev | `https://patf.com/bemused` | _(not used)_ |
 | `NODE_ENV` | Node environment | `development` | `production` |
 
 ## Nginx Configuration Notes
@@ -346,7 +353,6 @@ Range requests are properly supported for audio streaming.
 - The `.env` file contains database credentials - never commit it to git
 - The deploy script uses SSH key authentication on port 10022
 - Database should only accept local connections
-- Consider setting up SSL/TLS with Let's Encrypt (uncomment HTTPS redirect in nginx config)
 
 ## Common Issues
 
@@ -363,6 +369,11 @@ Range requests are properly supported for audio streaming.
 - Service may not be running: `sudo systemctl status bemused-api`
 - Check logs: `sudo journalctl -u bemused-api -n 50`
 - Verify port 3000 is correct in both `.env` and nginx config
+
+### Uploads not processing
+- Check queue worker is running: `sudo systemctl status bemused-queue-worker`
+- Verify `BEMUSED_UPLOAD_PATH` is set in `/var/www/bemused-node/shared/.env`
+- Check worker logs: `sudo journalctl -u bemused-queue-worker -n 50`
 
 ### No audio playback
 - Check that `BEMUSED_PATH` is set correctly in production `.env`

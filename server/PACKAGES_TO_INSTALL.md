@@ -1,24 +1,17 @@
-# Packages to Install for Upload Feature
+# Server Dependencies
 
-Run these commands in the server directory:
+All dependencies are already installed. Run `npm install` in the `server/` directory to restore them after a fresh clone.
 
-```bash
-cd /home/pfarrell/proj/bemused-spa/server
+Key production dependencies and their purpose:
 
-# For file uploads with Hono
-npm install @hono/multipart
-
-# For ID3 tag reading
-npm install node-id3
-
-# For MD5 hashing
-# (built-in with Node.js crypto module - no install needed)
-
-# For music metadata (duration, etc.)
-npm install music-metadata
-```
-
-After installing, run:
-```bash
-npm run build
-```
+| Package | Purpose |
+|---------|---------|
+| `hono` + `@hono/node-server` | HTTP framework and Node.js adapter |
+| `kysely` + `pg` | Type-safe SQL query builder + PostgreSQL driver |
+| `jsonwebtoken` + `bcrypt` | JWT auth cookies + password hashing |
+| `music-metadata` | Audio file duration and metadata extraction |
+| `node-id3` | ID3 tag reading from MP3 files (used by upload worker) |
+| `sharp` | Image resizing for artist/album art |
+| `node-fetch` | HTTP client for external service calls (MusicBrainz, Last.fm, etc.) |
+| `dotenv` | Load `.env` file into `process.env` |
+| `tsx` | TypeScript execution for dev server and scripts |
