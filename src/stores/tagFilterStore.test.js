@@ -27,7 +27,7 @@ describe('tagFilterStore', () => {
   });
 
   test('setTag with null removes localStorage entry', () => {
-    localStorage.setItem('tag-filter', 'rock');
+    useTagFilterStore.getState().setTag('rock');
     useTagFilterStore.getState().setTag(null);
     expect(localStorage.getItem('tag-filter')).toBeNull();
   });
@@ -39,7 +39,7 @@ describe('tagFilterStore', () => {
   });
 
   test('clearTag removes localStorage entry', () => {
-    localStorage.setItem('tag-filter', 'pop');
+    useTagFilterStore.getState().setTag('pop');
     useTagFilterStore.getState().clearTag();
     expect(localStorage.getItem('tag-filter')).toBeNull();
   });
