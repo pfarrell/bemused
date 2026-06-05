@@ -34,7 +34,7 @@ npm run db:reset     # Reset database
 
 Design specs live in `docs/superpowers/specs/` and implementation plans in `docs/superpowers/plans/`. Never commit these files to git.
 
-There are no tests.
+Frontend tests use Vitest + React Testing Library. Run with `npm test` (root). Test files live alongside source as `*.test.js` / `*.test.jsx`. Backend has no tests yet — tracked in [#31](https://github.com/pfarrell/bemused/issues/31).
 
 ## Architecture
 
