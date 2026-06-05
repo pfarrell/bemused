@@ -46,7 +46,7 @@ npm run dev          # Dev server via tsx watch on src/index.ts
 | Path | Purpose |
 |---|---|
 | `src/main.jsx` | Entry point, renders `<App />` |
-| `src/App.jsx` | Router config. `/login` has no layout; all other routes use `Layout`. Basename: `/` (dev) or `/bemused/app` (prod) via `import.meta.env.DEV` |
+| `src/App.jsx` | Router config. All routes render inside `Layout`. Basename: `/` (dev) or `/bemused/app` (prod) via `import.meta.env.DEV`. Routes: `/`, `/search`, `/login`, `/signup`, `/artist/:id`, `/album/:id`, `/library`, `/playlists`, `/playlist/:id`, `/collections`, `/collection/:id`, `/tags/:name`. Admin routes (require admin): `/admin/artist/:id`, `/admin/album/:id`, `/admin/collection/:id`, `/admin/playlist/:id`, `/admin/upload`, `/admin/logs`, `/admin/new` |
 | `src/components/Layout.jsx` | Fixed header (SearchBar), scrollable main content, fixed footer (NowPlaying + player) |
 | `src/components/NowPlaying.jsx` | Now-playing display in footer |
 | `src/components/Track.jsx` | Track row component. Props: `{ track, index, trackCount, includeMeta, isPlaying }` |
@@ -59,14 +59,21 @@ npm run dev          # Dev server via tsx watch on src/index.ts
 | `src/pages/Album.jsx` | `/album/:id` — album detail with tracks |
 | `src/pages/Search.jsx` | `/search?q=...` — search results |
 | `src/pages/Login.jsx`, `Signup.jsx` | Auth pages |
-| `src/pages/Admin*.jsx` | Admin pages (AdminAlbum, AdminArtist, AdminUpload, etc.) |
-| `src/pages/Playlist.jsx`, `Playlists.jsx` | Playlist views |
-| `src/pages/Collection.jsx`, `Collections.jsx` | Collection views |
-| `src/services/api.js` | Single axios instance. All API calls go through here. `apiService.getImageUrl(imagePath, context)` maps images to `https://patf.net/images/` |
+| `src/pages/Library.jsx` | `/library` — user's personal library |
+| `src/pages/Playlists.jsx`, `Playlist.jsx` | `/playlists`, `/playlist/:id` — playlist list and detail |
+| `src/pages/Collections.jsx`, `Collection.jsx` | `/collections`, `/collection/:id` — collection list and detail |
+| `src/pages/TagPage.jsx` | `/tags/:name` — browse artists and albums by tag |
+| `src/pages/AdminArtist.jsx`, `AdminAlbum.jsx` | Edit metadata, manage images and artist relations (admin) |
+| `src/pages/AdminCollection.jsx`, `AdminPlaylist.jsx` | Edit collection or playlist contents (admin) |
+| `src/pages/AdminUpload.jsx` | Upload audio files; polls upload queue status (admin) |
+| `src/pages/AdminLogs.jsx` | Paginated playback log viewer (admin) |
+| `src/pages/AdminNew.jsx` | Create new artist or album records (admin) |
+| `src/services/api.js` | Single axios instance. All API calls go through here. `apiService.getImageUrl(imagePath, context)` maps images to `https://patf.net/images/` (prod) or `/images` (dev). Context strings: `artist_search`, `artist_page`, `album_small`, `album_page`. `apiService.log(id)` fires at the 5-second mark of each track |
 | `src/stores/playerStore.js` | Zustand store: `currentTrack`, `playlist`, `isPlaying`, `playerInstance`, `currentTrackIndex` |
-| `src/stores/authStore.js` | Zustand store: `user`, `isAuthenticated`, `isAdmin`. Token in `localStorage` as `authToken` |
-| `src/stores/homeModeStore.js` | Home page display mode |
-| `src/stores/tagFilterStore.js` | Tag filtering state |
+| `src/stores/authStore.js` | Zustand store: `user`, `isAuthenticated`, `isAdmin`. Auth uses httpOnly cookie (no localStorage token). On login/init, populates `tagFilterStore` from `user.default_tag` |
+| `src/stores/homeModeStore.js` | Home page display mode (`'artists'` \| `'albums'`), persisted to `localStorage` as `home-mode` |
+| `src/stores/tagFilterStore.js` | Active tag filter, persisted to `localStorage` as `tag-filter`; populated from `user.default_tag` on login |
+| `src/components/ProtectedRoute.jsx` | Redirects to `/login` if not authenticated; `requireAdmin` prop also enforces admin role |
 | `src/hooks/useInfiniteItems.js` | Infinite scroll hook |
 | `src/utils/formatters.js` | Formatting helpers |
 | `src/index.css` | All custom CSS classes (`.app-header`, `.main-content`, `.app-footer`, `.artist-grid`, `.track-item`, `.now-playing`, etc.) — Tailwind v4 + custom styles |
@@ -102,7 +109,7 @@ npm run dev          # Dev server via tsx watch on src/index.ts
 - **No TypeScript in frontend** — all frontend code is `.js`/`.jsx`. Do not add `.ts`/`.tsx` files to `src/`.
 - **Tailwind v4** — use Tailwind utility classes. Custom CSS classes are defined in `src/index.css`.
 - **Zustand** for state — no Redux, no Context API for global state.
-- **axios** for HTTP — use the shared instance from `src/services/api.js`, not raw `fetch`.
+- **axios** for HTTP — use the shared instance from `src/services/api.js`, not raw `fetch`. Base URL is `/api` (dev) or `/bemused/api` (prod). `withCredentials: true` for httpOnly cookie auth.
 - **React Router v7** — routes defined in `src/App.jsx`.
 - **Audio player** — `window.AudioPlayer` is an external class from `public/player.js`. The `playerStore` holds the live instance as `playerInstance`.
 - **Image URLs** — always use `apiService.getImageUrl(path, context)` to construct image URLs. Context strings: `artist_image`, `album_art`, etc.
