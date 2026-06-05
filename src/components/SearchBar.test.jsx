@@ -1,0 +1,64 @@
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, useLocation } from 'react-router-dom';
+import SearchBar from './SearchBar';
+
+// Captures the current location so we can assert navigation happened
+const LocationDisplay = () => {
+  const location = useLocation();
+  return <div data-testid="location">{location.pathname + location.search}</div>;
+};
+
+const renderSearchBar = () =>
+  render(
+    <MemoryRouter>
+      <SearchBar />
+      <LocationDisplay />
+    </MemoryRouter>
+  );
+
+describe('SearchBar', () => {
+  test('renders the search input', () => {
+    renderSearchBar();
+    expect(
+      screen.getByPlaceholderText('Search for songs, artists, or albums')
+    ).toBeInTheDocument();
+  });
+
+  test('navigates to /search?q=... on form submit', async () => {
+    const user = userEvent.setup();
+    renderSearchBar();
+
+    await user.type(
+      screen.getByPlaceholderText('Search for songs, artists, or albums'),
+      'pink floyd'
+    );
+    await user.keyboard('{Enter}');
+
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/search?q=pink%20floyd'
+    );
+  });
+
+  test('does not navigate when query is empty', async () => {
+    const user = userEvent.setup();
+    renderSearchBar();
+
+    await user.keyboard('{Enter}');
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/');
+  });
+
+  test('does not navigate when query is only whitespace', async () => {
+    const user = userEvent.setup();
+    renderSearchBar();
+
+    await user.type(
+      screen.getByPlaceholderText('Search for songs, artists, or albums'),
+      '   '
+    );
+    await user.keyboard('{Enter}');
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/');
+  });
+});
