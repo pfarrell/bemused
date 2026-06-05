@@ -4,14 +4,20 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
-  { ignores: ['dist'] },
+  { ignores: ['dist', '.worktrees', 'node_modules', 'server/node_modules', 'server/dist'] },
   {
     files: ['**/*.test.{js,jsx}', 'src/setupTests.js'],
     languageOptions: {
-      globals: { ...globals.browser, ...globals.node },
+      globals: { ...globals.browser, ...globals.node, ...globals.vitest },
     },
     rules: {
       'no-undef': 'off',
+    },
+  },
+  {
+    files: ['server/**/*.js', 'public/**/*.js', '*.config.js'],
+    languageOptions: {
+      globals: globals.node,
     },
   },
   {
