@@ -1,6 +1,6 @@
 // src/pages/AdminArtist.jsx
-import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import Loading from '../components/Loading';
 import TagsSection from '../components/TagsSection';
@@ -28,7 +28,6 @@ const AdminArtist = () => {
 
   // Image gallery state
   const [images, setImages] = useState([]);
-  const [loadingImages, setLoadingImages] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState('');
   const [newImageName, setNewImageName] = useState('');
   const [addingImage, setAddingImage] = useState(false);
@@ -509,9 +508,7 @@ const AdminArtist = () => {
         <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
           <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: '1rem' }}>Images</h3>
 
-          {loadingImages ? (
-            <p>Loading images...</p>
-          ) : (
+          {images.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '12px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
               {images.map(img => (
                 <div key={img.id} style={{

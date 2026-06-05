@@ -11,11 +11,6 @@ export default function AdminLogs() {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    loadLogs(currentPage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
-
   const loadLogs = async (page = 1) => {
     try {
       setLoading(true);
@@ -29,6 +24,10 @@ export default function AdminLogs() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadLogs(currentPage);
+  }, [currentPage]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';

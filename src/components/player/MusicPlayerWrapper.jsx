@@ -78,7 +78,7 @@ const MusicPlayerWrapper = ({ className = "" }) => {
             apiService.log(track.id);
             console.log('5 seconds into:', track.title);
           },
-          getTrackPrefix: (track, index) => {
+          getTrackPrefix: () => {
             return '';
           }
         }

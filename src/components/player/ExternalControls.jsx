@@ -4,12 +4,6 @@ import { usePlayerStore } from '../../stores/playerStore';
 const ExternalControls = () => {
   const { currentTrack, isPlaying, playerInstance } = usePlayerStore();
 
-  const handleAddToQueue = (track) => {
-    if (playerInstance) {
-      playerInstance.addTrack(track);
-    }
-  };
-
   const handleClearPlaylist = () => {
     if (playerInstance) {
       playerInstance.clearPlaylist();

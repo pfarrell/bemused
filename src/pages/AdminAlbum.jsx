@@ -1,6 +1,6 @@
 // src/pages/AdminAlbum.jsx
-import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import Loading from '../components/Loading';
 import TagsSection from '../components/TagsSection';
@@ -30,7 +30,6 @@ const AdminAlbum = () => {
 
   // Image gallery state
   const [images, setImages] = useState([]);
-  const [loadingImages, setLoadingImages] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState('');
   const [newImageName, setNewImageName] = useState('');
   const [addingImage, setAddingImage] = useState(false);
@@ -273,7 +272,7 @@ const AdminAlbum = () => {
     }));
   };
 
-  const handleTrackBlur = async (trackId, field) => {
+  const handleTrackBlur = async (trackId) => {
     const changes = trackChanges[trackId];
     if (!changes || !changes.dirty) return;
 
@@ -594,9 +593,7 @@ const AdminAlbum = () => {
         <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
           <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: '1rem' }}>Images</h3>
 
-          {loadingImages ? (
-            <p>Loading images...</p>
-          ) : (
+          {images.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '12px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
               {images.map(img => (
                 <div key={img.id} style={{
@@ -1087,76 +1084,6 @@ const AdminAlbum = () => {
         )}
       </div>
 
-      {/* Bulk Update Section - REMOVED, replaced with Move Album section above */}
-      {tracks && tracks.length > 0 && false && (
-        <div style={{ marginTop: '3rem', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-            Update All Tracks (Deprecated)
-          </h2>
-          <div style={{
-            padding: '1rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: '4px',
-            border: '1px solid #e5e7eb'
-          }}>
-            <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#6b7280' }}>
-              Use this to change the album or artist for all tracks at once. This is useful for compilation albums or fixing batch imports.
-            </p>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-                  Album ID
-                </label>
-                <input
-                  type="number"
-                  value={bulkAlbumId}
-                  onChange={(e) => setBulkAlbumId(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    fontSize: '1rem',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                  }}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-                  Artist ID
-                </label>
-                <input
-                  type="number"
-                  value={bulkArtistId}
-                  onChange={(e) => setBulkArtistId(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    fontSize: '1rem',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                  }}
-                />
-              </div>
-              <button
-                onClick={handleBulkUpdate}
-                style={{
-                  padding: '0.5rem 1.5rem',
-                  backgroundColor: '#10b981',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  fontWeight: '500',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                Update All Tracks
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Tracks Section */}
       {tracks && tracks.length > 0 && (
@@ -1183,7 +1110,6 @@ const AdminAlbum = () => {
               </thead>
               <tbody>
                 {tracks.sort((a, b) => (parseInt(a.track_number) || 0) - (parseInt(b.track_number) || 0)).map((track) => {
-                  const currentChanges = trackChanges[track.id] || {};
                   return (
                     <tr key={track.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                       <td style={{ padding: '0.75rem' }}>

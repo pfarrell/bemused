@@ -13,7 +13,7 @@ import Retry from '../components/Retry';
 import TagsSection from '../components/TagsSection';
 
 const Artist = () => {
-  const { id, name } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const { isAdmin, isAuthenticated } = useAuthStore();
   const { playerInstance, currentTrack } = usePlayerStore();

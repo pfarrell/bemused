@@ -353,14 +353,14 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
       let touchStartTime = 0;
       let touchFeedbackTimeout = null;
       
-      listItem.addEventListener('touchstart', (e) => {
+      listItem.addEventListener('touchstart', () => {
         touchStartTime = Date.now();
-        
+
         // Clear any existing timeout
         if (touchFeedbackTimeout) {
           clearTimeout(touchFeedbackTimeout);
         }
-        
+
         // Only apply touch feedback if this isn't the active track
         if (index !== this.currentTrackIndex) {
           listItem.style.setProperty('background-color', '#4f46e5', 'important');
@@ -368,14 +368,14 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
         }
       }, { passive: true });
       
-      listItem.addEventListener('touchend', (e) => {
+      listItem.addEventListener('touchend', (touchEvent) => {
         const touchDuration = Date.now() - touchStartTime;
-        
+
         // Clear touch feedback
         if (touchFeedbackTimeout) {
           clearTimeout(touchFeedbackTimeout);
         }
-        
+
         // Reset visual feedback after delay, but only if it's not the active track
         touchFeedbackTimeout = setTimeout(() => {
           if (index !== this.currentTrackIndex) {
@@ -385,12 +385,12 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
           // Force active track styling update
           this.updateActiveTrackStyling();
         }, 200);
-        
+
         // Only trigger if it was a tap (not a scroll)
         if (touchDuration < 300) {
-          e.preventDefault();
-          e.stopPropagation();
-          handleTrackClick(e);
+          touchEvent.preventDefault();
+          touchEvent.stopPropagation();
+          handleTrackClick(touchEvent);
           
           // Force immediate styling update after track change
           setTimeout(() => {
@@ -605,22 +605,20 @@ AudioPlayer.prototype.highlightFirstTrack = function() {
 // Modified loadAndPlayTrack function to ensure styling updates
 AudioPlayer.prototype.loadAndPlayTrack = function(index) {
   if (index < 0 || index >= this.playlist.length) return;
-  
+
   const track = this.playlist[index];
   if (!track) return;
 
-  const wasPlaying = !this.audioPlayer.paused;
-  
   this.currentTrackIndex = index;
   this.audioPlayer.src = track.url;
   this.audioPlayer.load();
-  
+
   // Update active track styling immediately after changing currentTrackIndex
   this.updateActiveTrackStyling();
-  
-    this.audioPlayer.play().catch(error => {
-      console.error('Playback failed:', error);
-    });
+
+  this.audioPlayer.play().catch(error => {
+    console.error('Playback failed:', error);
+  });
   
   // Force another styling update after a short delay for mobile
   if (window.innerWidth <= 768) {

@@ -47,11 +47,6 @@ const Search = () => {
     }
   }, [query]);
 
-  const handleTrackClick = (track) => {
-    console.log('Play track:', track);
-    // TODO: Add to playlist and play
-  };
-
   const handlePlaylistClick = (playlist) => {
     console.log('Load playlist:', playlist.id);
   };
