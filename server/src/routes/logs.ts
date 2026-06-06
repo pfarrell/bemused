@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
-import { db } from '../db/database.js'
+import { logService } from '../services/logService.js'
 import { requireAdmin } from '../middleware/auth.js'
-import { sql } from 'kysely'
 import type { Variables } from '../types.js'
 
 const logs = new Hono<{ Variables: Variables }>()
@@ -14,30 +13,12 @@ logs.get('/admin', requireAdmin, async (c) => {
   const offset = (page - 1) * limit
 
   // Get total count
-  const countResult = await db
-    .selectFrom('logs')
-    .select(db.fn.count('id').as('count'))
-    .executeTakeFirst()
+  const countResult = await logService.countAll()
 
   const total = Number(countResult?.count ?? 0)
 
   // Get paginated logs with track, album, and artist info
-  const logEntries = await db
-    .selectFrom('logs')
-    .leftJoin('tracks', 'tracks.id', 'logs.track_id')
-    .leftJoin('albums', 'albums.id', 'logs.album_id')
-    .leftJoin('artists', 'artists.id', 'logs.artist_id')
-    .selectAll('logs')
-    .select('tracks.id as track_id')
-    .select('tracks.title as track_title')
-    .select('albums.id as album_id')
-    .select('albums.title as album_title')
-    .select('artists.id as artist_id')
-    .select('artists.name as artist_name')
-    .orderBy('logs.id', 'desc')
-    .limit(limit)
-    .offset(offset)
-    .execute()
+  const logEntries = await logService.listPage(limit, offset)
 
   return c.json({
     logs: logEntries,
@@ -54,11 +35,7 @@ logs.get('/admin', requireAdmin, async (c) => {
 logs.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
 
-  const track = await db
-    .selectFrom('tracks')
-    .selectAll()
-    .where('id', '=', id)
-    .executeTakeFirst()
+  const track = await logService.findTrackById(id)
 
   if (!track) return c.text('', 200)
 
@@ -69,17 +46,14 @@ logs.get('/:id', async (c) => {
     c.req.header('cf-connecting-ip') ||
     null
 
-  await db
-    .insertInto('logs')
-    .values({
-      track_id: track.id,
-      album_id: track.album_id,
-      artist_id: track.artist_id,
-      action: 'stream',
-      created_at: new Date(),
-      ip_address,
-    })
-    .execute()
+  await logService.record({
+    track_id: track.id,
+    album_id: track.album_id,
+    artist_id: track.artist_id,
+    action: 'stream',
+    created_at: new Date(),
+    ip_address,
+  })
 
   return c.text('', 200)
 })

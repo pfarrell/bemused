@@ -1,7 +1,7 @@
 import { Context, Next } from 'hono'
 import { getCookie } from 'hono/cookie'
 import jwt from 'jsonwebtoken'
-import { db } from '../db/database.js'
+import { authService } from '../services/authService.js'
 import type { Variables } from '../types.js'
 
 const JWT_SECRET = process.env.BEMUSED_JWT_SECRET || 'default-secret-change-me'
@@ -33,11 +33,7 @@ export async function authMiddleware(c: AppContext, next: Next) {
   }
 
   // DB errors propagate rather than silently clearing the user context
-  const user = await db
-    .selectFrom('users')
-    .select(['id', 'username', 'email', 'admin', 'default_tag'])
-    .where('id', '=', decoded.id)
-    .executeTakeFirst()
+  const user = await authService.findUserById(decoded.id)
 
   if (user) {
     c.set('user', user)
