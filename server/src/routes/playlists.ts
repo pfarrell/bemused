@@ -33,6 +33,7 @@ async function fetchTracksForIds(trackIds: number[]) {
       'track_artist.id as track_artist_id', 'track_artist.name as track_artist_name',
     ])
     .where('tracks.id', 'in', trackIds)
+    .where('tracks.approved', '=', true)
     .execute()
 
   const byId = new Map(rows.map((r) => [r.id, r]))
@@ -113,6 +114,7 @@ playlists.get('/newborns', async (c) => {
   const recentTracks = await db
     .selectFrom('tracks')
     .select('id')
+    .where('approved', '=', true)
     .orderBy('id', 'desc')
     .limit(size)
     .execute()
@@ -127,7 +129,7 @@ playlists.get('/newborns', async (c) => {
 // GET /surprise  — random 20-track playlist
 playlists.get('/surprise', async (c) => {
   const randomTracks = await sql<{ id: number }>`
-    SELECT id FROM tracks ORDER BY random() LIMIT 20
+    SELECT id FROM tracks WHERE approved = true ORDER BY random() LIMIT 20
   `.execute(db)
 
   const tracks = await fetchTracksForIds(randomTracks.rows.map((r) => r.id))

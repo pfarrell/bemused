@@ -15,6 +15,7 @@ streams.get('/:id', async (c) => {
     .leftJoin('media_files', 'media_files.id', 'tracks.media_file_id')
     .select(['media_files.absolute_path'])
     .where('tracks.id', '=', id)
+    .where('tracks.approved', '=', true)
     .executeTakeFirst()
 
   if (!track?.absolute_path) return c.json({ error: 'Track not found' }, 404)
