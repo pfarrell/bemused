@@ -75,6 +75,7 @@ artists.get('/:id', async (c) => {
     .innerJoin('tracks', 'tracks.album_id', 'albums.id')
     .select('albums.id')
     .where('albums.artist_id', '=', id)
+    .where('tracks.approved', '=', true)
     .distinct()
     .execute()
 
@@ -103,6 +104,7 @@ artists.get('/:id', async (c) => {
         'albums.title as album_title',
       ])
       .where('tracks.album_id', 'in', singlesAlbumIds)
+      .where('tracks.approved', '=', true)
       .orderBy('tracks.track_number', 'asc')
       .execute()
 
@@ -174,7 +176,7 @@ artists.get('/:id', async (c) => {
       sql<boolean>`EXISTS(
         SELECT 1 FROM tracks t
         INNER JOIN albums al ON al.id = t.album_id
-        WHERE al.artist_id = ra.id
+        WHERE al.artist_id = ra.id AND t.approved = true
       )`.as('has_tracks'),
     ])
     .where('ar.artist_id', '=', id)

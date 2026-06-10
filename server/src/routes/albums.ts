@@ -16,7 +16,7 @@ albums.get('/random', async (c) => {
         WITH eligible_album_ids AS (
           SELECT DISTINCT al.id
           FROM albums al
-          INNER JOIN tracks t ON t.album_id = al.id
+          INNER JOIN tracks t ON t.album_id = al.id AND t.approved = true
           INNER JOIN albums_tags at ON at.album_id = al.id
           INNER JOIN tags tg ON tg.id = at.tag_id AND tg.name = ${tag}
           WHERE al.image_path IS NOT NULL AND al.image_path != ''
@@ -34,7 +34,7 @@ albums.get('/random', async (c) => {
         WITH eligible_album_ids AS (
           SELECT DISTINCT al.id
           FROM albums al
-          INNER JOIN tracks t ON t.album_id = al.id
+          INNER JOIN tracks t ON t.album_id = al.id AND t.approved = true
           WHERE al.image_path IS NOT NULL AND al.image_path != ''
         ),
         random_ids AS (
@@ -90,6 +90,7 @@ albums.get('/:id', async (c) => {
       'track_artist.image_path as artist_image_path',
     ])
     .where('tracks.album_id', '=', id)
+    .where('tracks.approved', '=', true)
     .execute()
 
   trackRows.sort((a, b) => (parseInt(a.track_number ?? '0') || 0) - (parseInt(b.track_number ?? '0') || 0))

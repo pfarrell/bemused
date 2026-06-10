@@ -40,7 +40,7 @@ search.get('/', async (c) => {
     SELECT q.model_type, q.id, q.similarity_score FROM (
       (SELECT DISTINCT ON (a.id) 'Album' AS model_type, a.id, 0.8 AS similarity_score
         FROM albums a
-        INNER JOIN tracks t ON t.album_id = a.id
+        INNER JOIN tracks t ON t.album_id = a.id AND t.approved = true
         WHERE f_unaccent(lower(a.title)) ILIKE lower($1)
         ORDER BY a.id)
       UNION ALL
@@ -49,7 +49,7 @@ search.get('/', async (c) => {
           similarity(f_unaccent(lower(a.title)), lower($2)) AS similarity_score,
           ROW_NUMBER() OVER(PARTITION BY a.id ORDER BY similarity(f_unaccent(lower(a.title)), lower($2)) DESC) AS rn
         FROM albums a
-        INNER JOIN tracks t ON t.album_id = a.id
+        INNER JOIN tracks t ON t.album_id = a.id AND t.approved = true
         WHERE similarity(f_unaccent(lower(a.title)), lower($2)) > 0.24
       ) ranked WHERE rn = 1 ORDER BY similarity_score DESC)
       UNION ALL
@@ -69,7 +69,7 @@ search.get('/', async (c) => {
       UNION ALL
       (SELECT 'Playlist' AS model_type, id, -1.0 FROM playlists WHERE f_unaccent(lower(name)) ILIKE lower($1))
       UNION ALL
-      (SELECT 'Track' AS model_type, id, -1.0 FROM tracks WHERE f_unaccent(lower(title)) ILIKE lower($1))
+      (SELECT 'Track' AS model_type, id, -1.0 FROM tracks WHERE f_unaccent(lower(title)) ILIKE lower($1) AND approved = true)
     ) q ORDER BY q.similarity_score DESC
   `
 
@@ -116,6 +116,7 @@ search.get('/', async (c) => {
         eb.fn.count<number>('tracks.id').distinct().as('track_count'),
       ])
       .where('artists.id', 'in', ids)
+      .where((eb) => eb.or([eb('tracks.approved', '=', true), eb('tracks.id', 'is', null)]))
       .groupBy(['artists.id', 'artists.name', 'artists.image_path', 'artists.wikipedia', 'artists.created_at', 'artists.updated_at'])
       .execute()
 
@@ -135,6 +136,7 @@ search.get('/', async (c) => {
         eb.fn.count<number>('tracks.id').distinct().as('track_count'),
       ])
       .where('albums.id', 'in', ids)
+      .where((eb) => eb.or([eb('tracks.approved', '=', true), eb('tracks.id', 'is', null)]))
       .groupBy(['albums.id', 'albums.title', 'albums.image_path', 'albums.release_year', 'albums.wikipedia', 'artists.id', 'artists.name'])
       .execute()
     const byId = new Map(rows.map((r) => [r.id, { ...r, artist: { id: r.artist_id, name: r.artist_name } }]))
@@ -162,6 +164,7 @@ search.get('/', async (c) => {
         'track_artist.name as track_artist_name',
       ])
       .where('tracks.id', 'in', ids)
+      .where('tracks.approved', '=', true)
       .execute()
 
     return rows.map((t) => ({
