@@ -53,10 +53,12 @@ search.get('/', async (c) => {
         WHERE similarity(f_unaccent(lower(a.title)), lower($2)) > 0.24
       ) ranked WHERE rn = 1 ORDER BY similarity_score DESC)
       UNION ALL
-      (SELECT 'Artist' AS model_type, a.id, 0.8 AS similarity_score
+      (SELECT DISTINCT ON (a.id) 'Artist' AS model_type, a.id, 0.8 AS similarity_score
         FROM artists a
         INNER JOIN albums al ON al.artist_id = a.id
-        WHERE f_unaccent(lower(a.name)) ILIKE lower($1))
+        INNER JOIN tracks t ON t.album_id = al.id AND t.approved = true
+        WHERE f_unaccent(lower(a.name)) ILIKE lower($1)
+        ORDER BY a.id)
       UNION ALL
       (SELECT model_type, id, similarity_score FROM (
         SELECT 'Artist' AS model_type, a.id,
@@ -64,6 +66,7 @@ search.get('/', async (c) => {
           ROW_NUMBER() OVER(PARTITION BY a.id ORDER BY similarity(f_unaccent(lower(a.name)), lower($2)) DESC) AS rn
         FROM artists a
         INNER JOIN albums al ON al.artist_id = a.id
+        INNER JOIN tracks t ON t.album_id = al.id AND t.approved = true
         WHERE similarity(f_unaccent(lower(a.name)), lower($2)) > 0.24
       ) ranked WHERE rn = 1 ORDER BY similarity_score DESC LIMIT 50)
       UNION ALL
