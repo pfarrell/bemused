@@ -41,6 +41,7 @@ interface TrackTable {
   media_file_id: number | null
   wikipedia: string | null
   duration_sec: number | null
+  approved: boolean
   created_at: ColumnType<Date, string | undefined, never>
   updated_at: ColumnType<Date, string | undefined, string | Date>
 }
@@ -117,6 +118,8 @@ interface UploadQueueTable {
   album_art_url: string | null
   track_id: number | null
   error_message: string | null
+  discovery_source_id: number | null
+  source_url: string | null
   created_at: ColumnType<Date, never, never>
   started_at: Date | null
   completed_at: Date | null
@@ -206,6 +209,15 @@ interface TagTable {
   updated_at: ColumnType<Date, string | undefined, string | Date>
 }
 
+interface DiscoverySourceTable {
+  id: Generated<number>
+  name: string
+  kind: string
+  url_pattern: string | null
+  enabled: boolean
+  created_at: ColumnType<Date, string | Date | undefined, never>
+}
+
 interface AlbumTagTable {
   id: Generated<number>
   album_id: number
@@ -252,6 +264,7 @@ export interface Database {
   albums_tags: AlbumTagTable
   artists_tags: ArtistTagTable
   tags_tracks: TrackTagTable
+  discovery_sources: DiscoverySourceTable
 }
 
 // ---- DB instance ----
