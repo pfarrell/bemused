@@ -216,6 +216,7 @@ interface DiscoverySourceTable {
   url_pattern: string | null
   enabled: boolean
   created_at: ColumnType<Date, string | Date | undefined, never>
+  updated_at: ColumnType<Date, string | Date | undefined, string | Date>
 }
 
 interface AlbumTagTable {
