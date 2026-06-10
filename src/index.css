@@ -950,7 +950,7 @@
     padding-top: env(safe-area-inset-top, 0);
     padding-left: env(safe-area-inset-left, 1.5rem);
     padding-right: env(safe-area-inset-right, 1.5rem);
-    height: calc(4.5em + env(safe-area-inset-top, 0));
+    height: 4.5em;
   }
 
   /* Footer adjustments */
@@ -958,7 +958,7 @@
     padding-bottom: env(safe-area-inset-bottom, 0);
     padding-left: env(safe-area-inset-left, 0);
     padding-right: env(safe-area-inset-right, 0);
-    height: calc(4.5em + env(safe-area-inset-bottom, 0));
+    height: 4.5em;
   }
 
   /* Main content */
@@ -1423,7 +1423,7 @@
 /* iOS Safari specific fixes */
 @supports (-webkit-touch-callout: none) {
   .main-content {
-    height: calc(100vh - 9rem - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
+    height: calc(100vh - 9rem) !important;
     height: calc(-webkit-fill-available - 9rem) !important;
   }
 }
