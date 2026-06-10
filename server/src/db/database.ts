@@ -41,7 +41,7 @@ interface TrackTable {
   media_file_id: number | null
   wikipedia: string | null
   duration_sec: number | null
-  approved: boolean
+  approved: ColumnType<boolean, boolean | undefined, boolean>
   created_at: ColumnType<Date, string | undefined, never>
   updated_at: ColumnType<Date, string | undefined, string | Date>
 }
@@ -118,8 +118,8 @@ interface UploadQueueTable {
   album_art_url: string | null
   track_id: number | null
   error_message: string | null
-  discovery_source_id: number | null
-  source_url: string | null
+  discovery_source_id: ColumnType<number | null, number | null | undefined, number | null>
+  source_url: ColumnType<string | null, string | null | undefined, string | null>
   created_at: ColumnType<Date, never, never>
   started_at: Date | null
   completed_at: Date | null
