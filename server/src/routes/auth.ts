@@ -8,7 +8,7 @@ import type { Variables } from '../types.js'
 const auth = new Hono<{ Variables: Variables }>()
 
 const JWT_SECRET = process.env.BEMUSED_JWT_SECRET || 'default-secret-change-me'
-const JWT_EXPIRES_IN = '24h'
+const JWT_EXPIRES_IN = '14d'
 const SALT_ROUNDS = 10
 
 // Helper to generate JWT token
@@ -78,7 +78,7 @@ auth.post('/signup', async (c) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'Lax',
-      maxAge: 86400, // 24 hours
+      maxAge: 86400 * 14, // 2 weeks
       path: '/',
       domain: process.env.NODE_ENV === 'production' ? '.patf.com' : undefined,
     })
@@ -137,7 +137,7 @@ auth.post('/login', async (c) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'Lax',
-      maxAge: 86400, // 24 hours
+      maxAge: 86400 * 14, // 2 weeks
       path: '/',
       domain: process.env.NODE_ENV === 'production' ? '.patf.com' : undefined,
     })
