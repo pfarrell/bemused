@@ -965,12 +965,18 @@
     display: none !important;
   }
 
+  /* Compact mobile chrome height: small enough to save real estate, with the
+     safe-area inset added on top so the notch/home-indicator is cleared and
+     content never overlaps. Tune this one value to taste. Desktop is
+     unaffected (it falls back to 4.5em where --mb is undefined). */
+  :root { --mb: 3.25rem; }
+
   .app-header {
     padding: 0 1rem;
     padding-top: env(safe-area-inset-top, 0);
     padding-left: env(safe-area-inset-left, 1.5rem);
     padding-right: env(safe-area-inset-right, 1.5rem);
-    height: calc(4.5em + env(safe-area-inset-top, 0));
+    height: calc(var(--mb, 4.5em) + env(safe-area-inset-top, 0));
   }
 
   /* Footer adjustments */
@@ -978,18 +984,18 @@
     padding-bottom: env(safe-area-inset-bottom, 0);
     padding-left: env(safe-area-inset-left, 0);
     padding-right: env(safe-area-inset-right, 0);
-    height: calc(4.5em + env(safe-area-inset-bottom, 0));
+    height: calc(var(--mb, 4.5em) + env(safe-area-inset-bottom, 0));
   }
 
   /* Main content */
   .main-content {
-    padding-top: calc(4.5em + env(safe-area-inset-top, 0)) !important;
-    padding-bottom: calc(8rem + env(safe-area-inset-bottom, 0)) !important;
-    min-height: calc(100vh - 4.5em - env(safe-area-inset-top, 0)) !important;
+    padding-top: calc(var(--mb, 4.5em) + env(safe-area-inset-top, 0)) !important;
+    padding-bottom: calc(var(--mb, 4.5em) + env(safe-area-inset-bottom, 0) + 2rem) !important;
+    min-height: calc(100vh - var(--mb, 4.5em) - env(safe-area-inset-top, 0)) !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    height: calc(100vh - 9rem - env(safe-area-inset-top, 0)) !important;
-    height: calc(-webkit-fill-available - 9rem - env(safe-area-inset-top, 0)) !important;
+    height: calc(100vh - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
+    height: calc(-webkit-fill-available - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
   }
 
   /* Artist grid */
@@ -1010,9 +1016,14 @@
     padding: 0 1rem;
   }
   
-  /* now-playing visible on mobile: shows album art alongside player controls */
+  /* now-playing on mobile: show only the album art, not the artist/track text
+     (the footer is too narrow for it and only a clipped sliver would show) */
   .now-playing {
     max-width: 48px;
+  }
+
+  .now-playing .track-info {
+    display: none !important;
   }
 
   .playlist-button {
@@ -1089,10 +1100,10 @@
     width: 100% !important;
     left: 0 !important;
     right: 0 !important;
-    top: calc(4.5em + env(safe-area-inset-top, 0)) !important;
-    bottom: calc(4.5em + env(safe-area-inset-bottom, 0)) !important;
+    top: calc(var(--mb, 4.5em) + env(safe-area-inset-top, 0)) !important;
+    bottom: calc(var(--mb, 4.5em) + env(safe-area-inset-bottom, 0)) !important;
     height: auto !important;
-    max-height: calc(100vh - 9em - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
+    max-height: calc(100vh - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
     box-shadow: none !important;
     z-index: 1001 !important;
     text-align: left !important;
@@ -1444,7 +1455,7 @@
 /* iOS Safari specific fixes */
 @supports (-webkit-touch-callout: none) {
   .main-content {
-    height: calc(100vh - 9rem) !important;
-    height: calc(-webkit-fill-available - 9rem) !important;
+    height: calc(100vh - 2 * var(--mb, 4.5em)) !important;
+    height: calc(-webkit-fill-available - 2 * var(--mb, 4.5em)) !important;
   }
 }
