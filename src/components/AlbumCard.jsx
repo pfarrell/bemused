@@ -2,8 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import AddToCollectionModal from './AddToCollectionModal';
 
-const AlbumCard = ({ album, artist, onClick, imageUrl, fullImageUrl }) => {
-  const [showModal, setShowModal] = useState(false);
+const AlbumCard = ({ album, artist, onClick, imageUrl }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ x: 0, y: 0 });
   const [showCollectionModal, setShowCollectionModal] = useState(false);
@@ -23,13 +22,6 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, fullImageUrl }) => {
       if (longPressTimer.current) clearTimeout(longPressTimer.current);
     };
   }, []);
-
-  const handleImageClick = (e) => {
-    if (fullImageUrl) {
-      e.stopPropagation();
-      setShowModal(true);
-    }
-  };
 
   const openDropdown = (x, y) => {
     const menuWidth = 200;
@@ -88,8 +80,7 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, fullImageUrl }) => {
           <img
             src={imageUrl}
             alt={`${album.title}, ${artist.name}`}
-            onClick={handleImageClick}
-            style={{ cursor: fullImageUrl ? 'zoom-in' : 'pointer' }}
+            style={{ cursor: 'pointer' }}
             onError={(e) => {
               if (e.target.src.includes('/sm/')) {
                 e.target.src = e.target.src.replace('/sm/', '/');
@@ -142,36 +133,6 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, fullImageUrl }) => {
             </button>
           </div>
         </>,
-        document.body
-      )}
-
-      {/* Zoom modal */}
-      {showModal && createPortal(
-        <div
-          onClick={() => setShowModal(false)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 1000,
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            cursor: 'zoom-out', padding: '1rem',
-          }}
-        >
-          <img
-            src={fullImageUrl}
-            alt={`${album.title}, ${artist.name}`}
-            style={{
-              maxWidth: '90vw', maxHeight: '80vh',
-              objectFit: 'contain', borderRadius: '4px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-            }}
-            onError={(e) => { e.target.src = imageUrl; }}
-          />
-          <div style={{ marginTop: '0.75rem', textAlign: 'center', color: 'white' }}>
-            <div style={{ fontWeight: '600', fontSize: '1rem' }}>{album.title}</div>
-            <div style={{ fontSize: '0.875rem', color: '#9ca3af', marginTop: '0.25rem' }}>{artist.name}</div>
-          </div>
-        </div>,
         document.body
       )}
 
