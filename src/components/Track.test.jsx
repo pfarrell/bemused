@@ -2,8 +2,10 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Track from './Track';
 import { usePlayerStore } from '../stores/playerStore';
+import toast from 'react-hot-toast';
 
 vi.mock('./AddToPlaylistModal', () => ({ default: () => null }));
+vi.mock('react-hot-toast', () => ({ default: vi.fn() }));
 
 const mockTrack = {
   id: 1,
@@ -25,6 +27,7 @@ const renderTrack = (props = {}) =>
   );
 
 beforeEach(() => {
+  toast.mockClear();
   usePlayerStore.setState({
     playerInstance: null,
     currentTrack: null,
@@ -100,5 +103,41 @@ describe('Track component', () => {
     expect(screen.queryByText('▶ Play Now')).not.toBeInTheDocument();
 
     vi.useRealTimers();
+  });
+
+  const renderWithPlayer = () => {
+    usePlayerStore.setState({
+      playerInstance: {
+        playlist: [],
+        audioPlayer: { paused: true },
+        currentTrackIndex: 0,
+        addTrack: vi.fn(),
+        addTracks: vi.fn(),
+        clearPlaylist: vi.fn(),
+        loadAndPlayTrack: vi.fn(),
+      },
+    });
+    return renderTrack();
+  };
+
+  test('Add to Queue fires an acknowledgment toast', () => {
+    renderWithPlayer();
+    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+    fireEvent.click(screen.getByText('➕ Add to Queue'));
+    expect(toast).toHaveBeenCalledWith('Added to queue');
+  });
+
+  test('Play Next fires an acknowledgment toast', () => {
+    renderWithPlayer();
+    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+    fireEvent.click(screen.getByText('⏭ Play Next'));
+    expect(toast).toHaveBeenCalledWith('Playing next');
+  });
+
+  test('Play Now does NOT fire a toast (footer change is the feedback)', () => {
+    renderWithPlayer();
+    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+    fireEvent.click(screen.getByText('▶ Play Now'));
+    expect(toast).not.toHaveBeenCalled();
   });
 });
