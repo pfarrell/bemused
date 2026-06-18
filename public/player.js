@@ -31,6 +31,7 @@ function AudioPlayer(playlist, audioElement, containerElement, playlistElement, 
   this.backdropElement = null; // Track backdrop element
   this.onTrackStart = config.onTrackStart || function() {};
   this.onFiveSecondMark = config.onFiveSecondMark || function() {};
+  this.onLoadingChange = config.onLoadingChange || function() {};
   this.getTrackPrefix = config.getTrackPrefix || (() => '');
   this.draggedItem = null;
   this.draggedItemIndex = null;
@@ -548,6 +549,12 @@ AudioPlayer.prototype.attachAudioPlayerListeners = function() {
     // Ensure styling is correct when track is ready
     this.updateActiveTrackStyling();
   });
+
+  this.audioPlayer.addEventListener('loadstart', () => { this.onLoadingChange(true); });
+  this.audioPlayer.addEventListener('waiting', () => { this.onLoadingChange(true); });
+  this.audioPlayer.addEventListener('playing', () => { this.onLoadingChange(false); });
+  this.audioPlayer.addEventListener('canplay', () => { this.onLoadingChange(false); });
+  this.audioPlayer.addEventListener('error', () => { this.onLoadingChange(false); });
 
   this.audioPlayer.addEventListener('ended', () => {
     if (!this.shuffle && this.currentTrackIndex === this.playlist.length - 1) {

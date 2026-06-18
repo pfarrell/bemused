@@ -566,6 +566,21 @@
   flex-shrink: 0;
 }
 
+.now-playing-spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  animation: np-spin 0.7s linear infinite;
+}
+@keyframes np-spin { to { transform: rotate(360deg); } }
+
 .now-playing .track-info {
   display: flex;
   flex-direction: column;

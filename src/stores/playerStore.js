@@ -8,7 +8,8 @@ export const usePlayerStore = create((set, get) => ({
   isPlaying: false,
   playerInstance: null,
   currentTrackIndex: -1,
-  
+  isLoading: false,
+
   // Actions
   setCurrentTrack: (track) => {
     console.log('Setting current track:', track?.title);
@@ -39,7 +40,9 @@ export const usePlayerStore = create((set, get) => ({
     console.log('Setting current track index:', index);
     set({ currentTrackIndex: index });
   },
-  
+
+  setIsLoading: (isLoading) => set({ isLoading }),
+
   // Methods that delegate to your player
   addTrack: (track) => {
     const { playerInstance, playlist } = get();
