@@ -8,6 +8,8 @@ const AlbumCard = ({ album, artist, onClick, imageUrl }) => {
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const longPressTimer = useRef(null);
   const touchStartPos = useRef({ x: 0, y: 0 });
+  const justOpenedByLongPress = useRef(false);
+  const clearLongPressFlagTimer = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -20,6 +22,7 @@ const AlbumCard = ({ album, artist, onClick, imageUrl }) => {
   useEffect(() => {
     return () => {
       if (longPressTimer.current) clearTimeout(longPressTimer.current);
+      if (clearLongPressFlagTimer.current) clearTimeout(clearLongPressFlagTimer.current);
     };
   }, []);
 
@@ -48,6 +51,7 @@ const AlbumCard = ({ album, artist, onClick, imageUrl }) => {
       const x = isMobile
         ? Math.max(10, touchStartPos.current.x - 100)
         : touchStartPos.current.x;
+      justOpenedByLongPress.current = true;
       openDropdown(x, touchStartPos.current.y);
       if (navigator.vibrate) navigator.vibrate(50);
     }, 500);
@@ -63,6 +67,12 @@ const AlbumCard = ({ album, artist, onClick, imageUrl }) => {
 
   const handleTouchEnd = (e) => {
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+    if (justOpenedByLongPress.current) {
+      e.preventDefault(); e.stopPropagation();
+      if (clearLongPressFlagTimer.current) clearTimeout(clearLongPressFlagTimer.current);
+      clearLongPressFlagTimer.current = setTimeout(() => { justOpenedByLongPress.current = false; }, 350);
+      return;
+    }
     if (showDropdown) { e.preventDefault(); e.stopPropagation(); }
   };
 
@@ -102,9 +112,9 @@ const AlbumCard = ({ album, artist, onClick, imageUrl }) => {
         <>
           <div
             style={{ position: 'fixed', inset: 0, zIndex: 50 }}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowDropdown(false); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (justOpenedByLongPress.current) return; setShowDropdown(false); }}
             onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowDropdown(false); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); if (justOpenedByLongPress.current) return; setShowDropdown(false); }}
           />
           <div style={{
             position: 'fixed',

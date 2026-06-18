@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Track from './Track';
 import { usePlayerStore } from '../stores/playerStore';
@@ -76,5 +76,29 @@ describe('Track component', () => {
   test('renders formatted duration', () => {
     renderTrack();
     expect(screen.getByText('(3:00)')).toBeInTheDocument();
+  });
+
+  test('long-press menu stays open after finger release, closes on a later tap-away', () => {
+    vi.useFakeTimers();
+    usePlayerStore.setState({ playerInstance: { playlist: [], audioPlayer: { paused: true } } });
+    renderTrack();
+    const row = screen.getByText(/Test Track/).closest('.track-item');
+
+    // Long-press opens the menu (finger still down)
+    fireEvent.touchStart(row, { touches: [{ clientX: 50, clientY: 50 }] });
+    act(() => { vi.advanceTimersByTime(500); });
+    expect(screen.getByText('▶ Play Now')).toBeInTheDocument();
+
+    // Finger lifts, then the synthesized click lands on the backdrop — menu must persist
+    fireEvent.touchEnd(row);
+    fireEvent.click(screen.getByTestId('track-menu-backdrop'));
+    expect(screen.getByText('▶ Play Now')).toBeInTheDocument();
+
+    // After the release window, a deliberate tap on the backdrop closes it
+    act(() => { vi.advanceTimersByTime(350); });
+    fireEvent.click(screen.getByTestId('track-menu-backdrop'));
+    expect(screen.queryByText('▶ Play Now')).not.toBeInTheDocument();
+
+    vi.useRealTimers();
   });
 });

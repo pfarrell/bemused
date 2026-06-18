@@ -15,6 +15,8 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
   const longPressTimer = useRef(null);
   const touchStartPos = useRef({ x: 0, y: 0 });
   const trackItemRef = useRef(null);
+  const justOpenedByLongPress = useRef(false);
+  const clearLongPressFlagTimer = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect if we're on mobile
@@ -144,6 +146,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
 
         setDropdownPos({ x, y });
       }
+      justOpenedByLongPress.current = true;
       setShowDropdown(true);
       // Haptic feedback if available
       if (navigator.vibrate) {
@@ -172,7 +175,21 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
       longPressTimer.current = null;
     }
 
-    // If dropdown is showing, don't trigger normal click behavior
+    // When the long-press that opened the menu is released, swallow the
+    // resulting touchend + synthesized click so the menu stays open until the
+    // user makes a deliberate choice. Keep the flag set briefly so the
+    // synthesized click that lands on the backdrop right after release is
+    // ignored too; a later, deliberate tap-away then closes normally.
+    if (justOpenedByLongPress.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (clearLongPressFlagTimer.current) clearTimeout(clearLongPressFlagTimer.current);
+      clearLongPressFlagTimer.current = setTimeout(() => {
+        justOpenedByLongPress.current = false;
+      }, 350);
+      return;
+    }
+
     if (showDropdown) {
       e.preventDefault();
       e.stopPropagation();
@@ -216,6 +233,9 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
     return () => {
       if (longPressTimer.current) {
         clearTimeout(longPressTimer.current);
+      }
+      if (clearLongPressFlagTimer.current) {
+        clearTimeout(clearLongPressFlagTimer.current);
       }
     };
   }, []);
@@ -311,6 +331,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
         <>
           {/* Backdrop to close dropdown */}
           <div
+            data-testid="track-menu-backdrop"
             style={{
               position: 'fixed',
               top: 0,
@@ -322,6 +343,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              if (justOpenedByLongPress.current) return;
               setShowDropdown(false);
             }}
             onTouchStart={(e) => {
@@ -331,6 +353,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
             onTouchEnd={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              if (justOpenedByLongPress.current) return;
               setShowDropdown(false);
             }}
           />
