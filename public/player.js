@@ -32,6 +32,7 @@ function AudioPlayer(playlist, audioElement, containerElement, playlistElement, 
   this.onTrackStart = config.onTrackStart || function() {};
   this.onFiveSecondMark = config.onFiveSecondMark || function() {};
   this.getTrackPrefix = config.getTrackPrefix || (() => '');
+  this.getImageUrl = config.getImageUrl || (() => null);
   this.draggedItem = null;
   this.draggedItemIndex = null;
   this.playlistFinished = false;
@@ -232,6 +233,12 @@ AudioPlayer.prototype.createProgressBar = function() {
   });
 
   progressBarWrapper.appendChild(progressBar);
+
+  const loadingOverlay = document.createElement('div');
+  loadingOverlay.className = 'progress-bar-loading-overlay';
+  progressBarWrapper.appendChild(loadingOverlay);
+
+  this.progressBarWrapper = progressBarWrapper;
   return progressBarWrapper;
 };
 
@@ -291,7 +298,23 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
     listItem.style.minHeight = isMobile ? '60px' : '48px';
     listItem.style.position = 'relative';
     listItem.style.zIndex = '1002';
-    
+
+    const artSize = isMobile ? '32px' : '40px';
+    const imageUrl = this.getImageUrl(track);
+    let artElement;
+    if (imageUrl) {
+      artElement = document.createElement('img');
+      artElement.className = 'playlist-track-art';
+      artElement.src = imageUrl;
+      artElement.alt = track.title;
+    } else {
+      artElement = document.createElement('div');
+      artElement.className = 'playlist-track-art playlist-track-art-blank';
+    }
+    artElement.style.width = artSize;
+    artElement.style.height = artSize;
+    listItem.appendChild(artElement);
+
     if (prefix) {
       const prefixElement = document.createElement('span');
       prefixElement.className = 'track-prefix';
@@ -307,6 +330,11 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
     trackText.style.color = 'white';
     trackText.style.cursor = 'pointer';
     trackText.style.padding = isMobile ? '0.5rem 0' : '0.25rem 0';
+    if (isMobile) {
+      trackText.style.whiteSpace = 'nowrap';
+      trackText.style.overflow = 'hidden';
+      trackText.style.textOverflow = 'ellipsis';
+    }
     trackText.style.pointerEvents = 'auto';
     trackText.textContent = `${index + 1}. ${track.title} - ${track.artist.name} (${this.formatTime(track.duration)})`;
 
@@ -412,9 +440,16 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
       });
     }
 
+    if (track.__justAdded) {
+      const activityOverlay = document.createElement('div');
+      activityOverlay.className = 'track-item-activity-overlay';
+      listItem.appendChild(activityOverlay);
+      delete track.__justAdded; // self-clearing: a later unrelated rebuild (e.g. drag reorder) won't re-trigger this
+    }
+
     this.trackListElement.appendChild(listItem);
   });
-  
+
   // Update active track styling after creating all items
   this.updateActiveTrackStyling();
 };
@@ -549,6 +584,12 @@ AudioPlayer.prototype.attachAudioPlayerListeners = function() {
     this.updateActiveTrackStyling();
   });
 
+  this.audioPlayer.addEventListener('loadstart', () => { this.progressBarWrapper.classList.add('loading'); });
+  this.audioPlayer.addEventListener('waiting', () => { this.progressBarWrapper.classList.add('loading'); });
+  this.audioPlayer.addEventListener('playing', () => { this.progressBarWrapper.classList.remove('loading'); });
+  this.audioPlayer.addEventListener('canplay', () => { this.progressBarWrapper.classList.remove('loading'); });
+  this.audioPlayer.addEventListener('error', () => { this.progressBarWrapper.classList.remove('loading'); });
+
   this.audioPlayer.addEventListener('ended', () => {
     if (!this.shuffle && this.currentTrackIndex === this.playlist.length - 1) {
       this.playlistFinished = true;
@@ -674,25 +715,34 @@ AudioPlayer.prototype.playPrevTrack = function() {
   }
 };
 
-AudioPlayer.prototype.addTrack = function(track) {
+AudioPlayer.prototype.addTrack = function(track, { flashActivity = false } = {}) {
   if (!track || !track.title || !track.url) {
     throw new Error('Invalid track object. Must contain at least title and url properties');
+  }
+  if (flashActivity) {
+    track.__justAdded = true;
+    this.triggerActivityPulse();
   }
   this.playlist.push(track);
   this.loadPlaylistUI();
   return this.playlist.length - 1;
 };
 
-AudioPlayer.prototype.addTracks = function(tracks, playNext=false) {
+AudioPlayer.prototype.addTracks = function(tracks, playNext=false, { flashActivity = false } = {}) {
   if (!Array.isArray(tracks)) {
     throw new Error('Tracks must be provided as an array');
   }
-  
+
   const invalidTracks = tracks.filter(track => !track || !track.title || !track.url);
   if (invalidTracks.length > 0) {
     throw new Error('One or more tracks are invalid. Each track must contain at least title and url properties');
   }
-  
+
+  if (flashActivity) {
+    tracks.forEach(track => { track.__justAdded = true; });
+    this.triggerActivityPulse();
+  }
+
   const startIndex = this.playlist.length;
   if (playNext) {
     this.playlist.splice(this.currentTrackIndex+1, 0, ...tracks);
@@ -701,6 +751,16 @@ AudioPlayer.prototype.addTracks = function(tracks, playNext=false) {
   }
   this.loadPlaylistUI();
   return { startIndex, count: tracks.length };
+};
+
+AudioPlayer.prototype.triggerActivityPulse = function() {
+  this.hamburgerButtonElement.classList.remove('activity-pulse');
+  // Force a reflow so re-adding the class restarts the animation if one is already in flight
+  void this.hamburgerButtonElement.offsetWidth;
+  this.hamburgerButtonElement.classList.add('activity-pulse');
+  setTimeout(() => {
+    this.hamburgerButtonElement.classList.remove('activity-pulse');
+  }, 1200); // 2 iterations x 0.6s, matches the CSS animation in src/index.css
 };
 
 AudioPlayer.prototype.clearPlaylist = function() {

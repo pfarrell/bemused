@@ -14,7 +14,6 @@ const AlbumGrid = ({ albums, gridRef, sentinelRef }) => {
             album={album}
             artist={album.artist}
             imageUrl={apiService.getImageUrl(album.image_path, 'album_small')}
-            fullImageUrl={apiService.getImageUrl(album.image_path, 'album_page')}
             onClick={(a) => navigate(`/album/${a.id}`)}
           />
         ))}

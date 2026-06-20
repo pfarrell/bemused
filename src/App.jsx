@@ -164,6 +164,7 @@ function App() {
       <ScrollToTop /> {/* Add the ScrollToTop component here */}
       <Toaster
         position={window.innerWidth <= 768 ? "bottom-center" : "bottom-right"}
+        containerStyle={{ bottom: 'calc(4.5rem + env(safe-area-inset-bottom, 0))' }}
         toastOptions={{
           duration: 3000,
           style: {

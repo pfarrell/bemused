@@ -80,7 +80,8 @@ const MusicPlayerWrapper = ({ className = "" }) => {
           },
           getTrackPrefix: () => {
             return '';
-          }
+          },
+          getImageUrl: (track) => apiService.getImageUrl(track.image_path, 'album_small')
         }
       );
 

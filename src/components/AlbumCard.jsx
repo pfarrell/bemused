@@ -2,13 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import AddToCollectionModal from './AddToCollectionModal';
 
-const AlbumCard = ({ album, artist, onClick, imageUrl, fullImageUrl }) => {
-  const [showModal, setShowModal] = useState(false);
+const AlbumCard = ({ album, artist, onClick, imageUrl }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ x: 0, y: 0 });
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const longPressTimer = useRef(null);
   const touchStartPos = useRef({ x: 0, y: 0 });
+  const justOpenedByLongPress = useRef(false);
+  const clearLongPressFlagTimer = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -21,15 +22,9 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, fullImageUrl }) => {
   useEffect(() => {
     return () => {
       if (longPressTimer.current) clearTimeout(longPressTimer.current);
+      if (clearLongPressFlagTimer.current) clearTimeout(clearLongPressFlagTimer.current);
     };
   }, []);
-
-  const handleImageClick = (e) => {
-    if (fullImageUrl) {
-      e.stopPropagation();
-      setShowModal(true);
-    }
-  };
 
   const openDropdown = (x, y) => {
     const menuWidth = 200;
@@ -56,6 +51,7 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, fullImageUrl }) => {
       const x = isMobile
         ? Math.max(10, touchStartPos.current.x - 100)
         : touchStartPos.current.x;
+      justOpenedByLongPress.current = true;
       openDropdown(x, touchStartPos.current.y);
       if (navigator.vibrate) navigator.vibrate(50);
     }, 500);
@@ -71,6 +67,12 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, fullImageUrl }) => {
 
   const handleTouchEnd = (e) => {
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+    if (justOpenedByLongPress.current) {
+      e.preventDefault(); e.stopPropagation();
+      if (clearLongPressFlagTimer.current) clearTimeout(clearLongPressFlagTimer.current);
+      clearLongPressFlagTimer.current = setTimeout(() => { justOpenedByLongPress.current = false; }, 350);
+      return;
+    }
     if (showDropdown) { e.preventDefault(); e.stopPropagation(); }
   };
 
@@ -88,8 +90,7 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, fullImageUrl }) => {
           <img
             src={imageUrl}
             alt={`${album.title}, ${artist.name}`}
-            onClick={handleImageClick}
-            style={{ cursor: fullImageUrl ? 'zoom-in' : 'pointer' }}
+            style={{ cursor: 'pointer' }}
             onError={(e) => {
               if (e.target.src.includes('/sm/')) {
                 e.target.src = e.target.src.replace('/sm/', '/');
@@ -111,9 +112,9 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, fullImageUrl }) => {
         <>
           <div
             style={{ position: 'fixed', inset: 0, zIndex: 50 }}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowDropdown(false); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (justOpenedByLongPress.current) return; setShowDropdown(false); }}
             onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowDropdown(false); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); if (justOpenedByLongPress.current) return; setShowDropdown(false); }}
           />
           <div style={{
             position: 'fixed',
@@ -142,36 +143,6 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, fullImageUrl }) => {
             </button>
           </div>
         </>,
-        document.body
-      )}
-
-      {/* Zoom modal */}
-      {showModal && createPortal(
-        <div
-          onClick={() => setShowModal(false)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 1000,
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            cursor: 'zoom-out', padding: '1rem',
-          }}
-        >
-          <img
-            src={fullImageUrl}
-            alt={`${album.title}, ${artist.name}`}
-            style={{
-              maxWidth: '90vw', maxHeight: '80vh',
-              objectFit: 'contain', borderRadius: '4px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-            }}
-            onError={(e) => { e.target.src = imageUrl; }}
-          />
-          <div style={{ marginTop: '0.75rem', textAlign: 'center', color: 'white' }}>
-            <div style={{ fontWeight: '600', fontSize: '1rem' }}>{album.title}</div>
-            <div style={{ fontSize: '0.875rem', color: '#9ca3af', marginTop: '0.25rem' }}>{artist.name}</div>
-          </div>
-        </div>,
         document.body
       )}
 

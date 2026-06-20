@@ -20,8 +20,11 @@ const NowPlaying = () => {
     return null;
   }
 
-  const albumArtUrl = currentTrack.album?.image_path
-    ? apiService.getImageUrl(currentTrack.album.image_path, 'album_small')
+  // Every backend route puts the album art path at the track's top level
+  // (image_path), not nested under album.image_path — the nested album
+  // object only ever carries id/title/artist for navigation.
+  const albumArtUrl = currentTrack.image_path
+    ? apiService.getImageUrl(currentTrack.image_path, 'album_small')
     : null;
 
   return (
@@ -34,19 +37,11 @@ const NowPlaying = () => {
         />
       ) : (
         <svg
-          width="24"
-          height="24"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
+          width="24" height="24" fill="none" stroke="currentColor"
+          viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
         </svg>
       )}
       <div className="track-info show">

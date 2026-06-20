@@ -14,12 +14,20 @@
   left: 0;
   right: 0;
   z-index: 1100;
-  background-color: #1a252f; 
+  background-color: #1a252f;
   border-bottom: 1px solid #2c3e50;
   height: 4.5em;
   display: flex;
   align-items: center;
   padding: 0 1.5rem;
+  /* The mobile rule's height calc includes the safe-area-inset padding, which
+     only computes correctly under border-box. Tailwind's preflight (which
+     would normally provide this globally) isn't actually wired into this
+     build (the @tailwind directives pass through unprocessed - no
+     @tailwindcss/postcss or vite plugin configured), so content-box was the
+     real default, doubling the inset (padding added on top of an
+     already-inset-inclusive height). */
+  box-sizing: border-box;
 }
 
 .header-content {
@@ -77,9 +85,10 @@
   z-index: 1100;
   background-color: #1a252f;
   border-top: 1px solid #2c3e50;
-  height: 4.5em; 
+  height: 4.5em;
   display: flex;
   align-items: center;
+  box-sizing: border-box; /* see .app-header comment re: inset doubling */
 }
 
 /* Main content styles */
@@ -89,6 +98,7 @@
   padding-top: 4.5em;
   padding-bottom: 6rem; /* Increased bottom padding for footer clearance */
   background-color: #f5f5f5;
+  box-sizing: border-box; /* see .app-header comment re: inset doubling */
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
@@ -332,7 +342,7 @@
   cursor: pointer;
   font-size: 0.875rem;
   color: #374151;
-  transition: background-color 0.15s ease;
+  transition: transform 0.08s ease, background-color 0.12s ease;
 }
 
 .track-dropdown button:hover {
@@ -342,6 +352,23 @@
 .track-dropdown button:focus {
   outline: none;
   background-color: #e5e7eb;
+}
+
+.track-dropdown button:active {
+  transform: scale(0.96);
+  background-color: #e5edff;
+}
+
+/* Tactile acknowledgment for Play Next / Add to Queue: the dropdown closes
+   right after the tap, too fast for the :active state to be seen, so this
+   plays independently of press/release timing. */
+@keyframes menu-btn-flash {
+  0% { background-color: #bfdbfe; transform: scale(0.94); }
+  100% { background-color: transparent; transform: scale(1); }
+}
+
+.track-dropdown button.menu-btn-pressed {
+  animation: menu-btn-flash 0.2s ease-out;
 }
 
 .track-ellipsis {
@@ -459,6 +486,15 @@
   margin-right: 1rem;
 }
 
+@keyframes activity-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+  50% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.5); }
+}
+
+.hamburger-btn.activity-pulse {
+  animation: activity-glow 0.6s ease-in-out 2;
+}
+
 .hamburger-btn.active {
   background: rgba(59, 130, 246, 0.8);
   border-color: rgba(59, 130, 246, 1);
@@ -496,6 +532,28 @@
 
 .progress-bar {
   width: 100%;
+}
+
+.progress-bar-loading-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background: #3b82f6;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.progress-bar-wrapper.loading .progress-bar {
+  opacity: 0;
+}
+
+.progress-bar-wrapper.loading .progress-bar-loading-overlay {
+  animation: progress-bar-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes progress-bar-pulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.7; }
 }
 
 .player-container {
@@ -712,6 +770,32 @@
   user-select: none;
   flex-shrink: 0;
   text-align: left;
+}
+
+.music-player-playlist-container .playlist-track-art {
+  object-fit: cover;
+  border-radius: 3px;
+  flex-shrink: 0;
+  margin-right: 0.75rem;
+}
+
+.music-player-playlist-container .playlist-track-art-blank {
+  flex-shrink: 0;
+  margin-right: 0.75rem;
+}
+
+.music-player-playlist-container .track-item-activity-overlay {
+  position: absolute;
+  inset: 0;
+  background: #3b82f6;
+  opacity: 0;
+  pointer-events: none;
+  animation: activity-row-flash 0.6s ease-in-out 2;
+}
+
+@keyframes activity-row-flash {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.35; }
 }
 
 .music-player-playlist-container .track-delete-button {
@@ -945,12 +1029,20 @@
     display: none !important;
   }
 
+  /* Compact mobile chrome height: small enough to save real estate, with the
+     safe-area inset added on top so the notch/home-indicator is cleared and
+     content never overlaps. Tune this one value to taste. Desktop is
+     unaffected (it falls back to 4.5em where --mb is undefined). 2.75rem
+     (44px) is iOS's documented minimum touch-target height — going smaller
+     risks clipping the play button / hamburger icon. */
+  :root { --mb: 2.75rem; }
+
   .app-header {
     padding: 0 1rem;
     padding-top: env(safe-area-inset-top, 0);
     padding-left: env(safe-area-inset-left, 1.5rem);
     padding-right: env(safe-area-inset-right, 1.5rem);
-    height: 4.5em;
+    height: calc(var(--mb, 4.5em) + env(safe-area-inset-top, 0));
   }
 
   /* Footer adjustments */
@@ -958,17 +1050,18 @@
     padding-bottom: env(safe-area-inset-bottom, 0);
     padding-left: env(safe-area-inset-left, 0);
     padding-right: env(safe-area-inset-right, 0);
-    height: 4.5em;
+    height: calc(var(--mb, 4.5em) + env(safe-area-inset-bottom, 0));
   }
 
   /* Main content */
   .main-content {
-    padding-bottom: 8rem !important;
-    min-height: calc(100vh - 4.5em) !important;
+    padding-top: calc(var(--mb, 4.5em) + env(safe-area-inset-top, 0)) !important;
+    padding-bottom: calc(var(--mb, 4.5em) + env(safe-area-inset-bottom, 0) + 2rem) !important;
+    min-height: calc(100vh - var(--mb, 4.5em) - env(safe-area-inset-top, 0)) !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    height: calc(100vh - 9rem) !important;
-    height: calc(-webkit-fill-available - 9rem) !important;
+    height: calc(100vh - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
+    height: calc(-webkit-fill-available - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
   }
 
   /* Artist grid */
@@ -989,9 +1082,14 @@
     padding: 0 1rem;
   }
   
-  /* now-playing visible on mobile: shows album art alongside player controls */
+  /* now-playing on mobile: show only the album art, not the artist/track text
+     (the footer is too narrow for it and only a clipped sliver would show) */
   .now-playing {
     max-width: 48px;
+  }
+
+  .now-playing .track-info {
+    display: none !important;
   }
 
   .playlist-button {
@@ -1068,10 +1166,10 @@
     width: 100% !important;
     left: 0 !important;
     right: 0 !important;
-    top: 4.5em !important;
-    bottom: 4.5em !important;
+    top: calc(var(--mb, 4.5em) + env(safe-area-inset-top, 0)) !important;
+    bottom: calc(var(--mb, 4.5em) + env(safe-area-inset-bottom, 0)) !important;
     height: auto !important;
-    max-height: calc(100vh - 9em) !important;
+    max-height: calc(100vh - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
     box-shadow: none !important;
     z-index: 1001 !important;
     text-align: left !important;
@@ -1413,17 +1511,17 @@
     height: 100vh !important;
     height: 100dvh !important;
   }
-
-  .main-content {
-    height: calc(100vh - 9rem) !important;
-    height: calc(100dvh - 9rem) !important;
-  }
 }
 
-/* iOS Safari specific fixes */
+/* iOS Safari specific fixes. Must account for safe-area insets like the
+   mobile breakpoint's .main-content rule does: insets are 0 in a regular
+   Safari tab (the browser chrome already consumes that space) but non-zero
+   when installed as a standalone PWA (content runs edge-to-edge under the
+   notch/home-indicator), so omitting them here only broke the installed-PWA
+   case while looking fine in plain Safari. */
 @supports (-webkit-touch-callout: none) {
   .main-content {
-    height: calc(100vh - 9rem) !important;
-    height: calc(-webkit-fill-available - 9rem) !important;
+    height: calc(100vh - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
+    height: calc(-webkit-fill-available - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
   }
 }

@@ -58,8 +58,8 @@ const Album = () => {
   const handlePlayNext = () => {
     if (albumData?.tracks && playerInstance) {
       console.log('Added album to play next:', albumData.album.title);
-      playerInstance.addTracks(albumData.tracks, true); // true = play next
-      
+      playerInstance.addTracks(albumData.tracks, true, { flashActivity: true }); // true = play next
+
       // If nothing is playing, start playing immediately
       if (playerInstance.audioPlayer.paused) {
         const currentIndex = playerInstance.currentTrackIndex;
@@ -71,12 +71,11 @@ const Album = () => {
   const handleAddToQueue = () => {
     if (albumData?.tracks && playerInstance) {
       console.log('Added album to queue:', albumData.album.title);
-      playerInstance.addTracks(albumData.tracks, false); // false = add to end
-      
+      playerInstance.addTracks(albumData.tracks, false, { flashActivity: true }); // false = add to end
+
       // If nothing is playing, start playing immediately
       if (playerInstance.audioPlayer.paused) {
-        const playlist = playerInstance.getPlaylist();
-        const startIndex = playlist.length - albumData.tracks.length; // First track of the added album
+        const startIndex = playerInstance.playlist.length - albumData.tracks.length; // First track of the added album
         playerInstance.loadAndPlayTrack(startIndex);
       }
     }

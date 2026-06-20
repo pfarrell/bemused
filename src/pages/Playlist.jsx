@@ -54,7 +54,7 @@ export default function Playlist() {
 
   const handleAddToQueue = () => {
     if (!playerInstance || !playlistData?.tracks?.length) return;
-    playerInstance.addTracks(playlistData.tracks);
+    playerInstance.addTracks(playlistData.tracks, false, { flashActivity: true });
   };
 
   if (loading) return <Loading />;
