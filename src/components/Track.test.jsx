@@ -140,4 +140,20 @@ describe('Track component', () => {
     fireEvent.click(screen.getByText('▶ Play Now'));
     expect(toast).not.toHaveBeenCalled();
   });
+
+  test('Add to Queue flashes the pressed button before the menu closes', () => {
+    renderWithPlayer();
+    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+    const button = screen.getByText('➕ Add to Queue');
+    fireEvent.click(button);
+    expect(button).toHaveClass('menu-btn-pressed');
+  });
+
+  test('Play Next flashes the pressed button before the menu closes', () => {
+    renderWithPlayer();
+    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+    const button = screen.getByText('⏭ Play Next');
+    fireEvent.click(button);
+    expect(button).toHaveClass('menu-btn-pressed');
+  });
 });

@@ -349,6 +349,18 @@
   background-color: #e5edff;
 }
 
+/* Tactile acknowledgment for Play Next / Add to Queue: the dropdown closes
+   right after the tap, too fast for the :active state to be seen, so this
+   plays independently of press/release timing. */
+@keyframes menu-btn-flash {
+  0% { background-color: #bfdbfe; transform: scale(0.94); }
+  100% { background-color: transparent; transform: scale(1); }
+}
+
+.track-dropdown button.menu-btn-pressed {
+  animation: menu-btn-flash 0.2s ease-out;
+}
+
 .track-ellipsis {
   background: none;
   border: none;

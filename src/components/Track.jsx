@@ -11,6 +11,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ x: 0, y: 0 });
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [pressedButton, setPressedButton] = useState(null);
   const { playerInstance } = usePlayerStore();
   const navigate = useNavigate();
   const longPressTimer = useRef(null);
@@ -78,7 +79,11 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
         playerInstance.loadAndPlayTrack(currentIndex);
       }
     }
-    setTimeout(() => setShowDropdown(false), 0);
+    setPressedButton('next');
+    setTimeout(() => {
+      setShowDropdown(false);
+      setPressedButton(null);
+    }, 220);
   };
 
   const handleAddToQueue = (e) => {
@@ -99,7 +104,11 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
         playerInstance.loadAndPlayTrack(trackIndex);
       }
     }
-    setTimeout(() => setShowDropdown(false), 0);
+    setPressedButton('queue');
+    setTimeout(() => {
+      setShowDropdown(false);
+      setPressedButton(null);
+    }, 220);
   };
 
   const handleAddToPlaylist = (e) => {
@@ -387,6 +396,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
             </button>
 
             <button
+              className={pressedButton === 'next' ? 'menu-btn-pressed' : ''}
               onClick={handlePlayNext}
               onTouchStart={(e) => {
                 e.stopPropagation();
@@ -401,6 +411,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
             </button>
 
             <button
+              className={pressedButton === 'queue' ? 'menu-btn-pressed' : ''}
               onClick={handleAddToQueue}
               onTouchStart={(e) => {
                 e.stopPropagation();
