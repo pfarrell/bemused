@@ -756,6 +756,18 @@
   text-align: left;
 }
 
+.music-player-playlist-container .playlist-track-art {
+  object-fit: cover;
+  border-radius: 3px;
+  flex-shrink: 0;
+  margin-right: 0.75rem;
+}
+
+.music-player-playlist-container .playlist-track-art-blank {
+  flex-shrink: 0;
+  margin-right: 0.75rem;
+}
+
 .music-player-playlist-container .track-delete-button {
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);

@@ -33,6 +33,7 @@ function AudioPlayer(playlist, audioElement, containerElement, playlistElement, 
   this.onFiveSecondMark = config.onFiveSecondMark || function() {};
   this.onLoadingChange = config.onLoadingChange || function() {};
   this.getTrackPrefix = config.getTrackPrefix || (() => '');
+  this.getImageUrl = config.getImageUrl || (() => null);
   this.draggedItem = null;
   this.draggedItemIndex = null;
   this.playlistFinished = false;
@@ -292,7 +293,23 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
     listItem.style.minHeight = isMobile ? '60px' : '48px';
     listItem.style.position = 'relative';
     listItem.style.zIndex = '1002';
-    
+
+    const artSize = isMobile ? '32px' : '40px';
+    const imageUrl = this.getImageUrl(track);
+    let artElement;
+    if (imageUrl) {
+      artElement = document.createElement('img');
+      artElement.className = 'playlist-track-art';
+      artElement.src = imageUrl;
+      artElement.alt = track.title;
+    } else {
+      artElement = document.createElement('div');
+      artElement.className = 'playlist-track-art playlist-track-art-blank';
+    }
+    artElement.style.width = artSize;
+    artElement.style.height = artSize;
+    listItem.appendChild(artElement);
+
     if (prefix) {
       const prefixElement = document.createElement('span');
       prefixElement.className = 'track-prefix';
@@ -308,6 +325,11 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
     trackText.style.color = 'white';
     trackText.style.cursor = 'pointer';
     trackText.style.padding = isMobile ? '0.5rem 0' : '0.25rem 0';
+    if (isMobile) {
+      trackText.style.whiteSpace = 'nowrap';
+      trackText.style.overflow = 'hidden';
+      trackText.style.textOverflow = 'ellipsis';
+    }
     trackText.style.pointerEvents = 'auto';
     trackText.textContent = `${index + 1}. ${track.title} - ${track.artist.name} (${this.formatTime(track.duration)})`;
 
