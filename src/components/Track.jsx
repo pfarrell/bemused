@@ -4,7 +4,6 @@ import { createPortal } from 'react-dom';
 import { usePlayerStore } from '../stores/playerStore';
 import { formatDuration } from '../utils/formatters';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import AddToPlaylistModal from './AddToPlaylistModal';
 
 const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = false }) => {
@@ -70,8 +69,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
     }
     if (playerInstance) {
       console.log('Adding track to play next:', track.title);
-      playerInstance.addTracks([track], true); // true = play next
-      toast('Playing next');
+      playerInstance.addTracks([track], true, { flashActivity: true }); // true = play next
 
       // If nothing is playing, start playing immediately
       if (playerInstance.audioPlayer.paused) {
@@ -93,8 +91,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
     }
     if (playerInstance) {
       console.log('Adding track to queue:', track.title);
-      playerInstance.addTrack(track);
-      toast('Added to queue');
+      playerInstance.addTrack(track, { flashActivity: true });
 
       // If nothing is playing, start playing immediately
       if (playerInstance.audioPlayer && playerInstance.audioPlayer.paused) {

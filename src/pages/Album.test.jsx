@@ -55,7 +55,7 @@ describe('Album page', () => {
 
     fireEvent.click(screen.getByText('Add to Queue'));
 
-    expect(playerInstance.addTracks).toHaveBeenCalledWith(albumData.tracks, false);
+    expect(playerInstance.addTracks).toHaveBeenCalledWith(albumData.tracks, false, { flashActivity: true });
     // Regression check: previously this threw "playerInstance.getPlaylist is not
     // a function" before loadAndPlayTrack was ever reached.
     expect(loadAndPlayTrack).toHaveBeenCalledWith(0);
@@ -77,7 +77,7 @@ describe('Album page', () => {
 
     fireEvent.click(screen.getByText('Add to Queue'));
 
-    expect(playerInstance.addTracks).toHaveBeenCalledWith(albumData.tracks, false);
+    expect(playerInstance.addTracks).toHaveBeenCalledWith(albumData.tracks, false, { flashActivity: true });
     expect(loadAndPlayTrack).not.toHaveBeenCalled();
   });
 });

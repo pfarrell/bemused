@@ -486,6 +486,15 @@
   margin-right: 1rem;
 }
 
+@keyframes activity-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+  50% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.5); }
+}
+
+.hamburger-btn.activity-pulse {
+  animation: activity-glow 0.6s ease-in-out 2;
+}
+
 .hamburger-btn.active {
   background: rgba(59, 130, 246, 0.8);
   border-color: rgba(59, 130, 246, 1);
@@ -773,6 +782,20 @@
 .music-player-playlist-container .playlist-track-art-blank {
   flex-shrink: 0;
   margin-right: 0.75rem;
+}
+
+.music-player-playlist-container .track-item-activity-overlay {
+  position: absolute;
+  inset: 0;
+  background: #3b82f6;
+  opacity: 0;
+  pointer-events: none;
+  animation: activity-row-flash 0.6s ease-in-out 2;
+}
+
+@keyframes activity-row-flash {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.35; }
 }
 
 .music-player-playlist-container .track-delete-button {

@@ -2,10 +2,8 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Track from './Track';
 import { usePlayerStore } from '../stores/playerStore';
-import toast from 'react-hot-toast';
 
 vi.mock('./AddToPlaylistModal', () => ({ default: () => null }));
-vi.mock('react-hot-toast', () => ({ default: vi.fn() }));
 
 const mockTrack = {
   id: 1,
@@ -27,7 +25,6 @@ const renderTrack = (props = {}) =>
   );
 
 beforeEach(() => {
-  toast.mockClear();
   usePlayerStore.setState({
     playerInstance: null,
     currentTrack: null,
@@ -120,25 +117,29 @@ describe('Track component', () => {
     return renderTrack();
   };
 
-  test('Add to Queue fires an acknowledgment toast', () => {
+  test('Add to Queue flags activity for the player to pulse', () => {
     renderWithPlayer();
     fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
     fireEvent.click(screen.getByText('➕ Add to Queue'));
-    expect(toast).toHaveBeenCalledWith('Added to queue');
+    const { playerInstance } = usePlayerStore.getState();
+    expect(playerInstance.addTrack).toHaveBeenCalledWith(mockTrack, { flashActivity: true });
   });
 
-  test('Play Next fires an acknowledgment toast', () => {
+  test('Play Next flags activity for the player to pulse', () => {
     renderWithPlayer();
     fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
     fireEvent.click(screen.getByText('⏭ Play Next'));
-    expect(toast).toHaveBeenCalledWith('Playing next');
+    const { playerInstance } = usePlayerStore.getState();
+    expect(playerInstance.addTracks).toHaveBeenCalledWith([mockTrack], true, { flashActivity: true });
   });
 
-  test('Play Now does NOT fire a toast (footer change is the feedback)', () => {
+  test('Play Now does not flag activity (footer change is the feedback)', () => {
     renderWithPlayer();
     fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
     fireEvent.click(screen.getByText('▶ Play Now'));
-    expect(toast).not.toHaveBeenCalled();
+    const { playerInstance } = usePlayerStore.getState();
+    expect(playerInstance.addTrack).toHaveBeenCalledWith(mockTrack);
+    expect(playerInstance.addTracks).not.toHaveBeenCalled();
   });
 
   test('Add to Queue flashes the pressed button before the menu closes', () => {

@@ -440,9 +440,16 @@ AudioPlayer.prototype.loadPlaylistUI = function() {
       });
     }
 
+    if (track.__justAdded) {
+      const activityOverlay = document.createElement('div');
+      activityOverlay.className = 'track-item-activity-overlay';
+      listItem.appendChild(activityOverlay);
+      delete track.__justAdded; // self-clearing: a later unrelated rebuild (e.g. drag reorder) won't re-trigger this
+    }
+
     this.trackListElement.appendChild(listItem);
   });
-  
+
   // Update active track styling after creating all items
   this.updateActiveTrackStyling();
 };
@@ -708,25 +715,34 @@ AudioPlayer.prototype.playPrevTrack = function() {
   }
 };
 
-AudioPlayer.prototype.addTrack = function(track) {
+AudioPlayer.prototype.addTrack = function(track, { flashActivity = false } = {}) {
   if (!track || !track.title || !track.url) {
     throw new Error('Invalid track object. Must contain at least title and url properties');
+  }
+  if (flashActivity) {
+    track.__justAdded = true;
+    this.triggerActivityPulse();
   }
   this.playlist.push(track);
   this.loadPlaylistUI();
   return this.playlist.length - 1;
 };
 
-AudioPlayer.prototype.addTracks = function(tracks, playNext=false) {
+AudioPlayer.prototype.addTracks = function(tracks, playNext=false, { flashActivity = false } = {}) {
   if (!Array.isArray(tracks)) {
     throw new Error('Tracks must be provided as an array');
   }
-  
+
   const invalidTracks = tracks.filter(track => !track || !track.title || !track.url);
   if (invalidTracks.length > 0) {
     throw new Error('One or more tracks are invalid. Each track must contain at least title and url properties');
   }
-  
+
+  if (flashActivity) {
+    tracks.forEach(track => { track.__justAdded = true; });
+    this.triggerActivityPulse();
+  }
+
   const startIndex = this.playlist.length;
   if (playNext) {
     this.playlist.splice(this.currentTrackIndex+1, 0, ...tracks);
@@ -735,6 +751,16 @@ AudioPlayer.prototype.addTracks = function(tracks, playNext=false) {
   }
   this.loadPlaylistUI();
   return { startIndex, count: tracks.length };
+};
+
+AudioPlayer.prototype.triggerActivityPulse = function() {
+  this.hamburgerButtonElement.classList.remove('activity-pulse');
+  // Force a reflow so re-adding the class restarts the animation if one is already in flight
+  void this.hamburgerButtonElement.offsetWidth;
+  this.hamburgerButtonElement.classList.add('activity-pulse');
+  setTimeout(() => {
+    this.hamburgerButtonElement.classList.remove('activity-pulse');
+  }, 1200); // 2 iterations x 0.6s, matches the CSS animation in src/index.css
 };
 
 AudioPlayer.prototype.clearPlaylist = function() {
