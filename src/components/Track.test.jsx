@@ -156,4 +156,33 @@ describe('Track component', () => {
     fireEvent.click(button);
     expect(button).toHaveClass('menu-btn-pressed');
   });
+
+  test('Add to Queue starts playback at the newly added track\'s real index when paused', () => {
+    // playerInstance.playlist already has 2 tracks (added elsewhere, never
+    // synced into the Zustand store -- mirroring every real call site in
+    // this codebase, which all call playerInstance.addTrack/addTracks
+    // directly rather than the store's own wrapped actions).
+    const loadAndPlayTrack = vi.fn();
+    const playerInstance = {
+      playlist: [{ id: 101 }, { id: 102 }],
+      audioPlayer: { paused: true },
+      currentTrackIndex: -1,
+      addTrack: vi.fn((t) => { playerInstance.playlist.push(t); }),
+      addTracks: vi.fn(),
+      clearPlaylist: vi.fn(),
+      loadAndPlayTrack,
+    };
+    usePlayerStore.setState({ playerInstance });
+    // The store's own `playlist` field stays at its default (empty) --
+    // exactly as it does in production, since nothing here calls the
+    // store's addTrack action.
+    renderTrack();
+
+    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+    fireEvent.click(screen.getByText('➕ Add to Queue'));
+
+    // After the push, the new track is at index 2. Reading the (always-stale)
+    // store's playlist would have computed 0 - 1 = -1 instead.
+    expect(loadAndPlayTrack).toHaveBeenCalledWith(2);
+  });
 });

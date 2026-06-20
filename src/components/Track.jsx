@@ -98,9 +98,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
 
       // If nothing is playing, start playing immediately
       if (playerInstance.audioPlayer && playerInstance.audioPlayer.paused) {
-        // Get the current playlist length from the store instead
-        const { playlist } = usePlayerStore.getState();
-        const trackIndex = playlist.length - 1; // The track we just added
+        const trackIndex = playerInstance.playlist.length - 1; // The track we just added
         playerInstance.loadAndPlayTrack(trackIndex);
       }
     }
