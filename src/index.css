@@ -14,12 +14,20 @@
   left: 0;
   right: 0;
   z-index: 1100;
-  background-color: #1a252f; 
+  background-color: #1a252f;
   border-bottom: 1px solid #2c3e50;
   height: 4.5em;
   display: flex;
   align-items: center;
   padding: 0 1.5rem;
+  /* The mobile rule's height calc includes the safe-area-inset padding, which
+     only computes correctly under border-box. Tailwind's preflight (which
+     would normally provide this globally) isn't actually wired into this
+     build (the @tailwind directives pass through unprocessed - no
+     @tailwindcss/postcss or vite plugin configured), so content-box was the
+     real default, doubling the inset (padding added on top of an
+     already-inset-inclusive height). */
+  box-sizing: border-box;
 }
 
 .header-content {
@@ -77,9 +85,10 @@
   z-index: 1100;
   background-color: #1a252f;
   border-top: 1px solid #2c3e50;
-  height: 4.5em; 
+  height: 4.5em;
   display: flex;
   align-items: center;
+  box-sizing: border-box; /* see .app-header comment re: inset doubling */
 }
 
 /* Main content styles */
@@ -89,6 +98,7 @@
   padding-top: 4.5em;
   padding-bottom: 6rem; /* Increased bottom padding for footer clearance */
   background-color: #f5f5f5;
+  box-sizing: border-box; /* see .app-header comment re: inset doubling */
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
@@ -980,8 +990,10 @@
   /* Compact mobile chrome height: small enough to save real estate, with the
      safe-area inset added on top so the notch/home-indicator is cleared and
      content never overlaps. Tune this one value to taste. Desktop is
-     unaffected (it falls back to 4.5em where --mb is undefined). */
-  :root { --mb: 3.25rem; }
+     unaffected (it falls back to 4.5em where --mb is undefined). 2.75rem
+     (44px) is iOS's documented minimum touch-target height — going smaller
+     risks clipping the play button / hamburger icon. */
+  :root { --mb: 2.75rem; }
 
   .app-header {
     padding: 0 1rem;
@@ -1457,17 +1469,17 @@
     height: 100vh !important;
     height: 100dvh !important;
   }
-
-  .main-content {
-    height: calc(100vh - 9rem) !important;
-    height: calc(100dvh - 9rem) !important;
-  }
 }
 
-/* iOS Safari specific fixes */
+/* iOS Safari specific fixes. Must account for safe-area insets like the
+   mobile breakpoint's .main-content rule does: insets are 0 in a regular
+   Safari tab (the browser chrome already consumes that space) but non-zero
+   when installed as a standalone PWA (content runs edge-to-edge under the
+   notch/home-indicator), so omitting them here only broke the installed-PWA
+   case while looking fine in plain Safari. */
 @supports (-webkit-touch-callout: none) {
   .main-content {
-    height: calc(100vh - 2 * var(--mb, 4.5em)) !important;
-    height: calc(-webkit-fill-available - 2 * var(--mb, 4.5em)) !important;
+    height: calc(100vh - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
+    height: calc(-webkit-fill-available - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
   }
 }
