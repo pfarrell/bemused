@@ -525,6 +525,28 @@
   width: 100%;
 }
 
+.progress-bar-loading-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background: #3b82f6;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.progress-bar-wrapper.loading .progress-bar {
+  opacity: 0;
+}
+
+.progress-bar-wrapper.loading .progress-bar-loading-overlay {
+  animation: progress-bar-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes progress-bar-pulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.7; }
+}
+
 .player-container {
   position: relative;
   z-index: 3;
@@ -587,21 +609,6 @@
   border-radius: 3px;
   flex-shrink: 0;
 }
-
-.now-playing-spinner {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.35);
-  box-sizing: border-box;
-  animation: np-spin 0.7s linear infinite;
-}
-@keyframes np-spin { to { transform: rotate(360deg); } }
 
 .now-playing .track-info {
   display: flex;

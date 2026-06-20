@@ -15,7 +15,7 @@ const track = {
 const renderNP = () => render(<MemoryRouter><NowPlaying /></MemoryRouter>);
 
 beforeEach(() => {
-  usePlayerStore.setState({ currentTrack: track, isLoading: false });
+  usePlayerStore.setState({ currentTrack: track });
 });
 
 test('shows album art when the current track has an image_path', () => {
@@ -25,18 +25,7 @@ test('shows album art when the current track has an image_path', () => {
 });
 
 test('falls back to the music-notes icon when the track has no image_path', () => {
-  usePlayerStore.setState({ currentTrack: { ...track, image_path: null }, isLoading: false });
+  usePlayerStore.setState({ currentTrack: { ...track, image_path: null } });
   renderNP();
   expect(screen.queryByRole('img')).toBeNull();
-});
-
-test('shows a loading spinner when isLoading is true', () => {
-  usePlayerStore.setState({ currentTrack: track, isLoading: true });
-  renderNP();
-  expect(screen.getByTestId('now-playing-spinner')).toBeInTheDocument();
-});
-
-test('no spinner when not loading', () => {
-  renderNP();
-  expect(screen.queryByTestId('now-playing-spinner')).toBeNull();
 });

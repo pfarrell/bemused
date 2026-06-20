@@ -5,7 +5,7 @@ import { apiService } from '../services/api';
 
 const NowPlaying = () => {
   const navigate = useNavigate();
-  const { currentTrack, isLoading } = usePlayerStore();
+  const { currentTrack } = usePlayerStore();
   const handleArtistClick = (track) => {
     navigate(`/artist/${track.artist.id}`);
   };
@@ -29,26 +29,21 @@ const NowPlaying = () => {
 
   return (
     <div className="now-playing">
-      <div className="now-playing-art-wrap" style={{ position: 'relative', display: 'inline-flex' }}>
-        {albumArtUrl ? (
-          <img
-            src={albumArtUrl}
-            alt={currentTrack.album?.title}
-            className="now-playing-art"
-          />
-        ) : (
-          <svg
-            width="24" height="24" fill="none" stroke="currentColor"
-            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-              d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-          </svg>
-        )}
-        {isLoading && (
-          <span data-testid="now-playing-spinner" className="now-playing-spinner" aria-label="loading" />
-        )}
-      </div>
+      {albumArtUrl ? (
+        <img
+          src={albumArtUrl}
+          alt={currentTrack.album?.title}
+          className="now-playing-art"
+        />
+      ) : (
+        <svg
+          width="24" height="24" fill="none" stroke="currentColor"
+          viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+        </svg>
+      )}
       <div className="track-info show">
         <div className="track-artist" onClick={() => handleArtistClick(currentTrack)} title="go to artist">
           {currentTrack.artist?.name || currentTrack.artist || 'Unknown Artist'}

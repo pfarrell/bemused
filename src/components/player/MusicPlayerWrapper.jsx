@@ -13,8 +13,7 @@ const MusicPlayerWrapper = ({ className = "" }) => {
   const {
     setCurrentTrack,
     setIsPlaying,
-    setPlayerInstance,
-    setIsLoading
+    setPlayerInstance
   } = usePlayerStore();
 
   // Load the player script
@@ -79,9 +78,6 @@ const MusicPlayerWrapper = ({ className = "" }) => {
             apiService.log(track.id);
             console.log('5 seconds into:', track.title);
           },
-          onLoadingChange: (loading) => {
-            setIsLoading(loading);
-          },
           getTrackPrefix: () => {
             return '';
           },
@@ -104,7 +100,7 @@ const MusicPlayerWrapper = ({ className = "" }) => {
       }
       setPlayerInstance(null);
     };
-  }, [isPlayerReady, setCurrentTrack, setIsPlaying, setPlayerInstance, setIsLoading]);
+  }, [isPlayerReady, setCurrentTrack, setIsPlaying, setPlayerInstance]);
 
   return (
     <div className={`music-player-wrapper ${className}`}>

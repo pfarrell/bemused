@@ -31,7 +31,6 @@ function AudioPlayer(playlist, audioElement, containerElement, playlistElement, 
   this.backdropElement = null; // Track backdrop element
   this.onTrackStart = config.onTrackStart || function() {};
   this.onFiveSecondMark = config.onFiveSecondMark || function() {};
-  this.onLoadingChange = config.onLoadingChange || function() {};
   this.getTrackPrefix = config.getTrackPrefix || (() => '');
   this.getImageUrl = config.getImageUrl || (() => null);
   this.draggedItem = null;
@@ -234,6 +233,12 @@ AudioPlayer.prototype.createProgressBar = function() {
   });
 
   progressBarWrapper.appendChild(progressBar);
+
+  const loadingOverlay = document.createElement('div');
+  loadingOverlay.className = 'progress-bar-loading-overlay';
+  progressBarWrapper.appendChild(loadingOverlay);
+
+  this.progressBarWrapper = progressBarWrapper;
   return progressBarWrapper;
 };
 
@@ -572,11 +577,11 @@ AudioPlayer.prototype.attachAudioPlayerListeners = function() {
     this.updateActiveTrackStyling();
   });
 
-  this.audioPlayer.addEventListener('loadstart', () => { this.onLoadingChange(true); });
-  this.audioPlayer.addEventListener('waiting', () => { this.onLoadingChange(true); });
-  this.audioPlayer.addEventListener('playing', () => { this.onLoadingChange(false); });
-  this.audioPlayer.addEventListener('canplay', () => { this.onLoadingChange(false); });
-  this.audioPlayer.addEventListener('error', () => { this.onLoadingChange(false); });
+  this.audioPlayer.addEventListener('loadstart', () => { this.progressBarWrapper.classList.add('loading'); });
+  this.audioPlayer.addEventListener('waiting', () => { this.progressBarWrapper.classList.add('loading'); });
+  this.audioPlayer.addEventListener('playing', () => { this.progressBarWrapper.classList.remove('loading'); });
+  this.audioPlayer.addEventListener('canplay', () => { this.progressBarWrapper.classList.remove('loading'); });
+  this.audioPlayer.addEventListener('error', () => { this.progressBarWrapper.classList.remove('loading'); });
 
   this.audioPlayer.addEventListener('ended', () => {
     if (!this.shuffle && this.currentTrackIndex === this.playlist.length - 1) {
