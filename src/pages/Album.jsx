@@ -75,8 +75,7 @@ const Album = () => {
       
       // If nothing is playing, start playing immediately
       if (playerInstance.audioPlayer.paused) {
-        const playlist = playerInstance.getPlaylist();
-        const startIndex = playlist.length - albumData.tracks.length; // First track of the added album
+        const startIndex = playerInstance.playlist.length - albumData.tracks.length; // First track of the added album
         playerInstance.loadAndPlayTrack(startIndex);
       }
     }
