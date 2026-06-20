@@ -20,8 +20,11 @@ const NowPlaying = () => {
     return null;
   }
 
-  const albumArtUrl = currentTrack.album?.image_path
-    ? apiService.getImageUrl(currentTrack.album.image_path, 'album_small')
+  // Every backend route puts the album art path at the track's top level
+  // (image_path), not nested under album.image_path — the nested album
+  // object only ever carries id/title/artist for navigation.
+  const albumArtUrl = currentTrack.image_path
+    ? apiService.getImageUrl(currentTrack.image_path, 'album_small')
     : null;
 
   return (
