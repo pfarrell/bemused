@@ -10,6 +10,7 @@ const mockAudioElement = () => ({
   paused: true,
   src: '',
   currentTime: 0,
+  readyState: 0,
 });
 
 const setActiveAudio = (audioElement, overrides = {}) =>
@@ -34,6 +35,7 @@ beforeEach(() => {
     drawerOpen: false,
     activityPulseToken: 0,
     recentlyAddedIndices: [],
+    standbyUnlocked: false,
   });
 });
 
@@ -337,5 +339,112 @@ describe('getActiveAudio / getStandbyAudio', () => {
     const b = mockAudioElement();
     usePlayerStore.getState().setAudioElement('b', b);
     expect(usePlayerStore.getState().audioElementB).toBe(b);
+  });
+});
+
+describe('ensureStandbyLoaded', () => {
+  test('loads the standby element with the next track when it differs from what is already loaded', () => {
+    const standby = mockAudioElement();
+    usePlayerStore.setState({
+      audioElementA: mockAudioElement(), audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], nextTrackIndex: 1,
+    });
+    usePlayerStore.getState().ensureStandbyLoaded();
+    expect(standby.src).toBe('/stream/2');
+    expect(standby.load).toHaveBeenCalled();
+  });
+
+  test('does nothing if the standby element is already loaded with that track', () => {
+    const standby = mockAudioElement();
+    standby.src = '/stream/2';
+    usePlayerStore.setState({
+      audioElementA: mockAudioElement(), audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], nextTrackIndex: 1,
+    });
+    usePlayerStore.getState().ensureStandbyLoaded();
+    expect(standby.load).not.toHaveBeenCalled();
+  });
+
+  test('does nothing when there is no next track', () => {
+    const standby = mockAudioElement();
+    usePlayerStore.setState({
+      audioElementA: mockAudioElement(), audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1)], nextTrackIndex: -1,
+    });
+    usePlayerStore.getState().ensureStandbyLoaded();
+    expect(standby.load).not.toHaveBeenCalled();
+  });
+});
+
+describe('playNext gapless handoff', () => {
+  test('flips activeSlot and plays the standby element directly when it is already loaded and ready', () => {
+    const active = mockAudioElement();
+    const standby = mockAudioElement();
+    standby.src = '/stream/2';
+    standby.readyState = 3;
+    usePlayerStore.setState({
+      audioElementA: active, audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], currentTrackIndex: 0, nextTrackIndex: 1,
+    });
+    usePlayerStore.getState().playNext();
+    const state = usePlayerStore.getState();
+    expect(state.activeSlot).toBe('b');
+    expect(state.currentTrackIndex).toBe(1);
+    expect(state.currentTrack.id).toBe(2);
+    expect(standby.play).toHaveBeenCalled();
+    expect(standby.load).not.toHaveBeenCalled(); // no reload — that's the whole point
+  });
+
+  test('falls back to a normal load on the active element when the standby is not ready', () => {
+    const active = mockAudioElement();
+    const standby = mockAudioElement(); // src: '', readyState: 0 — not ready
+    usePlayerStore.setState({
+      audioElementA: active, audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], currentTrackIndex: 0, nextTrackIndex: 1,
+    });
+    usePlayerStore.getState().playNext();
+    const state = usePlayerStore.getState();
+    expect(state.activeSlot).toBe('a'); // unchanged
+    expect(active.src).toBe('/stream/2');
+    expect(active.load).toHaveBeenCalled();
+  });
+
+  test('falls back when the standby element is loaded but for the wrong track', () => {
+    const active = mockAudioElement();
+    const standby = mockAudioElement();
+    standby.src = '/stream/99'; // stale — loaded for a track that's no longer next
+    standby.readyState = 3;
+    usePlayerStore.setState({
+      audioElementA: active, audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], currentTrackIndex: 0, nextTrackIndex: 1,
+    });
+    usePlayerStore.getState().playNext();
+    expect(usePlayerStore.getState().activeSlot).toBe('a');
+    expect(active.src).toBe('/stream/2');
+  });
+});
+
+describe('standby unlock', () => {
+  test('the first playTrackAtIndex call unlocks the standby element with a muted silent clip', () => {
+    const active = mockAudioElement();
+    const standby = mockAudioElement();
+    usePlayerStore.setState({
+      audioElementA: active, audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1)], standbyUnlocked: false,
+    });
+    usePlayerStore.getState().playTrackAtIndex(0);
+    expect(standby.play).toHaveBeenCalled();
+    expect(usePlayerStore.getState().standbyUnlocked).toBe(true);
+  });
+
+  test('subsequent playTrackAtIndex calls do not re-unlock', () => {
+    const active = mockAudioElement();
+    const standby = mockAudioElement();
+    usePlayerStore.setState({
+      audioElementA: active, audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], standbyUnlocked: true,
+    });
+    usePlayerStore.getState().playTrackAtIndex(1);
+    expect(standby.play).not.toHaveBeenCalled();
   });
 });

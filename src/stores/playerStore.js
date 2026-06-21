@@ -21,6 +21,16 @@ const computeNextIndex = ({ shuffle, shuffleHistory, playlist, currentTrackIndex
   return currentTrackIndex + 1;
 };
 
+// A ~0-length silent WAV, used only to "unlock" the standby <audio> element for iOS Safari —
+// WebKit only allows a media element's *first* play() to succeed if it's called synchronously
+// inside a user gesture. The standby element is never played by a real gesture (its first
+// .play() happens later, inside a timeupdate/ended handler during a gapless handoff), so we
+// preemptively call play()/pause() on it here, inside the same gesture that starts the very
+// first track, while we still can.
+const SILENT_AUDIO_DATA_URI = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+
+const standbyMatchesTarget = (standby, target) => !!standby && !!target && standby.src.endsWith(target.url);
+
 export const usePlayerStore = create((set, get) => ({
   // DOM bridge — two raw <audio> elements, set once by usePlayerEngine on mount. activeSlot
   // says which one is currently "live"; the other is standby, used to gaplessly prefetch and
@@ -44,6 +54,8 @@ export const usePlayerStore = create((set, get) => ({
   // The playlist index that will play after the current track, kept in sync by every action
   // that mutates playlist/currentTrackIndex/shuffle/shuffleHistory. -1 means there is no next track.
   nextTrackIndex: -1,
+  // Whether the standby element has been unlocked for iOS. Set to true after the first playTrackAtIndex call.
+  standbyUnlocked: false,
 
   // Shuffle state
   shuffle: false,
@@ -68,9 +80,18 @@ export const usePlayerStore = create((set, get) => ({
   // Internal — recomputed at the end of every action that changes what "next" resolves to.
   syncNextTrackIndex: () => set({ nextTrackIndex: computeNextIndex(get()) }),
 
+  ensureStandbyLoaded: () => {
+    const { nextTrackIndex, playlist } = get();
+    const standby = get().getStandbyAudio();
+    const target = nextTrackIndex === -1 ? null : playlist[nextTrackIndex];
+    if (!standby || !target || standbyMatchesTarget(standby, target)) return;
+    standby.src = target.url;
+    standby.load();
+  },
+
   // Transport
   playTrackAtIndex: (index) => {
-    const { playlist, shuffle, shuffleHistory } = get();
+    const { playlist, shuffle, shuffleHistory, standbyUnlocked } = get();
     const audioElement = get().getActiveAudio();
     if (index < 0 || index >= playlist.length || !audioElement) return;
     const track = playlist[index];
@@ -79,6 +100,14 @@ export const usePlayerStore = create((set, get) => ({
     audioElement.src = track.url;
     audioElement.load();
     audioElement.play().catch((error) => console.error('Playback failed:', error));
+    if (!standbyUnlocked) {
+      const standby = get().getStandbyAudio();
+      if (standby) {
+        standby.src = SILENT_AUDIO_DATA_URI;
+        standby.play().then(() => standby.pause()).catch(() => {});
+      }
+      set({ standbyUnlocked: true });
+    }
     get().syncNextTrackIndex();
   },
 
@@ -104,7 +133,7 @@ export const usePlayerStore = create((set, get) => ({
   },
 
   playNext: () => {
-    const { shuffle, shuffleHistory, nextTrackIndex } = get();
+    const { shuffle, shuffleHistory, nextTrackIndex, playlist, activeSlot } = get();
     const audioElement = get().getActiveAudio();
     if (nextTrackIndex === -1) {
       set({ playlistFinished: true });
@@ -114,7 +143,24 @@ export const usePlayerStore = create((set, get) => ({
     if (shuffle) {
       set({ shuffleHistory: [...shuffleHistory, nextTrackIndex] });
     }
-    get().playTrackAtIndex(nextTrackIndex);
+
+    const standby = get().getStandbyAudio();
+    const target = playlist[nextTrackIndex];
+    const standbyReady = standbyMatchesTarget(standby, target) && standby.readyState >= 3; // HAVE_FUTURE_DATA
+
+    if (!standbyReady) {
+      get().playTrackAtIndex(nextTrackIndex);
+      return;
+    }
+
+    set({
+      activeSlot: activeSlot === 'a' ? 'b' : 'a',
+      currentTrackIndex: nextTrackIndex,
+      currentTrack: target,
+      playlistFinished: false,
+    });
+    standby.play().catch((error) => console.error('Playback failed:', error));
+    get().syncNextTrackIndex();
   },
 
   playPrev: () => {
