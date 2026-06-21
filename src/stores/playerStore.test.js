@@ -10,6 +10,7 @@ const mockAudioElement = () => ({
   paused: true,
   src: '',
   currentTime: 0,
+  duration: 0,
   readyState: 0,
 });
 
@@ -393,6 +394,23 @@ describe('playNext gapless handoff', () => {
     expect(state.currentTrack.id).toBe(2);
     expect(standby.play).toHaveBeenCalled();
     expect(standby.load).not.toHaveBeenCalled(); // no reload — that's the whole point
+  });
+
+  test('resets duration and currentTime to the standby track values on handoff', () => {
+    const active = mockAudioElement();
+    const standby = mockAudioElement();
+    standby.src = '/stream/2';
+    standby.readyState = 3;
+    standby.duration = 200;
+    usePlayerStore.setState({
+      audioElementA: active, audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], currentTrackIndex: 0, nextTrackIndex: 1,
+      duration: 180, currentTime: 170,
+    });
+    usePlayerStore.getState().playNext();
+    const state = usePlayerStore.getState();
+    expect(state.duration).toBe(200);
+    expect(state.currentTime).toBe(0);
   });
 
   test('falls back to a normal load on the active element when the standby is not ready', () => {

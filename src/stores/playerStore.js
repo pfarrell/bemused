@@ -158,6 +158,8 @@ export const usePlayerStore = create((set, get) => ({
       currentTrackIndex: nextTrackIndex,
       currentTrack: target,
       playlistFinished: false,
+      currentTime: 0,
+      duration: Number.isFinite(standby.duration) ? standby.duration : 0,
     });
     standby.play().catch((error) => console.error('Playback failed:', error));
     get().syncNextTrackIndex();
