@@ -34,8 +34,8 @@ const Library = () => {
 
   const handlePlayAlbum = async (album) => {
     try {
-      const response = await apiService.getAlbumTracks(album.id);
-      setPlaylist(response.data);
+      const response = await apiService.getAlbum(album.id);
+      setPlaylist(response.data.tracks);
     } catch (error) {
       console.error('Error loading album tracks:', error);
     }
