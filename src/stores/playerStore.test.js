@@ -10,11 +10,18 @@ const mockAudioElement = () => ({
   paused: true,
   src: '',
   currentTime: 0,
+  duration: 0,
+  readyState: 0,
 });
+
+const setActiveAudio = (audioElement, overrides = {}) =>
+  usePlayerStore.setState({ audioElementA: audioElement, audioElementB: mockAudioElement(), activeSlot: 'a', ...overrides });
 
 beforeEach(() => {
   usePlayerStore.setState({
-    audioElement: null,
+    audioElementA: null,
+    audioElementB: null,
+    activeSlot: 'a',
     playlist: [],
     currentTrackIndex: -1,
     currentTrack: null,
@@ -23,18 +30,20 @@ beforeEach(() => {
     currentTime: 0,
     duration: 0,
     playlistFinished: false,
+    nextTrackIndex: -1,
     shuffle: false,
     shuffleHistory: [],
     drawerOpen: false,
     activityPulseToken: 0,
     recentlyAddedIndices: [],
+    standbyUnlocked: false,
   });
 });
 
 describe('playTrackAtIndex', () => {
   test('sets currentTrack/currentTrackIndex and loads the audio element', () => {
     const audioElement = mockAudioElement();
-    usePlayerStore.setState({ audioElement, playlist: [track(1), track(2)] });
+    setActiveAudio(audioElement, { playlist: [track(1), track(2)] });
     usePlayerStore.getState().playTrackAtIndex(1);
     const state = usePlayerStore.getState();
     expect(state.currentTrackIndex).toBe(1);
@@ -46,7 +55,7 @@ describe('playTrackAtIndex', () => {
 
   test('does nothing for an out-of-range index', () => {
     const audioElement = mockAudioElement();
-    usePlayerStore.setState({ audioElement, playlist: [track(1)] });
+    setActiveAudio(audioElement, { playlist: [track(1)] });
     usePlayerStore.getState().playTrackAtIndex(5);
     expect(usePlayerStore.getState().currentTrackIndex).toBe(-1);
     expect(audioElement.load).not.toHaveBeenCalled();
@@ -56,7 +65,7 @@ describe('playTrackAtIndex', () => {
 describe('addTrack', () => {
   test('appends the track and starts playback when nothing is playing', () => {
     const audioElement = mockAudioElement();
-    usePlayerStore.setState({ audioElement, playlist: [], isPlaying: false });
+    setActiveAudio(audioElement, { playlist: [], isPlaying: false });
     usePlayerStore.getState().addTrack(track(1));
     const state = usePlayerStore.getState();
     expect(state.playlist).toHaveLength(1);
@@ -66,7 +75,7 @@ describe('addTrack', () => {
 
   test('appends without starting playback when something is already playing', () => {
     const audioElement = mockAudioElement();
-    usePlayerStore.setState({ audioElement, playlist: [track(1)], currentTrackIndex: 0, isPlaying: true });
+    setActiveAudio(audioElement, { playlist: [track(1)], currentTrackIndex: 0, isPlaying: true });
     usePlayerStore.getState().addTrack(track(2));
     const state = usePlayerStore.getState();
     expect(state.playlist).toHaveLength(2);
@@ -79,7 +88,7 @@ describe('addTrack', () => {
   });
 
   test('flashActivity bumps activityPulseToken', () => {
-    usePlayerStore.setState({ audioElement: mockAudioElement() });
+    setActiveAudio(mockAudioElement());
     usePlayerStore.getState().addTrack(track(1), { flashActivity: true });
     expect(usePlayerStore.getState().activityPulseToken).toBe(1);
   });
@@ -88,8 +97,7 @@ describe('addTrack', () => {
 describe('addTracks', () => {
   test('regression (fa854a2/fe75093): auto-plays the first track of a multi-track add at its real index when paused, even with an existing playlist', () => {
     const audioElement = mockAudioElement();
-    usePlayerStore.setState({
-      audioElement,
+    setActiveAudio(audioElement, {
       playlist: [track(101), track(102)],
       currentTrackIndex: 0,
       isPlaying: false,
@@ -103,8 +111,7 @@ describe('addTracks', () => {
   });
 
   test('playNext=true inserts immediately after the current track', () => {
-    usePlayerStore.setState({
-      audioElement: mockAudioElement(),
+    setActiveAudio(mockAudioElement(), {
       playlist: [track(1), track(2), track(3)],
       currentTrackIndex: 0,
       isPlaying: true,
@@ -121,13 +128,13 @@ describe('addTracks', () => {
 
 describe('recentlyAddedIndices', () => {
   test('addTrack with flashActivity records the new entry\'s playlist position, not its id', () => {
-    usePlayerStore.setState({ audioElement: mockAudioElement(), playlist: [track(99), track(98)] });
+    setActiveAudio(mockAudioElement(), { playlist: [track(99), track(98)] });
     usePlayerStore.getState().addTrack(track(5), { flashActivity: true });
     expect(usePlayerStore.getState().recentlyAddedIndices).toEqual([2]);
   });
 
   test('addTrack without flashActivity does not touch recentlyAddedIndices', () => {
-    usePlayerStore.setState({ audioElement: mockAudioElement(), recentlyAddedIndices: [99] });
+    setActiveAudio(mockAudioElement(), { recentlyAddedIndices: [99] });
     usePlayerStore.getState().addTrack(track(1));
     expect(usePlayerStore.getState().recentlyAddedIndices).toEqual([99]);
   });
@@ -137,8 +144,7 @@ describe('recentlyAddedIndices', () => {
     // ever opening the drawer — only 7/8 (the latest batch) should remain
     // marked; track 2's earlier position should no longer be flagged even
     // though it was never seen.
-    usePlayerStore.setState({
-      audioElement: mockAudioElement(),
+    setActiveAudio(mockAudioElement(), {
       playlist: [track(1), track(2)],
       currentTrackIndex: 0,
       isPlaying: true,
@@ -149,7 +155,7 @@ describe('recentlyAddedIndices', () => {
   });
 
   test('regression: queueing a track whose id already exists elsewhere in the playlist only marks the new occurrence', () => {
-    usePlayerStore.setState({ audioElement: mockAudioElement(), playlist: [track(5)], isPlaying: true });
+    setActiveAudio(mockAudioElement(), { playlist: [track(5)], isPlaying: true });
     usePlayerStore.getState().addTrack(track(5), { flashActivity: true });
     expect(usePlayerStore.getState().playlist).toHaveLength(2);
     expect(usePlayerStore.getState().recentlyAddedIndices).toEqual([1]);
@@ -179,7 +185,7 @@ describe('removeTrackFromPlaylist', () => {
 
   test('removing the last track resets playback state', () => {
     const audioElement = mockAudioElement();
-    usePlayerStore.setState({ audioElement, playlist: [track(1)], currentTrackIndex: -1 });
+    setActiveAudio(audioElement, { playlist: [track(1)], currentTrackIndex: -1 });
     usePlayerStore.getState().removeTrackFromPlaylist(0);
     const state = usePlayerStore.getState();
     expect(state.playlist).toHaveLength(0);
@@ -200,14 +206,14 @@ describe('reorderPlaylist', () => {
 
 describe('playNext / shuffle', () => {
   test('non-shuffle: advances to the next index', () => {
-    usePlayerStore.setState({ audioElement: mockAudioElement(), playlist: [track(1), track(2)], currentTrackIndex: 0 });
+    setActiveAudio(mockAudioElement(), { playlist: [track(1), track(2)], currentTrackIndex: 0, nextTrackIndex: 1 });
     usePlayerStore.getState().playNext();
     expect(usePlayerStore.getState().currentTrackIndex).toBe(1);
   });
 
   test('non-shuffle: marks playlistFinished and pauses on the last track', () => {
     const audioElement = mockAudioElement();
-    usePlayerStore.setState({ audioElement, playlist: [track(1), track(2)], currentTrackIndex: 1 });
+    setActiveAudio(audioElement, { playlist: [track(1), track(2)], currentTrackIndex: 1 });
     usePlayerStore.getState().playNext();
     const state = usePlayerStore.getState();
     expect(state.playlistFinished).toBe(true);
@@ -215,7 +221,7 @@ describe('playNext / shuffle', () => {
   });
 
   test('toggleShuffle(on) jumps to a random track and seeds shuffleHistory', () => {
-    usePlayerStore.setState({ audioElement: mockAudioElement(), playlist: [track(1), track(2), track(3)], currentTrackIndex: 0 });
+    setActiveAudio(mockAudioElement(), { playlist: [track(1), track(2), track(3)], currentTrackIndex: 0 });
     usePlayerStore.getState().toggleShuffle();
     const state = usePlayerStore.getState();
     expect(state.shuffle).toBe(true);
@@ -223,7 +229,7 @@ describe('playNext / shuffle', () => {
   });
 
   test('playPrev() on an empty playlist does not throw and leaves state sane', () => {
-    usePlayerStore.setState({ audioElement: mockAudioElement(), playlist: [], currentTrackIndex: -1 });
+    setActiveAudio(mockAudioElement(), { playlist: [], currentTrackIndex: -1 });
     expect(() => usePlayerStore.getState().playPrev()).not.toThrow();
     const state = usePlayerStore.getState();
     expect(state.currentTrackIndex).toBe(-1);
@@ -234,7 +240,7 @@ describe('playNext / shuffle', () => {
 describe('clearPlaylist', () => {
   test('resets all playback state and stops the audio element', () => {
     const audioElement = mockAudioElement();
-    usePlayerStore.setState({ audioElement, playlist: [track(1)], currentTrackIndex: 0, currentTrack: track(1), isPlaying: true });
+    setActiveAudio(audioElement, { playlist: [track(1)], currentTrackIndex: 0, currentTrack: track(1), isPlaying: true });
     usePlayerStore.getState().clearPlaylist();
     const state = usePlayerStore.getState();
     expect(state.playlist).toEqual([]);
@@ -247,10 +253,216 @@ describe('clearPlaylist', () => {
 describe('setPlaylist', () => {
   test('replaces the queue and starts playing the first track', () => {
     const audioElement = mockAudioElement();
-    usePlayerStore.setState({ audioElement, playlist: [track(1)], currentTrackIndex: 0, isPlaying: true });
+    setActiveAudio(audioElement, { playlist: [track(1)], currentTrackIndex: 0, isPlaying: true });
     usePlayerStore.getState().setPlaylist([track(9), track(10)]);
     const state = usePlayerStore.getState();
     expect(state.playlist.map((t) => t.id)).toEqual([9, 10]);
     expect(state.currentTrackIndex).toBe(0);
+  });
+});
+
+describe('nextTrackIndex', () => {
+  test('points at the following index in a non-shuffle playlist', () => {
+    setActiveAudio(mockAudioElement(), { playlist: [track(1), track(2), track(3)] });
+    usePlayerStore.getState().playTrackAtIndex(0);
+    expect(usePlayerStore.getState().nextTrackIndex).toBe(1);
+  });
+
+  test('is -1 on the last track', () => {
+    setActiveAudio(mockAudioElement(), { playlist: [track(1), track(2)] });
+    usePlayerStore.getState().playTrackAtIndex(1);
+    expect(usePlayerStore.getState().nextTrackIndex).toBe(-1);
+  });
+
+  test('is -1 on an empty playlist', () => {
+    setActiveAudio(mockAudioElement(), { playlist: [] });
+    usePlayerStore.getState().syncNextTrackIndex();
+    expect(usePlayerStore.getState().nextTrackIndex).toBe(-1);
+  });
+
+  test('in shuffle mode, excludes everything already in shuffleHistory', () => {
+    setActiveAudio(mockAudioElement(), {
+      playlist: [track(1), track(2), track(3)],
+      currentTrackIndex: 0,
+      shuffle: true,
+      shuffleHistory: [0],
+    });
+    usePlayerStore.getState().syncNextTrackIndex();
+    expect([1, 2]).toContain(usePlayerStore.getState().nextTrackIndex);
+  });
+
+  test('in shuffle mode, is -1 once every track is in shuffleHistory', () => {
+    usePlayerStore.setState({
+      playlist: [track(1), track(2)],
+      shuffle: true,
+      shuffleHistory: [0, 1],
+    });
+    usePlayerStore.getState().syncNextTrackIndex();
+    expect(usePlayerStore.getState().nextTrackIndex).toBe(-1);
+  });
+
+  test('playNext in shuffle mode advances to the precomputed nextTrackIndex, not a freshly-rolled one', () => {
+    setActiveAudio(mockAudioElement(), {
+      playlist: [track(1), track(2), track(3)],
+      currentTrackIndex: 0,
+      shuffle: true,
+      shuffleHistory: [0],
+      nextTrackIndex: 2,
+    });
+    usePlayerStore.getState().playNext();
+    const state = usePlayerStore.getState();
+    expect(state.currentTrackIndex).toBe(2);
+    expect(state.shuffleHistory).toEqual([0, 2]);
+  });
+});
+
+describe('getActiveAudio / getStandbyAudio', () => {
+  test('resolves slot A as active by default', () => {
+    const a = mockAudioElement();
+    const b = mockAudioElement();
+    usePlayerStore.setState({ audioElementA: a, audioElementB: b, activeSlot: 'a' });
+    expect(usePlayerStore.getState().getActiveAudio()).toBe(a);
+    expect(usePlayerStore.getState().getStandbyAudio()).toBe(b);
+  });
+
+  test('resolves slot B as active when activeSlot is b', () => {
+    const a = mockAudioElement();
+    const b = mockAudioElement();
+    usePlayerStore.setState({ audioElementA: a, audioElementB: b, activeSlot: 'b' });
+    expect(usePlayerStore.getState().getActiveAudio()).toBe(b);
+    expect(usePlayerStore.getState().getStandbyAudio()).toBe(a);
+  });
+
+  test('setAudioElement assigns into the given slot', () => {
+    const a = mockAudioElement();
+    usePlayerStore.getState().setAudioElement('a', a);
+    expect(usePlayerStore.getState().audioElementA).toBe(a);
+    const b = mockAudioElement();
+    usePlayerStore.getState().setAudioElement('b', b);
+    expect(usePlayerStore.getState().audioElementB).toBe(b);
+  });
+});
+
+describe('ensureStandbyLoaded', () => {
+  test('loads the standby element with the next track when it differs from what is already loaded', () => {
+    const standby = mockAudioElement();
+    usePlayerStore.setState({
+      audioElementA: mockAudioElement(), audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], nextTrackIndex: 1,
+    });
+    usePlayerStore.getState().ensureStandbyLoaded();
+    expect(standby.src).toBe('/stream/2');
+    expect(standby.load).toHaveBeenCalled();
+  });
+
+  test('does nothing if the standby element is already loaded with that track', () => {
+    const standby = mockAudioElement();
+    standby.src = '/stream/2';
+    usePlayerStore.setState({
+      audioElementA: mockAudioElement(), audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], nextTrackIndex: 1,
+    });
+    usePlayerStore.getState().ensureStandbyLoaded();
+    expect(standby.load).not.toHaveBeenCalled();
+  });
+
+  test('does nothing when there is no next track', () => {
+    const standby = mockAudioElement();
+    usePlayerStore.setState({
+      audioElementA: mockAudioElement(), audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1)], nextTrackIndex: -1,
+    });
+    usePlayerStore.getState().ensureStandbyLoaded();
+    expect(standby.load).not.toHaveBeenCalled();
+  });
+});
+
+describe('playNext gapless handoff', () => {
+  test('flips activeSlot and plays the standby element directly when it is already loaded and ready', () => {
+    const active = mockAudioElement();
+    const standby = mockAudioElement();
+    standby.src = '/stream/2';
+    standby.readyState = 3;
+    usePlayerStore.setState({
+      audioElementA: active, audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], currentTrackIndex: 0, nextTrackIndex: 1,
+    });
+    usePlayerStore.getState().playNext();
+    const state = usePlayerStore.getState();
+    expect(state.activeSlot).toBe('b');
+    expect(state.currentTrackIndex).toBe(1);
+    expect(state.currentTrack.id).toBe(2);
+    expect(standby.play).toHaveBeenCalled();
+    expect(standby.load).not.toHaveBeenCalled(); // no reload — that's the whole point
+  });
+
+  test('resets duration and currentTime to the standby track values on handoff', () => {
+    const active = mockAudioElement();
+    const standby = mockAudioElement();
+    standby.src = '/stream/2';
+    standby.readyState = 3;
+    standby.duration = 200;
+    usePlayerStore.setState({
+      audioElementA: active, audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], currentTrackIndex: 0, nextTrackIndex: 1,
+      duration: 180, currentTime: 170,
+    });
+    usePlayerStore.getState().playNext();
+    const state = usePlayerStore.getState();
+    expect(state.duration).toBe(200);
+    expect(state.currentTime).toBe(0);
+  });
+
+  test('falls back to a normal load on the active element when the standby is not ready', () => {
+    const active = mockAudioElement();
+    const standby = mockAudioElement(); // src: '', readyState: 0 — not ready
+    usePlayerStore.setState({
+      audioElementA: active, audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], currentTrackIndex: 0, nextTrackIndex: 1,
+    });
+    usePlayerStore.getState().playNext();
+    const state = usePlayerStore.getState();
+    expect(state.activeSlot).toBe('a'); // unchanged
+    expect(active.src).toBe('/stream/2');
+    expect(active.load).toHaveBeenCalled();
+  });
+
+  test('falls back when the standby element is loaded but for the wrong track', () => {
+    const active = mockAudioElement();
+    const standby = mockAudioElement();
+    standby.src = '/stream/99'; // stale — loaded for a track that's no longer next
+    standby.readyState = 3;
+    usePlayerStore.setState({
+      audioElementA: active, audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], currentTrackIndex: 0, nextTrackIndex: 1,
+    });
+    usePlayerStore.getState().playNext();
+    expect(usePlayerStore.getState().activeSlot).toBe('a');
+    expect(active.src).toBe('/stream/2');
+  });
+});
+
+describe('standby unlock', () => {
+  test('the first playTrackAtIndex call unlocks the standby element with a muted silent clip', () => {
+    const active = mockAudioElement();
+    const standby = mockAudioElement();
+    usePlayerStore.setState({
+      audioElementA: active, audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1)], standbyUnlocked: false,
+    });
+    usePlayerStore.getState().playTrackAtIndex(0);
+    expect(standby.play).toHaveBeenCalled();
+    expect(usePlayerStore.getState().standbyUnlocked).toBe(true);
+  });
+
+  test('subsequent playTrackAtIndex calls do not re-unlock', () => {
+    const active = mockAudioElement();
+    const standby = mockAudioElement();
+    usePlayerStore.setState({
+      audioElementA: active, audioElementB: standby, activeSlot: 'a',
+      playlist: [track(1), track(2)], standbyUnlocked: true,
+    });
+    usePlayerStore.getState().playTrackAtIndex(1);
+    expect(standby.play).not.toHaveBeenCalled();
   });
 });
