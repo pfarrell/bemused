@@ -22,9 +22,15 @@ const computeNextIndex = ({ shuffle, shuffleHistory, playlist, currentTrackIndex
 };
 
 export const usePlayerStore = create((set, get) => ({
-  // DOM bridge — the raw <audio> element, set once by usePlayerEngine on mount.
-  audioElement: null,
-  setAudioElement: (audioElement) => set({ audioElement }),
+  // DOM bridge — two raw <audio> elements, set once by usePlayerEngine on mount. activeSlot
+  // says which one is currently "live"; the other is standby, used to gaplessly prefetch and
+  // hand off to the next track (see Task 3).
+  audioElementA: null,
+  audioElementB: null,
+  activeSlot: 'a',
+  setAudioElement: (slot, audioElement) => set(slot === 'a' ? { audioElementA: audioElement } : { audioElementB: audioElement }),
+  getActiveAudio: () => (get().activeSlot === 'a' ? get().audioElementA : get().audioElementB),
+  getStandbyAudio: () => (get().activeSlot === 'a' ? get().audioElementB : get().audioElementA),
 
   // Playback state
   playlist: [],
@@ -64,7 +70,8 @@ export const usePlayerStore = create((set, get) => ({
 
   // Transport
   playTrackAtIndex: (index) => {
-    const { playlist, audioElement, shuffle, shuffleHistory } = get();
+    const { playlist, shuffle, shuffleHistory } = get();
+    const audioElement = get().getActiveAudio();
     if (index < 0 || index >= playlist.length || !audioElement) return;
     const track = playlist[index];
     const nextShuffleHistory = shuffle && !shuffleHistory.includes(index) ? [...shuffleHistory, index] : shuffleHistory;
@@ -76,7 +83,8 @@ export const usePlayerStore = create((set, get) => ({
   },
 
   togglePlayPause: () => {
-    const { audioElement, playlistFinished } = get();
+    const { playlistFinished } = get();
+    const audioElement = get().getActiveAudio();
     if (!audioElement) return;
     if (audioElement.paused) {
       if (playlistFinished) {
@@ -90,13 +98,14 @@ export const usePlayerStore = create((set, get) => ({
   },
 
   seek: (time) => {
-    const { audioElement } = get();
+    const audioElement = get().getActiveAudio();
     if (!audioElement || !Number.isFinite(time)) return;
     audioElement.currentTime = time;
   },
 
   playNext: () => {
-    const { shuffle, shuffleHistory, nextTrackIndex, audioElement } = get();
+    const { shuffle, shuffleHistory, nextTrackIndex } = get();
+    const audioElement = get().getActiveAudio();
     if (nextTrackIndex === -1) {
       set({ playlistFinished: true });
       audioElement?.pause();
@@ -190,7 +199,7 @@ export const usePlayerStore = create((set, get) => ({
   },
 
   clearPlaylist: () => {
-    const { audioElement } = get();
+    const audioElement = get().getActiveAudio();
     set({
       playlist: [],
       currentTrackIndex: -1,
@@ -209,7 +218,8 @@ export const usePlayerStore = create((set, get) => ({
   },
 
   removeTrackFromPlaylist: (index) => {
-    const { playlist, currentTrackIndex, shuffle, shuffleHistory, audioElement } = get();
+    const { playlist, currentTrackIndex, shuffle, shuffleHistory } = get();
+    const audioElement = get().getActiveAudio();
     if (index < 0 || index >= playlist.length || index === currentTrackIndex) return;
 
     const newPlaylist = playlist.filter((_, i) => i !== index);
