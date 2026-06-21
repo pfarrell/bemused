@@ -27,6 +27,7 @@ beforeEach(() => {
     shuffleHistory: [],
     drawerOpen: false,
     activityPulseToken: 0,
+    recentlyAddedTrackIds: [],
   });
 });
 
@@ -115,6 +116,41 @@ describe('addTracks', () => {
 
   test('throws if tracks is not an array', () => {
     expect(() => usePlayerStore.getState().addTracks('nope')).toThrow(/must be provided as an array/);
+  });
+});
+
+describe('recentlyAddedTrackIds', () => {
+  test('addTrack with flashActivity records just that track id', () => {
+    usePlayerStore.setState({ audioElement: mockAudioElement() });
+    usePlayerStore.getState().addTrack(track(1), { flashActivity: true });
+    expect(usePlayerStore.getState().recentlyAddedTrackIds).toEqual([1]);
+  });
+
+  test('addTrack without flashActivity does not touch recentlyAddedTrackIds', () => {
+    usePlayerStore.setState({ audioElement: mockAudioElement(), recentlyAddedTrackIds: [99] });
+    usePlayerStore.getState().addTrack(track(1));
+    expect(usePlayerStore.getState().recentlyAddedTrackIds).toEqual([99]);
+  });
+
+  test('a second flashActivity add replaces the previous batch instead of accumulating', () => {
+    // Regression: queue track 2 (flash), then play-next track 3 (flash) before
+    // ever opening the drawer — only track 3 (the latest batch) should remain
+    // marked; track 2 should no longer be flagged even though it was never seen.
+    usePlayerStore.setState({
+      audioElement: mockAudioElement(),
+      playlist: [track(1), track(2)],
+      currentTrackIndex: 0,
+      isPlaying: true,
+      recentlyAddedTrackIds: [2],
+    });
+    usePlayerStore.getState().addTracks([track(3)], true, { flashActivity: true });
+    expect(usePlayerStore.getState().recentlyAddedTrackIds).toEqual([3]);
+  });
+
+  test('clearRecentlyAdded resets the list to empty', () => {
+    usePlayerStore.setState({ recentlyAddedTrackIds: [1, 2] });
+    usePlayerStore.getState().clearRecentlyAdded();
+    expect(usePlayerStore.getState().recentlyAddedTrackIds).toEqual([]);
   });
 });
 

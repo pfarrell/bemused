@@ -13,13 +13,9 @@ const formatTime = (seconds) => {
   return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
 };
 
-const ActivityOverlay = ({ onDone }) => {
-  useEffect(() => {
-    const timer = setTimeout(onDone, 1200);
-    return () => clearTimeout(timer);
-  }, [onDone]);
-  return <div className="track-item-activity-overlay" />;
-};
+// CSS's own animation (activity-row-flash, 0.6s x2) self-terminates the
+// visual fade — this component has no timing logic of its own.
+const ActivityOverlay = () => <div className="track-item-activity-overlay" />;
 
 const PlaylistDrawer = () => {
   const playlist = usePlayerStore((s) => s.playlist);
@@ -30,10 +26,24 @@ const PlaylistDrawer = () => {
   const reorderPlaylist = usePlayerStore((s) => s.reorderPlaylist);
   const togglePlayPause = usePlayerStore((s) => s.togglePlayPause);
   const toggleDrawer = usePlayerStore((s) => s.toggleDrawer);
+  const recentlyAddedTrackIds = usePlayerStore((s) => s.recentlyAddedTrackIds);
+  const clearRecentlyAdded = usePlayerStore((s) => s.clearRecentlyAdded);
 
   const [draggedIndex, setDraggedIndex] = useState(null);
   const touchStartTimeRef = useRef(0);
   const touchStartPosRef = useRef({ x: 0, y: 0 });
+  // This component never unmounts (MusicPlayerWrapper always renders it; the
+  // `if (!drawerOpen) return null` below is the only thing hiding it), so
+  // "first open after an edit" has to be detected via the drawerOpen
+  // transition, not mount/unmount — snapshot the batch when it opens, then
+  // clear the store so a later open/close cycle shows no flash.
+  const [flashIds, setFlashIds] = useState([]);
+  useEffect(() => {
+    if (!drawerOpen) return;
+    setFlashIds(recentlyAddedTrackIds);
+    if (recentlyAddedTrackIds.length > 0) clearRecentlyAdded();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to the drawerOpen transition, not every recentlyAddedTrackIds change
+  }, [drawerOpen]);
 
   if (!drawerOpen) return null;
 
@@ -53,6 +63,10 @@ const PlaylistDrawer = () => {
   };
 
   const handleTouchEnd = (index) => (e) => {
+    // A tap on the delete button is handled by its own click handler, not
+    // row activation — otherwise the bubbled touchend plays the track first,
+    // which then blocks the delete (a track can't be removed while playing).
+    if (e.target.closest('.track-delete-button')) return;
     const duration = Date.now() - touchStartTimeRef.current;
     const dx = Math.abs(e.changedTouches[0].clientX - touchStartPosRef.current.x);
     const dy = Math.abs(e.changedTouches[0].clientY - touchStartPosRef.current.y);
@@ -114,9 +128,7 @@ const PlaylistDrawer = () => {
                 >
                   &#10060;
                 </button>
-                {track.__justAdded && (
-                  <ActivityOverlay onDone={() => { delete track.__justAdded; }} />
-                )}
+                {flashIds.includes(track.id) && <ActivityOverlay />}
               </li>
             );
           })}

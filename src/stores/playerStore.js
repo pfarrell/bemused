@@ -28,6 +28,11 @@ export const usePlayerStore = create((set, get) => ({
   // UI state
   drawerOpen: false,
   activityPulseToken: 0,
+  // IDs from the most recent flashActivity add — replaced wholesale on each
+  // add (not merged) so only the latest batch flashes when the drawer opens,
+  // and cleared by the drawer itself once shown so it doesn't flash again.
+  recentlyAddedTrackIds: [],
+  clearRecentlyAdded: () => set({ recentlyAddedTrackIds: [] }),
 
   // Internal setters — called only by usePlayerEngine in response to <audio> events
   setIsPlaying: (isPlaying) => set({ isPlaying }),
@@ -127,10 +132,12 @@ export const usePlayerStore = create((set, get) => ({
   addTrack: (track, { flashActivity = false } = {}) => {
     validateTrack(track);
     const { playlist, isPlaying } = get();
-    const newTrack = flashActivity ? { ...track, __justAdded: true } : track;
-    const newPlaylist = [...playlist, newTrack];
+    const newPlaylist = [...playlist, track];
     set({ playlist: newPlaylist });
-    if (flashActivity) get().triggerActivityPulse();
+    if (flashActivity) {
+      set({ recentlyAddedTrackIds: [track.id] });
+      get().triggerActivityPulse();
+    }
     if (!isPlaying) {
       get().playTrackAtIndex(newPlaylist.length - 1);
     }
@@ -142,20 +149,22 @@ export const usePlayerStore = create((set, get) => ({
     }
     tracks.forEach(validateTrack);
     const { playlist, currentTrackIndex, isPlaying } = get();
-    const taggedTracks = flashActivity ? tracks.map((t) => ({ ...t, __justAdded: true })) : tracks;
 
     let newPlaylist;
     let startIndex;
     if (playNext && currentTrackIndex >= 0) {
       startIndex = currentTrackIndex + 1;
-      newPlaylist = [...playlist.slice(0, startIndex), ...taggedTracks, ...playlist.slice(startIndex)];
+      newPlaylist = [...playlist.slice(0, startIndex), ...tracks, ...playlist.slice(startIndex)];
     } else {
       startIndex = playlist.length;
-      newPlaylist = [...playlist, ...taggedTracks];
+      newPlaylist = [...playlist, ...tracks];
     }
 
     set({ playlist: newPlaylist });
-    if (flashActivity) get().triggerActivityPulse();
+    if (flashActivity) {
+      set({ recentlyAddedTrackIds: tracks.map((t) => t.id) });
+      get().triggerActivityPulse();
+    }
     if (!isPlaying) {
       get().playTrackAtIndex(startIndex);
     }
