@@ -90,6 +90,7 @@ export const usePlayerStore = create((set, get) => ({
 
   playPrev: () => {
     const { shuffle, shuffleHistory, playlist, currentTrackIndex } = get();
+    if (playlist.length === 0) return;
     set({ playlistFinished: false });
     if (shuffle && shuffleHistory.length > 1) {
       const newHistory = shuffleHistory.slice(0, -1);

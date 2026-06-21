@@ -177,6 +177,14 @@ describe('playNext / shuffle', () => {
     expect(state.shuffle).toBe(true);
     expect(state.shuffleHistory).toEqual([state.currentTrackIndex]);
   });
+
+  test('playPrev() on an empty playlist does not throw and leaves state sane', () => {
+    usePlayerStore.setState({ audioElement: mockAudioElement(), playlist: [], currentTrackIndex: -1 });
+    expect(() => usePlayerStore.getState().playPrev()).not.toThrow();
+    const state = usePlayerStore.getState();
+    expect(state.currentTrackIndex).toBe(-1);
+    expect(state.playlist).toHaveLength(0);
+  });
 });
 
 describe('clearPlaylist', () => {
