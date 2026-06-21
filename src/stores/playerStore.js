@@ -44,10 +44,11 @@ export const usePlayerStore = create((set, get) => ({
 
   // Transport
   playTrackAtIndex: (index) => {
-    const { playlist, audioElement } = get();
+    const { playlist, audioElement, shuffle, shuffleHistory } = get();
     if (index < 0 || index >= playlist.length || !audioElement) return;
     const track = playlist[index];
-    set({ currentTrackIndex: index, currentTrack: track, playlistFinished: false });
+    const nextShuffleHistory = shuffle && !shuffleHistory.includes(index) ? [...shuffleHistory, index] : shuffleHistory;
+    set({ currentTrackIndex: index, currentTrack: track, playlistFinished: false, shuffleHistory: nextShuffleHistory });
     audioElement.src = track.url;
     audioElement.load();
     audioElement.play().catch((error) => console.error('Playback failed:', error));
@@ -69,7 +70,7 @@ export const usePlayerStore = create((set, get) => ({
 
   seek: (time) => {
     const { audioElement } = get();
-    if (!audioElement) return;
+    if (!audioElement || !Number.isFinite(time)) return;
     audioElement.currentTime = time;
   },
 

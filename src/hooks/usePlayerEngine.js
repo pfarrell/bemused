@@ -2,7 +2,15 @@ import { useEffect } from 'react';
 import { usePlayerStore } from '../stores/playerStore';
 import { apiService } from '../services/api';
 
-const FALLBACK_ARTWORK = '/bemused/app/icons/icon-512.png';
+const FALLBACK_ARTWORK = `${import.meta.env.BASE_URL}icons/icon-512.png`;
+
+const setMediaSessionActionHandler = (action, handler) => {
+  try {
+    navigator.mediaSession.setActionHandler(action, handler);
+  } catch {
+    // Some browsers (notably Safari) throw for unsupported actions.
+  }
+};
 
 export const usePlayerEngine = (audioRef) => {
   const currentTrack = usePlayerStore((s) => s.currentTrack);
@@ -26,7 +34,8 @@ export const usePlayerEngine = (audioRef) => {
         if (track) apiService.log(track.id);
       }
     };
-    const handleLoadedMetadata = () => usePlayerStore.getState().setDuration(audio.duration);
+    const handleLoadedMetadata = () =>
+      usePlayerStore.getState().setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
     const handleBufferingStart = () => usePlayerStore.getState().setBuffering(true);
     const handleBufferingEnd = () => usePlayerStore.getState().setBuffering(false);
     const handlePlay = () => {
@@ -48,11 +57,11 @@ export const usePlayerEngine = (audioRef) => {
     audio.addEventListener('ended', handleEnded);
 
     if ('mediaSession' in navigator) {
-      navigator.mediaSession.setActionHandler('play', () => usePlayerStore.getState().togglePlayPause());
-      navigator.mediaSession.setActionHandler('pause', () => usePlayerStore.getState().togglePlayPause());
-      navigator.mediaSession.setActionHandler('previoustrack', () => usePlayerStore.getState().playPrev());
-      navigator.mediaSession.setActionHandler('nexttrack', () => usePlayerStore.getState().playNext());
-      navigator.mediaSession.setActionHandler('seekto', (details) => {
+      setMediaSessionActionHandler('play', () => usePlayerStore.getState().togglePlayPause());
+      setMediaSessionActionHandler('pause', () => usePlayerStore.getState().togglePlayPause());
+      setMediaSessionActionHandler('previoustrack', () => usePlayerStore.getState().playPrev());
+      setMediaSessionActionHandler('nexttrack', () => usePlayerStore.getState().playNext());
+      setMediaSessionActionHandler('seekto', (details) => {
         if (details.seekTime != null) usePlayerStore.getState().seek(details.seekTime);
       });
     }
@@ -69,11 +78,11 @@ export const usePlayerEngine = (audioRef) => {
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('ended', handleEnded);
       if ('mediaSession' in navigator) {
-        navigator.mediaSession.setActionHandler('play', null);
-        navigator.mediaSession.setActionHandler('pause', null);
-        navigator.mediaSession.setActionHandler('previoustrack', null);
-        navigator.mediaSession.setActionHandler('nexttrack', null);
-        navigator.mediaSession.setActionHandler('seekto', null);
+        setMediaSessionActionHandler('play', null);
+        setMediaSessionActionHandler('pause', null);
+        setMediaSessionActionHandler('previoustrack', null);
+        setMediaSessionActionHandler('nexttrack', null);
+        setMediaSessionActionHandler('seekto', null);
       }
       usePlayerStore.getState().setAudioElement(null);
     };
@@ -99,8 +108,12 @@ export const usePlayerEngine = (audioRef) => {
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
     navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-    if (duration > 0) {
-      navigator.mediaSession.setPositionState({ duration, position: Math.min(currentTime, duration), playbackRate: 1 });
+    if (duration > 0 && typeof navigator.mediaSession.setPositionState === 'function') {
+      try {
+        navigator.mediaSession.setPositionState({ duration, position: Math.min(currentTime, duration), playbackRate: 1 });
+      } catch {
+        // Some browsers expose mediaSession without full setPositionState support.
+      }
     }
   }, [isPlaying, currentTime, duration]);
 };
