@@ -6,14 +6,15 @@ vi.mock('./PlaylistDrawer', () => ({ default: () => null }));
 
 beforeEach(() => {
   usePlayerStore.setState({
-    audioElement: null, isPlaying: false, isBuffering: false, currentTime: 0, duration: 0,
+    audioElementA: null, audioElementB: null, activeSlot: 'a', isPlaying: false, isBuffering: false, currentTime: 0, duration: 0,
     shuffle: false, drawerOpen: false, activityPulseToken: 0, playlist: [], currentTrackIndex: -1,
   });
 });
 
-test('renders a hidden audio element and binds it into the store', () => {
+test('renders two hidden audio elements and binds both into the store', () => {
   render(<MusicPlayerWrapper />);
-  expect(usePlayerStore.getState().audioElement).not.toBeNull();
+  expect(usePlayerStore.getState().audioElementA).not.toBeNull();
+  expect(usePlayerStore.getState().audioElementB).not.toBeNull();
 });
 
 test('play button calls togglePlayPause', () => {

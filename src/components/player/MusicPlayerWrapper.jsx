@@ -18,8 +18,9 @@ const formatTime = (seconds) => {
 };
 
 const MusicPlayerWrapper = ({ className = '' }) => {
-  const audioRef = useRef(null);
-  usePlayerEngine(audioRef);
+  const audioRefA = useRef(null);
+  const audioRefB = useRef(null);
+  usePlayerEngine(audioRefA, audioRefB);
 
   const isPlaying = usePlayerStore((s) => s.isPlaying);
   const isBuffering = usePlayerStore((s) => s.isBuffering);
@@ -57,7 +58,8 @@ const MusicPlayerWrapper = ({ className = '' }) => {
 
   return (
     <div className={`music-player-wrapper ${className}`}>
-      <audio ref={audioRef} style={{ display: 'none' }} preload="metadata" />
+      <audio ref={audioRefA} style={{ display: 'none' }} preload="metadata" />
+      <audio ref={audioRefB} style={{ display: 'none' }} preload="metadata" />
 
       <div className="player-controls-container">
         <div className="player-controls-wrapper">
