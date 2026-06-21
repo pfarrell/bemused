@@ -16,7 +16,7 @@ const Artist = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAdmin, isAuthenticated } = useAuthStore();
-  const { playerInstance, currentTrack } = usePlayerStore();
+  const { addTracks, clearPlaylist, currentTrack } = usePlayerStore();
   const [artistData, setArtistData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -93,10 +93,9 @@ const Artist = () => {
   const { artist, summary, albums, singles, appears_on, related_artists, members, member_of, similar_artists } = artistData;
 
   const handlePlaySingles = () => {
-    if (playerInstance && singles?.length) {
-      playerInstance.clearPlaylist();
-      playerInstance.addTracks(singles);
-      playerInstance.loadAndPlayTrack(0);
+    if (singles?.length) {
+      clearPlaylist();
+      addTracks(singles);
     }
   };
 
