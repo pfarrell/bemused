@@ -69,8 +69,7 @@ const PlaylistDrawer = () => {
     const rect = e.currentTarget.getBoundingClientRect();
     const midpoint = rect.top + rect.height / 2;
     const insertAt = e.clientY > midpoint ? index + 1 : index;
-    const target = insertAt > draggedIndex ? insertAt - 1 : insertAt;
-    reorderPlaylist(draggedIndex, target);
+    reorderPlaylist(draggedIndex, insertAt);
     setDraggedIndex(null);
   };
 
