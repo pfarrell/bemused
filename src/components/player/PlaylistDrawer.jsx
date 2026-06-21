@@ -26,7 +26,7 @@ const PlaylistDrawer = () => {
   const reorderPlaylist = usePlayerStore((s) => s.reorderPlaylist);
   const togglePlayPause = usePlayerStore((s) => s.togglePlayPause);
   const toggleDrawer = usePlayerStore((s) => s.toggleDrawer);
-  const recentlyAddedTrackIds = usePlayerStore((s) => s.recentlyAddedTrackIds);
+  const recentlyAddedIndices = usePlayerStore((s) => s.recentlyAddedIndices);
   const clearRecentlyAdded = usePlayerStore((s) => s.clearRecentlyAdded);
 
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -36,13 +36,14 @@ const PlaylistDrawer = () => {
   // `if (!drawerOpen) return null` below is the only thing hiding it), so
   // "first open after an edit" has to be detected via the drawerOpen
   // transition, not mount/unmount — snapshot the batch when it opens, then
-  // clear the store so a later open/close cycle shows no flash.
-  const [flashIds, setFlashIds] = useState([]);
+  // clear the store so a later open/close cycle shows no flash. Matched by
+  // playlist position, not track id — the same track can appear twice.
+  const [flashIndices, setFlashIndices] = useState([]);
   useEffect(() => {
     if (!drawerOpen) return;
-    setFlashIds(recentlyAddedTrackIds);
-    if (recentlyAddedTrackIds.length > 0) clearRecentlyAdded();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to the drawerOpen transition, not every recentlyAddedTrackIds change
+    setFlashIndices(recentlyAddedIndices);
+    if (recentlyAddedIndices.length > 0) clearRecentlyAdded();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to the drawerOpen transition, not every recentlyAddedIndices change
   }, [drawerOpen]);
 
   if (!drawerOpen) return null;
@@ -128,7 +129,7 @@ const PlaylistDrawer = () => {
                 >
                   &#10060;
                 </button>
-                {flashIds.includes(track.id) && <ActivityOverlay />}
+                {flashIndices.includes(index) && <ActivityOverlay />}
               </li>
             );
           })}

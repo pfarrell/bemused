@@ -28,11 +28,13 @@ export const usePlayerStore = create((set, get) => ({
   // UI state
   drawerOpen: false,
   activityPulseToken: 0,
-  // IDs from the most recent flashActivity add — replaced wholesale on each
-  // add (not merged) so only the latest batch flashes when the drawer opens,
-  // and cleared by the drawer itself once shown so it doesn't flash again.
-  recentlyAddedTrackIds: [],
-  clearRecentlyAdded: () => set({ recentlyAddedTrackIds: [] }),
+  // Playlist positions (not track ids — the same track can legitimately
+  // appear twice) from the most recent flashActivity add. Replaced wholesale
+  // on each add (not merged) so only the latest batch flashes when the
+  // drawer opens, and cleared by the drawer itself once shown so it doesn't
+  // flash again.
+  recentlyAddedIndices: [],
+  clearRecentlyAdded: () => set({ recentlyAddedIndices: [] }),
 
   // Internal setters — called only by usePlayerEngine in response to <audio> events
   setIsPlaying: (isPlaying) => set({ isPlaying }),
@@ -135,7 +137,7 @@ export const usePlayerStore = create((set, get) => ({
     const newPlaylist = [...playlist, track];
     set({ playlist: newPlaylist });
     if (flashActivity) {
-      set({ recentlyAddedTrackIds: [track.id] });
+      set({ recentlyAddedIndices: [newPlaylist.length - 1] });
       get().triggerActivityPulse();
     }
     if (!isPlaying) {
@@ -162,7 +164,8 @@ export const usePlayerStore = create((set, get) => ({
 
     set({ playlist: newPlaylist });
     if (flashActivity) {
-      set({ recentlyAddedTrackIds: tracks.map((t) => t.id) });
+      const newIndices = tracks.map((_, i) => startIndex + i);
+      set({ recentlyAddedIndices: newIndices });
       get().triggerActivityPulse();
     }
     if (!isPlaying) {

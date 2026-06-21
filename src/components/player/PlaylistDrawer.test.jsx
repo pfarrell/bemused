@@ -4,14 +4,14 @@ import { usePlayerStore } from '../../stores/playerStore';
 
 vi.mock('../../services/api', () => ({ apiService: { getImageUrl: () => 'http://example.com/art.jpg' } }));
 
-const track = (id, overrides = {}) => ({ id, title: `Track ${id}`, duration: 125, artist: { name: 'Artist' }, ...overrides });
+const track = (id, overrides = {}) => ({ id, title: `Track ${id}`, url: `/stream/${id}`, duration: 125, artist: { name: 'Artist' }, ...overrides });
 
 beforeEach(() => {
   usePlayerStore.setState({
     playlist: [track(1), track(2), track(3)],
     currentTrackIndex: 1,
     drawerOpen: true,
-    recentlyAddedTrackIds: [],
+    recentlyAddedIndices: [],
     playTrackAtIndex: vi.fn(),
     removeTrackFromPlaylist: vi.fn(),
     reorderPlaylist: vi.fn(),
@@ -33,8 +33,8 @@ test('renders every track in the playlist', () => {
   expect(screen.getByText(/Track 3/)).toBeInTheDocument();
 });
 
-test('only flashes tracks present in recentlyAddedTrackIds at mount time', () => {
-  usePlayerStore.setState({ recentlyAddedTrackIds: [3] });
+test('only flashes the track at the position recorded in recentlyAddedIndices at mount time', () => {
+  usePlayerStore.setState({ recentlyAddedIndices: [2] }); // track 3 is at index 2
   render(<PlaylistDrawer />);
   const row1 = screen.getByText(/Track 1/).closest('.track-item');
   const row3 = screen.getByText(/Track 3/).closest('.track-item');
@@ -42,10 +42,24 @@ test('only flashes tracks present in recentlyAddedTrackIds at mount time', () =>
   expect(row3.querySelector('.track-item-activity-overlay')).not.toBeNull();
 });
 
-test('clears recentlyAddedTrackIds after mount so a later open does not re-flash', () => {
-  usePlayerStore.setState({ recentlyAddedTrackIds: [3] });
+test('clears recentlyAddedIndices after mount so a later open does not re-flash', () => {
+  usePlayerStore.setState({ recentlyAddedIndices: [2] });
   render(<PlaylistDrawer />);
-  expect(usePlayerStore.getState().recentlyAddedTrackIds).toEqual([]);
+  expect(usePlayerStore.getState().recentlyAddedIndices).toEqual([]);
+});
+
+test('regression: queueing a track whose id already exists elsewhere in the playlist only flashes the new occurrence', () => {
+  usePlayerStore.setState({ playlist: [track(5)], currentTrackIndex: 0, isPlaying: true, recentlyAddedIndices: [] });
+  render(<PlaylistDrawer />);
+
+  act(() => usePlayerStore.getState().addTrack(track(5), { flashActivity: true }));
+  act(() => usePlayerStore.setState({ drawerOpen: false }));
+  act(() => usePlayerStore.setState({ drawerOpen: true }));
+
+  const rows = screen.getAllByText(/Track 5/).map((el) => el.closest('.track-item'));
+  expect(rows).toHaveLength(2);
+  expect(rows[0].querySelector('.track-item-activity-overlay')).toBeNull(); // pre-existing occurrence
+  expect(rows[1].querySelector('.track-item-activity-overlay')).not.toBeNull(); // newly queued occurrence
 });
 
 test('reported scenario: only the latest add flashes, and only on its first open (component never unmounts between opens)', () => {
@@ -54,13 +68,14 @@ test('reported scenario: only the latest add flashes, and only on its first open
   // this test renders once and drives every step through the store, exactly
   // like the real app, instead of calling render() again per step (which
   // would hide this class of bug behind a fresh mount each time).
-  usePlayerStore.setState({ playlist: [track(1)], currentTrackIndex: 0, drawerOpen: false, recentlyAddedTrackIds: [] });
+  usePlayerStore.setState({ playlist: [track(1)], currentTrackIndex: 0, drawerOpen: false, recentlyAddedIndices: [] });
   render(<PlaylistDrawer />);
 
-  // Queue track 2 (flashActivity), then play-next track 3 (flashActivity) —
-  // neither has been viewed yet, drawer still closed.
-  act(() => usePlayerStore.setState({ playlist: [track(1), track(2)], recentlyAddedTrackIds: [2] }));
-  act(() => usePlayerStore.setState({ playlist: [track(1), track(3), track(2)], recentlyAddedTrackIds: [3] }));
+  // Queue track 2 (flashActivity, lands at index 1), then play-next track 3
+  // (flashActivity, inserted after current index 0, so also lands at index 1)
+  // — neither has been viewed yet, drawer still closed.
+  act(() => usePlayerStore.setState({ playlist: [track(1), track(2)], recentlyAddedIndices: [1] }));
+  act(() => usePlayerStore.setState({ playlist: [track(1), track(3), track(2)], recentlyAddedIndices: [1] }));
 
   // First open: only track 3 (the latest batch) should flash, not track 2.
   act(() => usePlayerStore.setState({ drawerOpen: true }));
@@ -77,7 +92,7 @@ test('reported scenario: only the latest add flashes, and only on its first open
 
   // Close, add track 4 to queue, reopen: only track 4 should flash.
   act(() => usePlayerStore.setState({ drawerOpen: false }));
-  act(() => usePlayerStore.setState({ playlist: [track(1), track(3), track(2), track(4)], recentlyAddedTrackIds: [4] }));
+  act(() => usePlayerStore.setState({ playlist: [track(1), track(3), track(2), track(4)], recentlyAddedIndices: [3] }));
   act(() => usePlayerStore.setState({ drawerOpen: true }));
   rows = screen.getAllByText(/Track [1-4]/).map((el) => el.closest('.track-item'));
   expect(rows[3].querySelector('.track-item-activity-overlay')).not.toBeNull(); // track 4, position 4

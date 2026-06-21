@@ -27,7 +27,7 @@ beforeEach(() => {
     shuffleHistory: [],
     drawerOpen: false,
     activityPulseToken: 0,
-    recentlyAddedTrackIds: [],
+    recentlyAddedIndices: [],
   });
 });
 
@@ -119,38 +119,46 @@ describe('addTracks', () => {
   });
 });
 
-describe('recentlyAddedTrackIds', () => {
-  test('addTrack with flashActivity records just that track id', () => {
-    usePlayerStore.setState({ audioElement: mockAudioElement() });
-    usePlayerStore.getState().addTrack(track(1), { flashActivity: true });
-    expect(usePlayerStore.getState().recentlyAddedTrackIds).toEqual([1]);
+describe('recentlyAddedIndices', () => {
+  test('addTrack with flashActivity records the new entry\'s playlist position, not its id', () => {
+    usePlayerStore.setState({ audioElement: mockAudioElement(), playlist: [track(99), track(98)] });
+    usePlayerStore.getState().addTrack(track(5), { flashActivity: true });
+    expect(usePlayerStore.getState().recentlyAddedIndices).toEqual([2]);
   });
 
-  test('addTrack without flashActivity does not touch recentlyAddedTrackIds', () => {
-    usePlayerStore.setState({ audioElement: mockAudioElement(), recentlyAddedTrackIds: [99] });
+  test('addTrack without flashActivity does not touch recentlyAddedIndices', () => {
+    usePlayerStore.setState({ audioElement: mockAudioElement(), recentlyAddedIndices: [99] });
     usePlayerStore.getState().addTrack(track(1));
-    expect(usePlayerStore.getState().recentlyAddedTrackIds).toEqual([99]);
+    expect(usePlayerStore.getState().recentlyAddedIndices).toEqual([99]);
   });
 
   test('a second flashActivity add replaces the previous batch instead of accumulating', () => {
-    // Regression: queue track 2 (flash), then play-next track 3 (flash) before
-    // ever opening the drawer — only track 3 (the latest batch) should remain
-    // marked; track 2 should no longer be flagged even though it was never seen.
+    // Regression: queue track 2 (flash), then queue tracks 7/8 (flash) before
+    // ever opening the drawer — only 7/8 (the latest batch) should remain
+    // marked; track 2's earlier position should no longer be flagged even
+    // though it was never seen.
     usePlayerStore.setState({
       audioElement: mockAudioElement(),
       playlist: [track(1), track(2)],
       currentTrackIndex: 0,
       isPlaying: true,
-      recentlyAddedTrackIds: [2],
+      recentlyAddedIndices: [1],
     });
-    usePlayerStore.getState().addTracks([track(3)], true, { flashActivity: true });
-    expect(usePlayerStore.getState().recentlyAddedTrackIds).toEqual([3]);
+    usePlayerStore.getState().addTracks([track(7), track(8)], false, { flashActivity: true });
+    expect(usePlayerStore.getState().recentlyAddedIndices).toEqual([2, 3]);
+  });
+
+  test('regression: queueing a track whose id already exists elsewhere in the playlist only marks the new occurrence', () => {
+    usePlayerStore.setState({ audioElement: mockAudioElement(), playlist: [track(5)], isPlaying: true });
+    usePlayerStore.getState().addTrack(track(5), { flashActivity: true });
+    expect(usePlayerStore.getState().playlist).toHaveLength(2);
+    expect(usePlayerStore.getState().recentlyAddedIndices).toEqual([1]);
   });
 
   test('clearRecentlyAdded resets the list to empty', () => {
-    usePlayerStore.setState({ recentlyAddedTrackIds: [1, 2] });
+    usePlayerStore.setState({ recentlyAddedIndices: [1, 2] });
     usePlayerStore.getState().clearRecentlyAdded();
-    expect(usePlayerStore.getState().recentlyAddedTrackIds).toEqual([]);
+    expect(usePlayerStore.getState().recentlyAddedIndices).toEqual([]);
   });
 });
 
