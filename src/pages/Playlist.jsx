@@ -12,7 +12,7 @@ import Retry from '../components/Retry';
 export default function Playlist() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { playerInstance, currentTrack } = usePlayerStore();
+  const { addTracks, clearPlaylist, currentTrack } = usePlayerStore();
   const { user, isAdmin } = useAuthStore();
   const [playlistData, setPlaylistData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,24 +37,14 @@ export default function Playlist() {
   };
 
   const handlePlayAll = () => {
-    console.log('handlePlayAll called', { playerInstance, playlistData, tracks: playlistData?.tracks });
-    if (!playerInstance) {
-      console.log('No playerInstance');
-      return;
-    }
-    if (!playlistData?.tracks?.length) {
-      console.log('No tracks in playlistData');
-      return;
-    }
-    console.log('Playing playlist now:', playlistData.playlist.name, 'with', playlistData.tracks.length, 'tracks');
-    playerInstance.clearPlaylist();
-    playerInstance.addTracks(playlistData.tracks);
-    playerInstance.loadAndPlayTrack(0);
+    if (!playlistData?.tracks?.length) return;
+    clearPlaylist();
+    addTracks(playlistData.tracks);
   };
 
   const handleAddToQueue = () => {
-    if (!playerInstance || !playlistData?.tracks?.length) return;
-    playerInstance.addTracks(playlistData.tracks, false, { flashActivity: true });
+    if (!playlistData?.tracks?.length) return;
+    addTracks(playlistData.tracks, false, { flashActivity: true });
   };
 
   if (loading) return <Loading />;

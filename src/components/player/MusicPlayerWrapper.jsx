@@ -1,133 +1,106 @@
-// src/components/player/MusicPlayerWrapper.jsx
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { usePlayerStore } from '../../stores/playerStore';
-import { apiService } from '../../services/api';
+import { usePlayerEngine } from '../../hooks/usePlayerEngine';
+import PlaylistDrawer from './PlaylistDrawer';
 
-const MusicPlayerWrapper = ({ className = "" }) => {
-  const audioRef = useRef();
-  const controlsContainerRef = useRef();
-  const playlistContainerRef = useRef();
-  const playerInstanceRef = useRef(null);
-  const [isPlayerReady, setIsPlayerReady] = useState(false);
-  
-  const {
-    setCurrentTrack,
-    setIsPlaying,
-    setPlayerInstance
-  } = usePlayerStore();
+const HAMBURGER = '☰';
+const PREV = '⏪';
+const NEXT = '⏩';
+const SHUFFLE = '\u{1F500}';
+const PLAY = '⏵';
+const PAUSE = '⏸';
 
-  // Load the player script
+const formatTime = (seconds) => {
+  if (!seconds || !Number.isFinite(seconds)) return '0:00';
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+};
+
+const MusicPlayerWrapper = ({ className = '' }) => {
+  const audioRef = useRef(null);
+  usePlayerEngine(audioRef);
+
+  const isPlaying = usePlayerStore((s) => s.isPlaying);
+  const isBuffering = usePlayerStore((s) => s.isBuffering);
+  const currentTime = usePlayerStore((s) => s.currentTime);
+  const duration = usePlayerStore((s) => s.duration);
+  const shuffle = usePlayerStore((s) => s.shuffle);
+  const drawerOpen = usePlayerStore((s) => s.drawerOpen);
+  const activityPulseToken = usePlayerStore((s) => s.activityPulseToken);
+  const togglePlayPause = usePlayerStore((s) => s.togglePlayPause);
+  const playNext = usePlayerStore((s) => s.playNext);
+  const playPrev = usePlayerStore((s) => s.playPrev);
+  const toggleShuffle = usePlayerStore((s) => s.toggleShuffle);
+  const toggleDrawer = usePlayerStore((s) => s.toggleDrawer);
+  const seek = usePlayerStore((s) => s.seek);
+
+  const [pulsing, setPulsing] = useState(false);
+
   useEffect(() => {
-    const loadPlayerScript = () => {
-      if (typeof window.AudioPlayer !== 'undefined') {
-        console.log('AudioPlayer already available');
-        setIsPlayerReady(true);
-        return;
-      }
-
-      // Determine script path based on environment
-      const scriptPath = import.meta.env.DEV
-        ? '/player.js'  // Dev server will serve from public/
-        : '/bemused/app/player.js';  // Production path
-
-      const existingScript = document.querySelector(`script[src="${scriptPath}"]`);
-      if (existingScript) {
-        console.log('Script tag exists, waiting for load...');
-        existingScript.onload = () => setIsPlayerReady(true);
-        return;
-      }
-
-      console.log('Loading player script...');
-      const script = document.createElement('script');
-      script.src = scriptPath;
-      script.onload = () => {
-        console.log('Player script loaded successfully');
-        setIsPlayerReady(true);
-      };
-      script.onerror = () => {
-        console.error('Failed to load music player script');
-      };
-      document.head.appendChild(script);
-    };
-
-    loadPlayerScript();
-  }, []);
-
-  // Initialize the player when ready
-  useEffect(() => {
-    if (!isPlayerReady || !audioRef.current || !controlsContainerRef.current || !playlistContainerRef.current) {
-      return;
-    }
-
-    try {
-      console.log('Initializing AudioPlayer...');
-
-      const player = new window.AudioPlayer(
-        [], // Start with empty playlist
-        audioRef.current,              // Audio element
-        controlsContainerRef.current,  // Controls container (player will render hamburger + controls here)
-        playlistContainerRef.current,  // Playlist container (player will manage visibility)
-        {
-          shuffle: false,
-          onTrackStart: (track) => {
-            console.log('Track started:', track);
-            setCurrentTrack(track);
-            setIsPlaying(true);
-          },
-          onFiveSecondMark: (track) => {
-            apiService.log(track.id);
-            console.log('5 seconds into:', track.title);
-          },
-          getTrackPrefix: () => {
-            return '';
-          },
-          getImageUrl: (track) => apiService.getImageUrl(track.image_path, 'album_small')
-        }
-      );
-
-      playerInstanceRef.current = player;
-      setPlayerInstance(player);
-
-      console.log('Music player initialized successfully');
-
-    } catch (error) {
-      console.error('Error initializing music player:', error);
-    }
-
+    if (activityPulseToken === 0) return undefined;
+    setPulsing(false);
+    const frame = requestAnimationFrame(() => setPulsing(true));
+    const stop = setTimeout(() => setPulsing(false), 1200);
     return () => {
-      if (playerInstanceRef.current) {
-        playerInstanceRef.current = null;
-      }
-      setPlayerInstance(null);
+      cancelAnimationFrame(frame);
+      clearTimeout(stop);
     };
-  }, [isPlayerReady, setCurrentTrack, setIsPlaying, setPlayerInstance]);
+  }, [activityPulseToken]);
+
+  const handleSeek = (e) => {
+    const percent = Number(e.target.value) / 100;
+    seek(percent * duration);
+  };
+
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
     <div className={`music-player-wrapper ${className}`}>
-      {/* Audio element - hidden */}
-      <audio 
-        ref={audioRef} 
-        style={{ display: 'none' }}
-        preload="metadata"
-      />
-      
-      {/* Controls container - AudioPlayer renders hamburger + all controls here */}
-      <div 
-        ref={controlsContainerRef} 
-        className="player-controls-container"
-      >
-        {!isPlayerReady && (
-          <div className="loading-text">
-            Loading player...
+      <audio ref={audioRef} style={{ display: 'none' }} preload="metadata" />
+
+      <div className="player-controls-container">
+        <div className="player-controls-wrapper">
+          <button
+            className={`player-btn hamburger-btn ${drawerOpen ? 'active' : ''} ${pulsing ? 'activity-pulse' : ''}`}
+            title="Toggle Playlist"
+            onClick={toggleDrawer}
+          >
+            {HAMBURGER}
+          </button>
+
+          <span className="time-display elapsed">{formatTime(currentTime)}</span>
+
+          <div className={`progress-bar-wrapper ${isBuffering ? 'loading' : ''}`}>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={progressPercent}
+              className="progress-bar"
+              onChange={handleSeek}
+            />
+            <div className="progress-bar-loading-overlay" />
           </div>
-        )}
+
+          <span className="time-display total">{formatTime(duration)}</span>
+
+          <button className="player-btn prev-btn" title="Previous" onClick={playPrev}>{PREV}</button>
+          <button className="player-btn play-btn" title="Play/Pause" onClick={togglePlayPause}>
+            {isPlaying ? PAUSE : PLAY}
+          </button>
+          <button className="player-btn next-btn" title="Next" onClick={playNext}>{NEXT}</button>
+          <button
+            className={`player-btn shuffle-btn ${shuffle ? 'active' : ''}`}
+            title="Shuffle"
+            onClick={toggleShuffle}
+          >
+            {SHUFFLE}
+          </button>
+        </div>
       </div>
-      
-      {/* Playlist container - AudioPlayer manages this visibility via hamburger */}
-      <div 
-        ref={playlistContainerRef}
-        className="music-player-playlist-container"
-      />
+
+      <PlaylistDrawer />
     </div>
   );
 };

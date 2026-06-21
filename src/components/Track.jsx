@@ -11,7 +11,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
   const [dropdownPos, setDropdownPos] = useState({ x: 0, y: 0 });
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [pressedButton, setPressedButton] = useState(null);
-  const { playerInstance } = usePlayerStore();
+  const { playlist, addTrack, addTracks, clearPlaylist, playTrackAtIndex } = usePlayerStore();
   const navigate = useNavigate();
   const longPressTimer = useRef(null);
   const touchStartPos = useRef({ x: 0, y: 0 });
@@ -31,16 +31,12 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
   }, []);
 
   const handleTrackClick = () => {
-    if (playerInstance) {
-      const existingIndex = playerInstance.playlist.findIndex(t => t.id === track.id);
-      if (existingIndex !== -1) {
-        // Track is already in the playlist — jump to it instead of replacing
-        playerInstance.loadAndPlayTrack(existingIndex);
-      } else {
-        playerInstance.clearPlaylist();
-        playerInstance.addTrack(track);
-        playerInstance.loadAndPlayTrack(0);
-      }
+    const existingIndex = playlist.findIndex((t) => t.id === track.id);
+    if (existingIndex !== -1) {
+      playTrackAtIndex(existingIndex);
+    } else {
+      clearPlaylist();
+      addTrack(track);
     }
   };
 
@@ -49,15 +45,12 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
       e.preventDefault();
       e.stopPropagation();
     }
-    if (playerInstance) {
-      const existingIndex = playerInstance.playlist.findIndex(t => t.id === track.id);
-      if (existingIndex !== -1) {
-        playerInstance.loadAndPlayTrack(existingIndex);
-      } else {
-        playerInstance.clearPlaylist();
-        playerInstance.addTrack(track);
-        playerInstance.loadAndPlayTrack(0);
-      }
+    const existingIndex = playlist.findIndex((t) => t.id === track.id);
+    if (existingIndex !== -1) {
+      playTrackAtIndex(existingIndex);
+    } else {
+      clearPlaylist();
+      addTrack(track);
     }
     setTimeout(() => setShowDropdown(false), 0);
   };
@@ -67,16 +60,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
       e.preventDefault();
       e.stopPropagation();
     }
-    if (playerInstance) {
-      console.log('Adding track to play next:', track.title);
-      playerInstance.addTracks([track], true, { flashActivity: true }); // true = play next
-
-      // If nothing is playing, start playing immediately
-      if (playerInstance.audioPlayer.paused) {
-        const currentIndex = playerInstance.currentTrackIndex || 0;
-        playerInstance.loadAndPlayTrack(currentIndex);
-      }
-    }
+    addTracks([track], true, { flashActivity: true }); // true = play next; store auto-starts playback if idle
     setPressedButton('next');
     setTimeout(() => {
       setShowDropdown(false);
@@ -89,16 +73,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
       e.preventDefault();
       e.stopPropagation();
     }
-    if (playerInstance) {
-      console.log('Adding track to queue:', track.title);
-      playerInstance.addTrack(track, { flashActivity: true });
-
-      // If nothing is playing, start playing immediately
-      if (playerInstance.audioPlayer && playerInstance.audioPlayer.paused) {
-        const trackIndex = playerInstance.playlist.length - 1; // The track we just added
-        playerInstance.loadAndPlayTrack(trackIndex);
-      }
-    }
+    addTrack(track, { flashActivity: true }); // store auto-starts playback if idle
     setPressedButton('queue');
     setTimeout(() => {
       setShowDropdown(false);
