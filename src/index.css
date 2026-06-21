@@ -694,7 +694,6 @@
   -webkit-user-select: none;
   user-select: none;
   text-align: left;
-  display: none; /* Hide playlist by default */
 }
 
 .music-player-playlist-container .playlist {
@@ -1173,12 +1172,9 @@
     box-shadow: none !important;
     z-index: 1001 !important;
     text-align: left !important;
+    display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
-  }
-  
-  .music-player-playlist-container[style*="display: block"] {
-    display: flex !important;
   }
   
   .music-player-playlist-container .playlist {
