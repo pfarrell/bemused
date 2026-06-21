@@ -12,7 +12,7 @@ import TagsSection from '../components/TagsSection';
 const Album = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { playerInstance, currentTrack } = usePlayerStore();
+  const { addTracks, clearPlaylist, currentTrack } = usePlayerStore();
   const { isAdmin, isAuthenticated } = useAuthStore();
   const [albumData, setAlbumData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -45,39 +45,21 @@ const Album = () => {
   }
 
   const handlePlayNow = () => {
-    if (albumData?.tracks && playerInstance) {
-      console.log('Playing album now:', albumData.album.title);
-      playerInstance.clearPlaylist();
-      playerInstance.addTracks(albumData.tracks);
-      playerInstance.loadAndPlayTrack(0);
-    } else {
-      console.log('Player not ready or no tracks');
+    if (albumData?.tracks) {
+      clearPlaylist();
+      addTracks(albumData.tracks);
     }
   };
 
   const handlePlayNext = () => {
-    if (albumData?.tracks && playerInstance) {
-      console.log('Added album to play next:', albumData.album.title);
-      playerInstance.addTracks(albumData.tracks, true, { flashActivity: true }); // true = play next
-
-      // If nothing is playing, start playing immediately
-      if (playerInstance.audioPlayer.paused) {
-        const currentIndex = playerInstance.currentTrackIndex;
-        playerInstance.loadAndPlayTrack(currentIndex + 1);
-      }
+    if (albumData?.tracks) {
+      addTracks(albumData.tracks, true, { flashActivity: true }); // store auto-starts playback if idle
     }
   };
 
   const handleAddToQueue = () => {
-    if (albumData?.tracks && playerInstance) {
-      console.log('Added album to queue:', albumData.album.title);
-      playerInstance.addTracks(albumData.tracks, false, { flashActivity: true }); // false = add to end
-
-      // If nothing is playing, start playing immediately
-      if (playerInstance.audioPlayer.paused) {
-        const startIndex = playerInstance.playlist.length - albumData.tracks.length; // First track of the added album
-        playerInstance.loadAndPlayTrack(startIndex);
-      }
+    if (albumData?.tracks) {
+      addTracks(albumData.tracks, false, { flashActivity: true }); // store auto-starts playback if idle
     }
   };
 

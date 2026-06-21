@@ -39,45 +39,15 @@ beforeEach(() => {
 });
 
 describe('Album page', () => {
-  test('Add to Queue starts playback without throwing when paused', async () => {
-    const loadAndPlayTrack = vi.fn();
-    const playerInstance = {
-      playlist: [],
-      audioPlayer: { paused: true },
-      currentTrackIndex: -1,
-      addTracks: vi.fn((tracks) => { playerInstance.playlist.push(...tracks); }),
-      loadAndPlayTrack,
-    };
-    usePlayerStore.setState({ playerInstance, currentTrack: null });
+  test('Add to Queue calls addTracks with flashActivity', async () => {
+    const addTracks = vi.fn();
+    usePlayerStore.setState({ addTracks, currentTrack: null });
 
     renderAlbum();
     await screen.findByText('Test Album');
 
     fireEvent.click(screen.getByText('Add to Queue'));
 
-    expect(playerInstance.addTracks).toHaveBeenCalledWith(albumData.tracks, false, { flashActivity: true });
-    // Regression check: previously this threw "playerInstance.getPlaylist is not
-    // a function" before loadAndPlayTrack was ever reached.
-    expect(loadAndPlayTrack).toHaveBeenCalledWith(0);
-  });
-
-  test('Add to Queue does not auto-play when something is already playing', async () => {
-    const loadAndPlayTrack = vi.fn();
-    const playerInstance = {
-      playlist: [{ id: 99, title: 'Already playing' }],
-      audioPlayer: { paused: false },
-      currentTrackIndex: 0,
-      addTracks: vi.fn((tracks) => { playerInstance.playlist.push(...tracks); }),
-      loadAndPlayTrack,
-    };
-    usePlayerStore.setState({ playerInstance, currentTrack: null });
-
-    renderAlbum();
-    await screen.findByText('Test Album');
-
-    fireEvent.click(screen.getByText('Add to Queue'));
-
-    expect(playerInstance.addTracks).toHaveBeenCalledWith(albumData.tracks, false, { flashActivity: true });
-    expect(loadAndPlayTrack).not.toHaveBeenCalled();
+    expect(addTracks).toHaveBeenCalledWith(albumData.tracks, false, { flashActivity: true });
   });
 });
