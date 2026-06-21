@@ -6,6 +6,21 @@ const validateTrack = (track) => {
   }
 };
 
+// Pure function: given the fields that decide "what plays after this," resolves the next
+// playlist index (or -1 if there is none). Shuffle's pick is rolled once here and reused by
+// playNext() rather than rolled again at advance time, so it's knowable ahead of time —
+// required for prefetching the next track before the current one ends.
+const computeNextIndex = ({ shuffle, shuffleHistory, playlist, currentTrackIndex }) => {
+  if (playlist.length === 0) return -1;
+  if (shuffle) {
+    const remaining = playlist.map((_, i) => i).filter((i) => !shuffleHistory.includes(i));
+    if (remaining.length === 0) return -1;
+    return remaining[Math.floor(Math.random() * remaining.length)];
+  }
+  if (currentTrackIndex === playlist.length - 1) return -1;
+  return currentTrackIndex + 1;
+};
+
 export const usePlayerStore = create((set, get) => ({
   // DOM bridge — the raw <audio> element, set once by usePlayerEngine on mount.
   audioElement: null,
@@ -20,6 +35,9 @@ export const usePlayerStore = create((set, get) => ({
   currentTime: 0,
   duration: 0,
   playlistFinished: false,
+  // The playlist index that will play after the current track, kept in sync by every action
+  // that mutates playlist/currentTrackIndex/shuffle/shuffleHistory. -1 means there is no next track.
+  nextTrackIndex: -1,
 
   // Shuffle state
   shuffle: false,
@@ -41,6 +59,8 @@ export const usePlayerStore = create((set, get) => ({
   setBuffering: (isBuffering) => set({ isBuffering }),
   setCurrentTime: (currentTime) => set({ currentTime }),
   setDuration: (duration) => set({ duration }),
+  // Internal — recomputed at the end of every action that changes what "next" resolves to.
+  syncNextTrackIndex: () => set({ nextTrackIndex: computeNextIndex(get()) }),
 
   // Transport
   playTrackAtIndex: (index) => {
@@ -52,6 +72,7 @@ export const usePlayerStore = create((set, get) => ({
     audioElement.src = track.url;
     audioElement.load();
     audioElement.play().catch((error) => console.error('Playback failed:', error));
+    get().syncNextTrackIndex();
   },
 
   togglePlayPause: () => {
@@ -75,25 +96,16 @@ export const usePlayerStore = create((set, get) => ({
   },
 
   playNext: () => {
-    const { shuffle, shuffleHistory, playlist, currentTrackIndex, audioElement } = get();
-    if (shuffle) {
-      const remaining = playlist.map((_, i) => i).filter((i) => !shuffleHistory.includes(i));
-      if (remaining.length === 0) {
-        set({ playlistFinished: true });
-        audioElement?.pause();
-        return;
-      }
-      const nextIndex = remaining[Math.floor(Math.random() * remaining.length)];
-      set({ shuffleHistory: [...shuffleHistory, nextIndex] });
-      get().playTrackAtIndex(nextIndex);
-      return;
-    }
-    if (currentTrackIndex === playlist.length - 1) {
+    const { shuffle, shuffleHistory, nextTrackIndex, audioElement } = get();
+    if (nextTrackIndex === -1) {
       set({ playlistFinished: true });
       audioElement?.pause();
       return;
     }
-    get().playTrackAtIndex(currentTrackIndex + 1);
+    if (shuffle) {
+      set({ shuffleHistory: [...shuffleHistory, nextTrackIndex] });
+    }
+    get().playTrackAtIndex(nextTrackIndex);
   },
 
   playPrev: () => {
@@ -124,6 +136,7 @@ export const usePlayerStore = create((set, get) => ({
       get().playTrackAtIndex(nextIndex);
     } else {
       set({ shuffle: false, shuffleHistory: [get().currentTrackIndex] });
+      get().syncNextTrackIndex();
     }
   },
 
@@ -144,6 +157,7 @@ export const usePlayerStore = create((set, get) => ({
     if (!isPlaying) {
       get().playTrackAtIndex(newPlaylist.length - 1);
     }
+    get().syncNextTrackIndex();
   },
 
   addTracks: (tracks, playNext = false, { flashActivity = false } = {}) => {
@@ -172,6 +186,7 @@ export const usePlayerStore = create((set, get) => ({
     if (!isPlaying) {
       get().playTrackAtIndex(startIndex);
     }
+    get().syncNextTrackIndex();
   },
 
   clearPlaylist: () => {
@@ -190,6 +205,7 @@ export const usePlayerStore = create((set, get) => ({
       audioElement.pause();
       audioElement.src = '';
     }
+    get().syncNextTrackIndex();
   },
 
   removeTrackFromPlaylist: (index) => {
@@ -214,6 +230,7 @@ export const usePlayerStore = create((set, get) => ({
         audioElement.src = '';
       }
     }
+    get().syncNextTrackIndex();
   },
 
   reorderPlaylist: (fromIndex, toIndex) => {
@@ -229,6 +246,7 @@ export const usePlayerStore = create((set, get) => ({
     newPlaylist.splice(insertIndex, 0, moved);
     const newCurrentIndex = currentTrackRef ? newPlaylist.indexOf(currentTrackRef) : -1;
     set({ playlist: newPlaylist, currentTrackIndex: newCurrentIndex });
+    get().syncNextTrackIndex();
   },
 
   setPlaylist: (tracks) => {
