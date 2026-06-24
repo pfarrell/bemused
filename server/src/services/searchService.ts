@@ -79,7 +79,6 @@ export function createSearchService(db: Kysely<Database>) {
           'artists.wikipedia',
           'artists.created_at',
           'artists.updated_at',
-          eb.fn.countAll<number>().over(w => w.partitionBy('artists.id')).as('_row_count'),
           eb.fn.count<number>('albums.id').distinct().as('album_count'),
           eb.fn.count<number>('tracks.id').distinct().as('track_count'),
         ])

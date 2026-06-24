@@ -40,7 +40,7 @@ auth.post('/signup', async (c) => {
     }
 
     // Check if username already exists (case-insensitive)
-    const existingUser = await authService.findUserByUsername(username)
+    const existingUser = await authService.userExistsByUsername(username)
 
     if (existingUser) {
       return c.json({ error: 'Username already taken' }, 409)
@@ -102,7 +102,7 @@ auth.post('/login', async (c) => {
     }
 
     // Find user (case-insensitive username)
-    const user = await authService.findUserByUsername(username)
+    const user = await authService.findUserForLogin(username)
 
     if (!user) {
       return c.json({ error: 'Invalid username or password' }, 401)

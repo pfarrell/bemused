@@ -11,7 +11,15 @@ export function createAuthService(db: Kysely<Database>) {
         .executeTakeFirst()
     },
 
-    async findUserByUsername(username: string) {
+    async userExistsByUsername(username: string) {
+      return db
+        .selectFrom('users')
+        .select('id')
+        .where(db.fn('LOWER', ['username']), '=', username.toLowerCase())
+        .executeTakeFirst()
+    },
+
+    async findUserForLogin(username: string) {
       return db
         .selectFrom('users')
         .selectAll()
