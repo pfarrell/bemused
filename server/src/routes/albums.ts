@@ -1,8 +1,7 @@
 import { Hono } from 'hono'
-import { sql } from 'kysely'
-import { db } from '../db/database.js'
 import { getAlbumSummary } from '../services/wikipedia.js'
 import { streamBase } from '../db/streamUrl.js'
+import { albumsService } from '../services/albumsService.js'
 
 const albums = new Hono()
 
@@ -12,40 +11,8 @@ albums.get('/random', async (c) => {
   const tag = c.req.query('tag')
 
   const rows = tag
-    ? await sql<any>`
-        WITH eligible_album_ids AS (
-          SELECT DISTINCT al.id
-          FROM albums al
-          INNER JOIN tracks t ON t.album_id = al.id AND t.approved = true
-          INNER JOIN albums_tags at ON at.album_id = al.id
-          INNER JOIN tags tg ON tg.id = at.tag_id AND tg.name = ${tag}
-          WHERE al.image_path IS NOT NULL AND al.image_path != ''
-        ),
-        random_ids AS (
-          SELECT id FROM eligible_album_ids ORDER BY random() LIMIT ${size}
-        )
-        SELECT al.id, al.title, al.image_path,
-               ar.id AS artist_id, ar.name AS artist_name
-        FROM albums al
-        INNER JOIN random_ids r ON al.id = r.id
-        INNER JOIN artists ar ON ar.id = al.artist_id
-      `.execute(db)
-    : await sql<any>`
-        WITH eligible_album_ids AS (
-          SELECT DISTINCT al.id
-          FROM albums al
-          INNER JOIN tracks t ON t.album_id = al.id AND t.approved = true
-          WHERE al.image_path IS NOT NULL AND al.image_path != ''
-        ),
-        random_ids AS (
-          SELECT id FROM eligible_album_ids ORDER BY random() LIMIT ${size}
-        )
-        SELECT al.id, al.title, al.image_path,
-               ar.id AS artist_id, ar.name AS artist_name
-        FROM albums al
-        INNER JOIN random_ids r ON al.id = r.id
-        INNER JOIN artists ar ON ar.id = al.artist_id
-      `.execute(db)
+    ? await albumsService.randomByTag(tag, size)
+    : await albumsService.randomAll(size)
 
   return c.json(rows.rows.map((row: any) => ({
     id: row.id,
@@ -59,39 +26,16 @@ albums.get('/random', async (c) => {
 albums.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
 
-  const album = await db
-    .selectFrom('albums')
-    .selectAll()
-    .where('id', '=', id)
-    .executeTakeFirst()
+  const album = await albumsService.findAlbumById(id)
 
   if (!album) return c.json({ error: 'Not found' }, 404)
 
-  const artist = await db
-    .selectFrom('artists')
-    .selectAll()
-    .where('id', '=', album.artist_id)
-    .executeTakeFirst()
+  const artist = await albumsService.findArtistById(album.artist_id)
 
   if (!artist) return c.json({ error: 'Artist not found' }, 404)
 
   // Fetch tracks with their artist info (track-level artist override)
-  const trackRows = await db
-    .selectFrom('tracks')
-    .leftJoin('artists as track_artist', 'track_artist.id', 'tracks.artist_id')
-    .select([
-      'tracks.id',
-      'tracks.title',
-      'tracks.track_number',
-      'tracks.duration_sec',
-      'tracks.album_id',
-      'tracks.artist_id',
-      'track_artist.name as artist_name',
-      'track_artist.image_path as artist_image_path',
-    ])
-    .where('tracks.album_id', '=', id)
-    .where('tracks.approved', '=', true)
-    .execute()
+  const trackRows = await albumsService.findTracksByAlbumId(id)
 
   trackRows.sort((a, b) => (parseInt(a.track_number ?? '0') || 0) - (parseInt(b.track_number ?? '0') || 0))
 
@@ -106,18 +50,7 @@ albums.get('/:id', async (c) => {
     url: `${streamBase()}/stream/${t.id}`,
   }))
 
-  const secondaryArtistRows = await db
-    .selectFrom('artist_albums')
-    .innerJoin('artists as sa', 'sa.id', 'artist_albums.artist_id')
-    .select([
-      'artist_albums.artist_id as id',
-      'sa.name',
-      'artist_albums.role',
-    ])
-    .where('artist_albums.album_id', '=', id)
-    .where('artist_albums.role', '!=', 'primary')
-    .orderBy('artist_albums.order', 'asc')
-    .execute()
+  const secondaryArtistRows = await albumsService.findSecondaryArtistsByAlbumId(id)
 
   const secondary_artists = secondaryArtistRows.map(r => ({ id: r.id, name: r.name, role: r.role }))
 

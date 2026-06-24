@@ -1,9 +1,9 @@
 import { Hono } from 'hono'
-import { db } from '../db/database.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { setCookie, deleteCookie } from 'hono/cookie'
 import type { Variables } from '../types.js'
+import { authService } from '../services/authService.js'
 
 const auth = new Hono<{ Variables: Variables }>()
 
@@ -40,11 +40,7 @@ auth.post('/signup', async (c) => {
     }
 
     // Check if username already exists (case-insensitive)
-    const existingUser = await db
-      .selectFrom('users')
-      .select('id')
-      .where(db.fn('LOWER', ['username']), '=', username.toLowerCase())
-      .executeTakeFirst()
+    const existingUser = await authService.findUserByUsername(username)
 
     if (existingUser) {
       return c.json({ error: 'Username already taken' }, 409)
@@ -54,16 +50,11 @@ auth.post('/signup', async (c) => {
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS)
 
     // Create user (store username as entered)
-    const user = await db
-      .insertInto('users')
-      .values({
-        username,
-        password: passwordHash,
-        email: email || null,
-        admin: false, // New users are not admin by default
-      })
-      .returningAll()
-      .executeTakeFirst()
+    const user = await authService.createUser({
+      username,
+      password: passwordHash,
+      email: email || null,
+    })
 
     if (!user) {
       return c.json({ error: 'Failed to create user' }, 500)
@@ -111,11 +102,7 @@ auth.post('/login', async (c) => {
     }
 
     // Find user (case-insensitive username)
-    const user = await db
-      .selectFrom('users')
-      .selectAll()
-      .where(db.fn('LOWER', ['username']), '=', username.toLowerCase())
-      .executeTakeFirst()
+    const user = await authService.findUserByUsername(username)
 
     if (!user) {
       return c.json({ error: 'Invalid username or password' }, 401)
@@ -203,11 +190,7 @@ auth.put('/default-tag', async (c) => {
     ? raw.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || null
     : null
 
-  await db
-    .updateTable('users')
-    .set({ default_tag: tag, updated_at: new Date().toISOString() })
-    .where('id', '=', user.id)
-    .execute()
+  await authService.updateDefaultTag(user.id, tag)
 
   return c.json({ default_tag: tag })
 })
