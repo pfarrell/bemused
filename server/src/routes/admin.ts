@@ -354,10 +354,42 @@ admin.get('/artists/search', async (c) => {
 
   const rows = await db
     .selectFrom('artists')
-    .select(['id', 'name', 'image_path'])
-    .where(sql<boolean>`lower(name) LIKE ${'%' + q.toLowerCase() + '%'}`)
-    .orderBy(sql<number>`similarity(lower(name), lower(${q}))`, 'desc')
+    .leftJoin('albums', 'albums.artist_id', 'artists.id')
+    .select((eb) => [
+      'artists.id',
+      'artists.name',
+      'artists.image_path',
+      eb.fn.count<number>('albums.id').as('album_count'),
+    ])
+    .where(sql<boolean>`lower(artists.name) LIKE ${'%' + q.toLowerCase() + '%'}`)
+    .groupBy(['artists.id', 'artists.name', 'artists.image_path'])
+    .orderBy(sql<number>`similarity(lower(artists.name), lower(${q}))`, 'desc')
     .limit(20)
+    .execute()
+
+  return c.json(rows)
+})
+
+// GET /admin/albums/search?q= — album search with artist name and track count
+admin.get('/albums/search', async (c) => {
+  const q = (c.req.query('q') ?? '').trim()
+  if (q.length < 2) return c.json([])
+
+  const rows = await db
+    .selectFrom('albums')
+    .innerJoin('artists', 'artists.id', 'albums.artist_id')
+    .leftJoin('tracks', 'tracks.album_id', 'albums.id')
+    .select((eb) => [
+      'albums.id',
+      'albums.title',
+      'albums.release_year',
+      'artists.name as artist_name',
+      eb.fn.count<number>('tracks.id').as('track_count'),
+    ])
+    .where(sql<boolean>`lower(albums.title) LIKE ${'%' + q.toLowerCase() + '%'}`)
+    .groupBy(['albums.id', 'albums.title', 'albums.release_year', 'artists.name'])
+    .orderBy(sql<number>`similarity(lower(albums.title), lower(${q}))`, 'desc')
+    .limit(10)
     .execute()
 
   return c.json(rows)
