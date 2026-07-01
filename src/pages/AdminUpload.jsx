@@ -188,7 +188,7 @@ const AdminUpload = () => {
   };
 
   const handleArtistSearch = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     if (artistQuery.length < 2) return;
     setArtistSearching(true);
     try {
@@ -214,7 +214,7 @@ const AdminUpload = () => {
   };
 
   const handleAlbumSearch = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     if (albumQuery.length < 2) return;
     setAlbumSearching(true);
     try {
@@ -334,17 +334,19 @@ const AdminUpload = () => {
               </div>
             ) : (
               <div>
-                <form onSubmit={handleArtistSearch} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.25rem' }}>
                   <input
                     type="text"
                     value={artistQuery}
                     onChange={(e) => { setArtistQuery(e.target.value); setArtistResults([]); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleArtistSearch(e); } }}
                     placeholder="Search by name or leave blank to use ID3 tag"
                     style={{ flex: 1, padding: '0.5rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: '4px' }}
                   />
                   <button
-                    type="submit"
+                    type="button"
                     aria-label="Search artists"
+                    onClick={handleArtistSearch}
                     disabled={artistSearching || artistQuery.length < 2}
                     style={{
                       padding: '0.5rem 1rem',
@@ -359,7 +361,7 @@ const AdminUpload = () => {
                   >
                     {artistSearching ? 'Searching…' : 'Search'}
                   </button>
-                </form>
+                </div>
                 {artistResults.length > 0 && (
                   <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', backgroundColor: 'white', maxHeight: '200px', overflowY: 'auto', marginBottom: '0.25rem' }}>
                     {artistResults.map((artist) => (
@@ -415,17 +417,19 @@ const AdminUpload = () => {
               </div>
             ) : (
               <div>
-                <form onSubmit={handleAlbumSearch} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.25rem' }}>
                   <input
                     type="text"
                     value={albumQuery}
                     onChange={(e) => { setAlbumQuery(e.target.value); setAlbumResults([]); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAlbumSearch(e); } }}
                     placeholder="Search by title or leave blank to use ID3 tag"
                     style={{ flex: 1, padding: '0.5rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: '4px' }}
                   />
                   <button
-                    type="submit"
+                    type="button"
                     aria-label="Search albums"
+                    onClick={handleAlbumSearch}
                     disabled={albumSearching || albumQuery.length < 2}
                     style={{
                       padding: '0.5rem 1rem',
@@ -440,7 +444,7 @@ const AdminUpload = () => {
                   >
                     {albumSearching ? 'Searching…' : 'Search'}
                   </button>
-                </form>
+                </div>
                 {albumResults.length > 0 && (
                   <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', backgroundColor: 'white', maxHeight: '200px', overflowY: 'auto', marginBottom: '0.25rem' }}>
                     {albumResults.map((album) => (
