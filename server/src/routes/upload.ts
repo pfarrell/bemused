@@ -47,31 +47,38 @@ upload.post('/', async (c) => {
       maxSize: 2 * 1024 * 1024 * 1024 // 2GB
     })
 
-    // Extract form fields
-    const artistInput = body.artist_name as string | undefined
-    const albumInput = body.album_name as string | undefined
+    // Extract form fields — prefer explicit artist_id/album_id (from picker selection),
+    // fall back to artist_name/album_name (free-text or legacy numeric-as-name from old modal)
+    const artistIdParam = body.artist_id as string | undefined
+    const artistNameParam = body.artist_name as string | undefined
+    const albumIdParam = body.album_id as string | undefined
+    const albumNameParam = body.album_name as string | undefined
 
-    // Determine if artist input is an ID (numeric) or name
     let artistName: string | null = null
     let artistId: number | null = null
-    if (artistInput) {
-      const parsedArtistId = parseInt(artistInput)
-      if (!isNaN(parsedArtistId) && parsedArtistId.toString() === artistInput.trim()) {
-        artistId = parsedArtistId
+    if (artistIdParam) {
+      const parsed = parseInt(artistIdParam)
+      if (!isNaN(parsed)) artistId = parsed
+    } else if (artistNameParam) {
+      const parsed = parseInt(artistNameParam)
+      if (!isNaN(parsed) && parsed.toString() === artistNameParam.trim()) {
+        artistId = parsed
       } else {
-        artistName = artistInput
+        artistName = artistNameParam
       }
     }
 
-    // Determine if album input is an ID (numeric) or name
     let albumName: string | null = null
     let albumId: number | null = null
-    if (albumInput) {
-      const parsedAlbumId = parseInt(albumInput)
-      if (!isNaN(parsedAlbumId) && parsedAlbumId.toString() === albumInput.trim()) {
-        albumId = parsedAlbumId
+    if (albumIdParam) {
+      const parsed = parseInt(albumIdParam)
+      if (!isNaN(parsed)) albumId = parsed
+    } else if (albumNameParam) {
+      const parsed = parseInt(albumNameParam)
+      if (!isNaN(parsed) && parsed.toString() === albumNameParam.trim()) {
+        albumId = parsed
       } else {
-        albumName = albumInput
+        albumName = albumNameParam
       }
     }
 
