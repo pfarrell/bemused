@@ -1,6 +1,7 @@
 // src/pages/AdminUpload.jsx
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
+import jsmediatags from 'jsmediatags';
 
 const AdminUpload = () => {
   // Form state
@@ -23,6 +24,8 @@ const AdminUpload = () => {
 
   // Upload stats
   const [stats, setStats] = useState(null);
+
+  const [filePreviews, setFilePreviews] = useState([]);
 
   // Artist search modal state
   const [showArtistSearchModal, setShowArtistSearchModal] = useState(false);
@@ -68,8 +71,34 @@ const AdminUpload = () => {
     }
   };
 
-  const handleFileChange = (e) => {
-    setSelectedFiles(Array.from(e.target.files));
+  const readTags = (file) =>
+    new Promise((resolve) => {
+      jsmediatags.read(file, {
+        onSuccess: (tag) => resolve(tag.tags),
+        onError: () => resolve({}),
+      });
+    });
+
+  const handleFileChange = async (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles(files);
+    if (files.length === 0) {
+      setFilePreviews([]);
+      return;
+    }
+    const previews = await Promise.all(
+      files.map(async (file) => {
+        const tags = await readTags(file);
+        return {
+          filename: file.name,
+          title: tags.title || null,
+          artist: tags.artist || null,
+          album: tags.album || null,
+          track: tags.track || null,
+        };
+      })
+    );
+    setFilePreviews(previews);
   };
 
   const handleSubmit = async (e) => {
@@ -119,6 +148,7 @@ const AdminUpload = () => {
       // Reset file input
       const fileInput = document.getElementById('file-input');
       if (fileInput) fileInput.value = '';
+      setFilePreviews([]);
 
       // Reload recent uploads and stats
       loadRecentUploads();
@@ -456,6 +486,41 @@ const AdminUpload = () => {
             {selectedFiles.length > 0 && (
               <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
                 {selectedFiles.length} file(s) selected
+              </div>
+            )}
+            {filePreviews.length > 0 && (
+              <div style={{ marginTop: '0.75rem' }}>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f3f4f6' }}>
+                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>Filename</th>
+                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>Title</th>
+                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>Artist</th>
+                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>Album</th>
+                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>#</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filePreviews.map((p, i) => {
+                        const displayTitle = p.title || p.filename.replace(/\.[^.]+$/, '');
+                        const isFallback = !p.title;
+                        return (
+                          <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                            <td style={{ padding: '0.4rem 0.6rem', color: '#6b7280', fontFamily: 'monospace' }}>{p.filename}</td>
+                            <td style={{ padding: '0.4rem 0.6rem', fontStyle: isFallback ? 'italic' : 'normal', color: isFallback ? '#9ca3af' : 'inherit' }}>{displayTitle}</td>
+                            <td style={{ padding: '0.4rem 0.6rem', color: p.artist ? 'inherit' : '#9ca3af' }}>{p.artist || '—'}</td>
+                            <td style={{ padding: '0.4rem 0.6rem', color: p.album ? 'inherit' : '#9ca3af' }}>{p.album || '—'}</td>
+                            <td style={{ padding: '0.4rem 0.6rem', color: p.track ? 'inherit' : '#9ca3af' }}>{p.track || '—'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <small style={{ color: '#6b7280', fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
+                  Artist and album overrides above take precedence over these tags.
+                </small>
               </div>
             )}
           </div>
