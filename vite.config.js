@@ -48,6 +48,13 @@ export default defineConfig({
       },
     }),
   ],
+  resolve: {
+    alias: {
+      // jsmediatags package.json points browser field to dist/jsmediatags.js which doesn't
+      // exist — only the .min.js is shipped. Point directly to the file that exists.
+      'jsmediatags': 'jsmediatags/dist/jsmediatags.min.js',
+    },
+  },
   base: process.env.NODE_ENV === 'production' ? '/bemused/app/' : '/',
   server: {
     proxy: {
