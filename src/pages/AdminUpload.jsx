@@ -5,8 +5,6 @@ import jsmediatags from 'jsmediatags';
 
 const AdminUpload = () => {
   // Form state
-  const [artistInput, setArtistInput] = useState('');
-  const [albumInput, setAlbumInput] = useState('');
   const [genre, setGenre] = useState('');
   const [trackPad, setTrackPad] = useState('0');
   const [albumArtUrl, setAlbumArtUrl] = useState('');
@@ -27,15 +25,17 @@ const AdminUpload = () => {
 
   const [filePreviews, setFilePreviews] = useState([]);
 
-  // Artist search modal state
-  const [showArtistSearchModal, setShowArtistSearchModal] = useState(false);
-  const [artistSearchQuery, setArtistSearchQuery] = useState('');
-  const [artistSearchResults, setArtistSearchResults] = useState([]);
+  // Artist inline picker
+  const [artistQuery, setArtistQuery] = useState('');
+  const [artistResults, setArtistResults] = useState([]);
+  const [artistSearching, setArtistSearching] = useState(false);
+  const [selectedArtist, setSelectedArtist] = useState(null);
 
-  // Album search modal state
-  const [showAlbumSearchModal, setShowAlbumSearchModal] = useState(false);
-  const [albumSearchQuery, setAlbumSearchQuery] = useState('');
-  const [albumSearchResults, setAlbumSearchResults] = useState([]);
+  // Album inline picker
+  const [albumQuery, setAlbumQuery] = useState('');
+  const [albumResults, setAlbumResults] = useState([]);
+  const [albumSearching, setAlbumSearching] = useState(false);
+  const [selectedAlbum, setSelectedAlbum] = useState(null);
 
   useEffect(() => {
     loadRecentUploads();
@@ -122,8 +122,17 @@ const AdminUpload = () => {
       });
 
       // Add metadata
-      if (artistInput) formData.append('artist_name', artistInput);
-      if (albumInput) formData.append('album_name', albumInput);
+      if (selectedArtist) {
+        formData.append('artist_id', String(selectedArtist.id));
+      } else if (artistQuery.trim()) {
+        formData.append('artist_name', artistQuery.trim());
+      }
+
+      if (selectedAlbum) {
+        formData.append('album_id', String(selectedAlbum.id));
+      } else if (albumQuery.trim()) {
+        formData.append('album_name', albumQuery.trim());
+      }
       if (genre) formData.append('genre', genre);
       if (trackPad) formData.append('track_pad', trackPad);
       if (albumArtUrl) formData.append('album_art_url', albumArtUrl);
@@ -137,8 +146,12 @@ const AdminUpload = () => {
       setTimeout(() => setMessage(null), 5000);
 
       // Clear form
-      setArtistInput('');
-      setAlbumInput('');
+      setArtistQuery('');
+      setSelectedArtist(null);
+      setArtistResults([]);
+      setAlbumQuery('');
+      setSelectedAlbum(null);
+      setAlbumResults([]);
       setGenre('');
       setTrackPad('0');
       setAlbumArtUrl('');
@@ -174,52 +187,56 @@ const AdminUpload = () => {
     return new Date(dateString).toLocaleString();
   };
 
-  // Artist search handlers
   const handleArtistSearch = async (e) => {
     e.preventDefault();
-    if (artistSearchQuery.length < 2) {
-      setError('Please enter at least 2 characters to search');
-      return;
-    }
-
+    if (artistQuery.length < 2) return;
+    setArtistSearching(true);
     try {
-      const response = await apiService.search(artistSearchQuery);
-      setArtistSearchResults(response.data.artists || []);
-    } catch (error) {
-      console.error('Error searching artists:', error);
-      setError('Failed to search artists');
+      const response = await apiService.searchAdminArtists(artistQuery);
+      setArtistResults(response.data || []);
+    } catch (err) {
+      console.error('Artist search error:', err);
+    } finally {
+      setArtistSearching(false);
     }
   };
 
-  const handleSelectArtist = (artist) => {
-    setArtistInput(String(artist.id));
-    setShowArtistSearchModal(false);
-    setArtistSearchQuery('');
-    setArtistSearchResults([]);
+  const handleArtistSelect = (artist) => {
+    setSelectedArtist(artist);
+    setArtistQuery('');
+    setArtistResults([]);
   };
 
-  // Album search handlers
+  const handleArtistClear = () => {
+    setSelectedArtist(null);
+    setArtistQuery('');
+    setArtistResults([]);
+  };
+
   const handleAlbumSearch = async (e) => {
     e.preventDefault();
-    if (albumSearchQuery.length < 2) {
-      setError('Please enter at least 2 characters to search');
-      return;
-    }
-
+    if (albumQuery.length < 2) return;
+    setAlbumSearching(true);
     try {
-      const response = await apiService.search(albumSearchQuery);
-      setAlbumSearchResults(response.data.albums || []);
-    } catch (error) {
-      console.error('Error searching albums:', error);
-      setError('Failed to search albums');
+      const response = await apiService.searchAdminAlbums(albumQuery);
+      setAlbumResults(response.data || []);
+    } catch (err) {
+      console.error('Album search error:', err);
+    } finally {
+      setAlbumSearching(false);
     }
   };
 
-  const handleSelectAlbum = (album) => {
-    setAlbumInput(String(album.id));
-    setShowAlbumSearchModal(false);
-    setAlbumSearchQuery('');
-    setAlbumSearchResults([]);
+  const handleAlbumSelect = (album) => {
+    setSelectedAlbum(album);
+    setAlbumQuery('');
+    setAlbumResults([]);
+  };
+
+  const handleAlbumClear = () => {
+    setSelectedAlbum(null);
+    setAlbumQuery('');
+    setAlbumResults([]);
   };
 
   return (
@@ -290,86 +307,163 @@ const AdminUpload = () => {
         </h2>
 
         <div style={{ display: 'grid', gap: '1.5rem' }}>
-          {/* Artist Input */}
+          {/* Artist Picker */}
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Artist (name or ID)
+              Artist
             </label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input
-                type="text"
-                value={artistInput}
-                onChange={(e) => setArtistInput(e.target.value)}
-                placeholder="e.g., The Beatles or 123"
-                style={{
-                  flex: 1,
-                  padding: '0.5rem',
-                  fontSize: '1rem',
-                  border: '1px solid #ccc',
+            {selectedArtist ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{
+                  padding: '0.4rem 0.75rem',
+                  backgroundColor: '#e0f2fe',
                   borderRadius: '4px',
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowArtistSearchModal(true)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#6b7280',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                Search
-              </button>
-            </div>
-            <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-              Optional. Enter artist name or numeric ID. Overrides ID3 tags.
-            </small>
+                  fontSize: '0.95rem',
+                  fontWeight: '500',
+                }}>
+                  {selectedArtist.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleArtistClear}
+                  aria-label="Clear artist"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: '1rem' }}
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <div>
+                <form onSubmit={handleArtistSearch} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <input
+                    type="text"
+                    value={artistQuery}
+                    onChange={(e) => { setArtistQuery(e.target.value); setArtistResults([]); }}
+                    placeholder="Search by name or leave blank to use ID3 tag"
+                    style={{ flex: 1, padding: '0.5rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                  <button
+                    type="submit"
+                    aria-label="Search artists"
+                    disabled={artistSearching || artistQuery.length < 2}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontSize: '0.875rem',
+                      cursor: artistSearching || artistQuery.length < 2 ? 'not-allowed' : 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {artistSearching ? 'Searching…' : 'Search'}
+                  </button>
+                </form>
+                {artistResults.length > 0 && (
+                  <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', backgroundColor: 'white', maxHeight: '200px', overflowY: 'auto', marginBottom: '0.25rem' }}>
+                    {artistResults.map((artist) => (
+                      <div
+                        key={artist.id}
+                        onClick={() => handleArtistSelect(artist)}
+                        style={{ padding: '0.6rem 0.75rem', borderBottom: '1px solid #e5e7eb', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'white')}
+                      >
+                        <span style={{ fontWeight: '500' }}>{artist.name}</span>
+                        <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                          {Number(artist.album_count)} album{Number(artist.album_count) !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                  Optional. Leave blank to use ID3 tags, or type to search existing artists.
+                </small>
+              </div>
+            )}
           </div>
 
-          {/* Album Input */}
+          {/* Album Picker */}
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Album (name or ID)
+              Album
             </label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input
-                type="text"
-                value={albumInput}
-                onChange={(e) => setAlbumInput(e.target.value)}
-                placeholder="e.g., Abbey Road or 456"
-                style={{
-                  flex: 1,
-                  padding: '0.5rem',
-                  fontSize: '1rem',
-                  border: '1px solid #ccc',
+            {selectedAlbum ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{
+                  padding: '0.4rem 0.75rem',
+                  backgroundColor: '#e0f2fe',
                   borderRadius: '4px',
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowAlbumSearchModal(true)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#6b7280',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                Search
-              </button>
-            </div>
-            <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-              Optional. Enter album name or numeric ID. Overrides ID3 tags.
-            </small>
+                  fontSize: '0.95rem',
+                  fontWeight: '500',
+                }}>
+                  {selectedAlbum.title}
+                  <span style={{ fontWeight: 'normal', color: '#6b7280', marginLeft: '0.4rem' }}>
+                    · {selectedAlbum.artist_name}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={handleAlbumClear}
+                  aria-label="Clear album"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: '1rem' }}
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <div>
+                <form onSubmit={handleAlbumSearch} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <input
+                    type="text"
+                    value={albumQuery}
+                    onChange={(e) => { setAlbumQuery(e.target.value); setAlbumResults([]); }}
+                    placeholder="Search by title or leave blank to use ID3 tag"
+                    style={{ flex: 1, padding: '0.5rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                  <button
+                    type="submit"
+                    aria-label="Search albums"
+                    disabled={albumSearching || albumQuery.length < 2}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontSize: '0.875rem',
+                      cursor: albumSearching || albumQuery.length < 2 ? 'not-allowed' : 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {albumSearching ? 'Searching…' : 'Search'}
+                  </button>
+                </form>
+                {albumResults.length > 0 && (
+                  <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', backgroundColor: 'white', maxHeight: '200px', overflowY: 'auto', marginBottom: '0.25rem' }}>
+                    {albumResults.map((album) => (
+                      <div
+                        key={album.id}
+                        onClick={() => handleAlbumSelect(album)}
+                        style={{ padding: '0.6rem 0.75rem', borderBottom: '1px solid #e5e7eb', cursor: 'pointer' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'white')}
+                      >
+                        <div style={{ fontWeight: '500' }}>{album.title}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                          {album.artist_name}{album.release_year ? ` · ${album.release_year}` : ''} · {Number(album.track_count)} track{Number(album.track_count) !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                  Optional. Leave blank to use ID3 tags, or type to search existing albums.
+                </small>
+              </div>
+            )}
           </div>
 
           {/* Genre and Track Pad */}
@@ -626,253 +720,6 @@ const AdminUpload = () => {
         )}
       </div>
 
-      {/* Artist Search Modal */}
-      {showArtistSearchModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={() => setShowArtistSearchModal(false)}
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              padding: '2rem',
-              borderRadius: '8px',
-              maxWidth: '600px',
-              width: '90%',
-              maxHeight: '80vh',
-              overflow: 'auto',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-              Search for Artist
-            </h3>
-            <form onSubmit={handleArtistSearch} style={{ marginBottom: '1rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input
-                  type="text"
-                  value={artistSearchQuery}
-                  onChange={(e) => setArtistSearchQuery(e.target.value)}
-                  placeholder="Enter artist name..."
-                  autoFocus
-                  style={{
-                    flex: 1,
-                    padding: '0.5rem',
-                    fontSize: '1rem',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                  }}
-                />
-                <button
-                  type="submit"
-                  style={{
-                    padding: '0.5rem 1.5rem',
-                    backgroundColor: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '1rem',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Search
-                </button>
-              </div>
-            </form>
-
-            {artistSearchResults.length > 0 ? (
-              <div style={{ marginTop: '1rem' }}>
-                <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                  Click an artist to select:
-                </p>
-                <div style={{ maxHeight: '400px', overflow: 'auto' }}>
-                  {artistSearchResults.map((artist) => (
-                    <div
-                      key={artist.id}
-                      onClick={() => handleSelectArtist(artist)}
-                      style={{
-                        padding: '0.75rem',
-                        borderBottom: '1px solid #e5e7eb',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'white')}
-                    >
-                      <div>
-                        <div style={{ fontWeight: '500' }}>{artist.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                          {artist.album_count} albums · {artist.track_count} tracks
-                        </div>
-                      </div>
-                      <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                        ID: {artist.id}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : artistSearchQuery.length >= 2 ? (
-              <p style={{ marginTop: '1rem', color: '#6b7280', textAlign: 'center' }}>
-                No artists found. Try a different search term.
-              </p>
-            ) : null}
-
-            <button
-              onClick={() => setShowArtistSearchModal(false)}
-              style={{
-                marginTop: '1.5rem',
-                padding: '0.5rem 1rem',
-                backgroundColor: '#6b7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-              }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Album Search Modal */}
-      {showAlbumSearchModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={() => setShowAlbumSearchModal(false)}
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              padding: '2rem',
-              borderRadius: '8px',
-              maxWidth: '600px',
-              width: '90%',
-              maxHeight: '80vh',
-              overflow: 'auto',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-              Search for Album
-            </h3>
-            <form onSubmit={handleAlbumSearch} style={{ marginBottom: '1rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input
-                  type="text"
-                  value={albumSearchQuery}
-                  onChange={(e) => setAlbumSearchQuery(e.target.value)}
-                  placeholder="Enter album name..."
-                  autoFocus
-                  style={{
-                    flex: 1,
-                    padding: '0.5rem',
-                    fontSize: '1rem',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                  }}
-                />
-                <button
-                  type="submit"
-                  style={{
-                    padding: '0.5rem 1.5rem',
-                    backgroundColor: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '1rem',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Search
-                </button>
-              </div>
-            </form>
-
-            {albumSearchResults.length > 0 ? (
-              <div style={{ marginTop: '1rem' }}>
-                <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                  Click an album to select:
-                </p>
-                <div style={{ maxHeight: '400px', overflow: 'auto' }}>
-                  {albumSearchResults.map((album) => (
-                    <div
-                      key={album.id}
-                      onClick={() => handleSelectAlbum(album)}
-                      style={{
-                        padding: '0.75rem',
-                        borderBottom: '1px solid #e5e7eb',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'white')}
-                    >
-                      <div>
-                        <div style={{ fontWeight: '500' }}>{album.title}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                          {album.artist.name} · {album.track_count} tracks
-                        </div>
-                      </div>
-                      <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                        ID: {album.id}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : albumSearchQuery.length >= 2 ? (
-              <p style={{ marginTop: '1rem', color: '#6b7280', textAlign: 'center' }}>
-                No albums found. Try a different search term.
-              </p>
-            ) : null}
-
-            <button
-              onClick={() => setShowAlbumSearchModal(false)}
-              style={{
-                marginTop: '1.5rem',
-                padding: '0.5rem 1rem',
-                backgroundColor: '#6b7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-              }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

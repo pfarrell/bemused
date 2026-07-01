@@ -69,3 +69,69 @@ describe('AdminUpload — ID3 preview panel', () => {
     await screen.findByText(/Artist and album overrides above take precedence/i);
   });
 });
+
+describe('AdminUpload — Artist picker', () => {
+  test('shows search results and selects artist as chip', async () => {
+    apiService.searchAdminArtists.mockResolvedValue({
+      data: [{ id: 7, name: 'Radiohead', album_count: 9 }],
+    });
+    const user = userEvent.setup();
+    renderUpload();
+
+    await user.type(
+      screen.getByPlaceholderText('Search by name or leave blank to use ID3 tag'),
+      'Radio'
+    );
+    await user.click(screen.getByRole('button', { name: 'Search artists' }));
+
+    await screen.findByText('Radiohead');
+    expect(screen.getByText(/9 album/)).toBeInTheDocument();
+
+    await user.click(screen.getByText('Radiohead'));
+    expect(screen.queryByRole('button', { name: 'Search artists' })).not.toBeInTheDocument();
+    expect(screen.getByText('Radiohead')).toBeInTheDocument();
+  });
+
+  test('clears selected artist chip back to input', async () => {
+    apiService.searchAdminArtists.mockResolvedValue({
+      data: [{ id: 7, name: 'Radiohead', album_count: 9 }],
+    });
+    const user = userEvent.setup();
+    renderUpload();
+
+    await user.type(
+      screen.getByPlaceholderText('Search by name or leave blank to use ID3 tag'),
+      'Radio'
+    );
+    await user.click(screen.getByRole('button', { name: 'Search artists' }));
+    await screen.findByText('Radiohead');
+    await user.click(screen.getByText('Radiohead'));
+
+    await user.click(screen.getByRole('button', { name: 'Clear artist' }));
+    expect(screen.getByRole('button', { name: 'Search artists' })).toBeInTheDocument();
+  });
+});
+
+describe('AdminUpload — Album picker', () => {
+  test('shows album results with metadata and selects album as chip', async () => {
+    apiService.searchAdminAlbums.mockResolvedValue({
+      data: [{ id: 3, title: 'OK Computer', artist_name: 'Radiohead', release_year: '1997', track_count: 12 }],
+    });
+    const user = userEvent.setup();
+    renderUpload();
+
+    await user.type(
+      screen.getByPlaceholderText('Search by title or leave blank to use ID3 tag'),
+      'OK Co'
+    );
+    await user.click(screen.getByRole('button', { name: 'Search albums' }));
+
+    await screen.findByText('OK Computer');
+    expect(screen.getByText(/Radiohead/)).toBeInTheDocument();
+    expect(screen.getByText(/1997/)).toBeInTheDocument();
+    expect(screen.getByText(/12 track/)).toBeInTheDocument();
+
+    await user.click(screen.getByText('OK Computer'));
+    expect(screen.queryByRole('button', { name: 'Search albums' })).not.toBeInTheDocument();
+  });
+});
