@@ -3,8 +3,32 @@ import { stream } from 'hono/streaming'
 import fs from 'fs'
 import path from 'path'
 import { streamsService } from '../services/streamsService.js'
+import { requireAuth } from '../middleware/auth.js'
+import type { Variables } from '../types.js'
 
 const streams = new Hono()
+export const downloads = new Hono<{ Variables: Variables }>()
+
+const CONTENT_TYPES: Record<string, string> = {
+  '.mp3': 'audio/mpeg',
+  '.flac': 'audio/flac',
+  '.m4a': 'audio/mp4',
+}
+
+function sanitizeForFilename(value: string): string {
+  return value.replace(/["/\\\r\n\x00-\x1f]/g, '').trim() || 'download'
+}
+
+function asciiFallback(value: string): string {
+  return value.replace(/[^\x20-\x7e]/g, '_')
+}
+
+function buildContentDisposition(artistName: string, title: string, fileType: string): string {
+  const rawName = `${sanitizeForFilename(artistName)} - ${sanitizeForFilename(title)}${fileType}`
+  const asciiName = asciiFallback(rawName)
+  const encoded = encodeURIComponent(rawName)
+  return `attachment; filename="${asciiName}"; filename*=UTF-8''${encoded}`
+}
 
 // GET /stream/:id  — stream an audio file with range request support
 streams.get('/:id', async (c) => {
@@ -77,6 +101,32 @@ streams.get('/:id', async (c) => {
 
     for await (const chunk of readStream) {
       await stream.write(chunk)
+    }
+  })
+})
+
+// GET /download/:id  — authenticated, full-file download with attachment headers
+downloads.get('/:id', requireAuth, async (c) => {
+  const id = parseInt(c.req.param('id'))
+  const file = await streamsService.findTrackForDownload(id)
+
+  if (!file) return c.json({ error: 'Track not found' }, 404)
+
+  let stat: fs.Stats
+  try {
+    stat = fs.statSync(file.absolutePath)
+  } catch {
+    return c.json({ error: 'File not found' }, 404)
+  }
+
+  return stream(c, async (streamWriter) => {
+    c.header('Content-Length', String(stat.size))
+    c.header('Content-Type', CONTENT_TYPES[file.fileType] || 'application/octet-stream')
+    c.header('Content-Disposition', buildContentDisposition(file.artistName, file.title, file.fileType))
+
+    const readStream = fs.createReadStream(file.absolutePath)
+    for await (const chunk of readStream) {
+      await streamWriter.write(chunk)
     }
   })
 })

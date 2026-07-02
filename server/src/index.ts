@@ -6,7 +6,7 @@ import type { Variables } from './types.js'
 import artists from './routes/artists.js'
 import albums from './routes/albums.js'
 import search from './routes/search.js'
-import streams from './routes/streams.js'
+import streams, { downloads } from './routes/streams.js'
 import logs from './routes/logs.js'
 import playlists from './routes/playlists.js'
 import collections from './routes/collections.js'
@@ -62,6 +62,7 @@ app.route('/albums', albums)
 app.route('/album', albums)     // singular alias
 app.route('/search', search)
 app.route('/stream', streams)
+app.route('/download', downloads)
 app.route('/log', logs)
 app.route('/playlist', playlists)
 app.route('/playlists', playlists)
