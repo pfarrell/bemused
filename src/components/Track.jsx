@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { usePlayerStore } from '../stores/playerStore';
+import { useAuthStore } from '../stores/authStore';
 import { formatDuration } from '../utils/formatters';
 import { useNavigate } from 'react-router-dom';
 import AddToPlaylistModal from './AddToPlaylistModal';
@@ -12,6 +13,8 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [pressedButton, setPressedButton] = useState(null);
   const { playlist, addTrack, addTracks, clearPlaylist, playTrackAtIndex } = usePlayerStore();
+  const { isAuthenticated } = useAuthStore();
+  const downloadsEnabled = import.meta.env.VITE_ENABLE_DOWNLOADS === 'true';
   const navigate = useNavigate();
   const longPressTimer = useRef(null);
   const touchStartPos = useRef({ x: 0, y: 0 });
@@ -88,6 +91,15 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
     }
     setShowDropdown(false);
     setShowPlaylistModal(true);
+  };
+
+  const handleDownload = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    window.location.href = track.download_url;
+    setShowDropdown(false);
   };
 
   // Long-press handlers
@@ -408,6 +420,22 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
             >
               📋 Add to Playlist
             </button>
+
+            {downloadsEnabled && isAuthenticated && track.download_url && (
+              <button
+                onClick={handleDownload}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDownload();
+                }}
+              >
+                ⬇ Download
+              </button>
+            )}
           </div>
         </>,
         document.body

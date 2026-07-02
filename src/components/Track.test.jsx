@@ -2,6 +2,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Track from './Track';
 import { usePlayerStore } from '../stores/playerStore';
+import { useAuthStore } from '../stores/authStore';
 
 vi.mock('./AddToPlaylistModal', () => ({ default: () => null }));
 
@@ -15,6 +16,7 @@ const mockTrack = {
     title: 'Test Album',
     artist: { id: 5, name: 'Album Artist' },
   },
+  download_url: 'http://localhost:3000/download/1',
 };
 
 const renderTrack = (props = {}) =>
@@ -35,6 +37,7 @@ beforeEach(() => {
     clearPlaylist: vi.fn(),
     playTrackAtIndex: vi.fn(),
   });
+  useAuthStore.setState({ isAuthenticated: false });
 });
 
 describe('Track component', () => {
@@ -151,6 +154,52 @@ describe('Track component', () => {
     const button = screen.getByText('⏭ Play Next');
     fireEvent.click(button);
     expect(button).toHaveClass('menu-btn-pressed');
+  });
+
+  describe('Download menu item', () => {
+    afterEach(() => {
+      import.meta.env.VITE_ENABLE_DOWNLOADS = 'false';
+    });
+
+    test('does not render when logged out, even if the flag is enabled', () => {
+      import.meta.env.VITE_ENABLE_DOWNLOADS = 'true';
+      useAuthStore.setState({ isAuthenticated: false });
+      renderTrack();
+      fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+      expect(screen.queryByText('⬇ Download')).not.toBeInTheDocument();
+    });
+
+    test('does not render when logged in but the flag is disabled', () => {
+      import.meta.env.VITE_ENABLE_DOWNLOADS = 'false';
+      useAuthStore.setState({ isAuthenticated: true });
+      renderTrack();
+      fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+      expect(screen.queryByText('⬇ Download')).not.toBeInTheDocument();
+    });
+
+    test('renders when logged in and the flag is enabled', () => {
+      import.meta.env.VITE_ENABLE_DOWNLOADS = 'true';
+      useAuthStore.setState({ isAuthenticated: true });
+      renderTrack();
+      fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+      expect(screen.getByText('⬇ Download')).toBeInTheDocument();
+    });
+
+    test('clicking Download navigates to the track download_url and closes the menu', () => {
+      import.meta.env.VITE_ENABLE_DOWNLOADS = 'true';
+      useAuthStore.setState({ isAuthenticated: true });
+      // jsdom's window.location is non-configurable; redefine it with
+      // writable: true rather than deleting it (which throws in jsdom 29).
+      Object.defineProperty(window, 'location', {
+        writable: true,
+        value: { href: '' },
+      });
+      renderTrack();
+      fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+      fireEvent.click(screen.getByText('⬇ Download'));
+      expect(window.location.href).toBe(mockTrack.download_url);
+      expect(screen.queryByText('⬇ Download')).not.toBeInTheDocument();
+    });
   });
 
 });
