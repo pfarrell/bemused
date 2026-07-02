@@ -1,8 +1,8 @@
 import { Hono } from 'hono'
 import { stream } from 'hono/streaming'
-import { db } from '../db/database.js'
 import fs from 'fs'
 import path from 'path'
+import { streamsService } from '../services/streamsService.js'
 
 const streams = new Hono()
 
@@ -10,13 +10,7 @@ const streams = new Hono()
 streams.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
 
-  const track = await db
-    .selectFrom('tracks')
-    .leftJoin('media_files', 'media_files.id', 'tracks.media_file_id')
-    .select(['media_files.absolute_path'])
-    .where('tracks.id', '=', id)
-    .where('tracks.approved', '=', true)
-    .executeTakeFirst()
+  const track = await streamsService.findTrackPath(id)
 
   if (!track?.absolute_path) return c.json({ error: 'Track not found' }, 404)
 
