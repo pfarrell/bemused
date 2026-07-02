@@ -143,6 +143,7 @@ export function createSearchService(db: Kysely<Database>) {
         artist: { id: t.track_artist_id ?? t.album_artist_id, name: t.track_artist_name ?? t.album_artist_name },
         image_path: t.album_image_path,
         url: `${streamBase()}/stream/${t.id}`,
+        download_url: `${streamBase()}/download/${t.id}`,
       }))
     },
   }

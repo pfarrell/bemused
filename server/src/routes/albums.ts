@@ -48,6 +48,7 @@ albums.get('/:id', async (c) => {
     artist: { id: t.artist_id ?? artist.id, name: t.artist_name ?? artist.name },
     image_path: album.image_path,
     url: `${streamBase()}/stream/${t.id}`,
+    download_url: `${streamBase()}/download/${t.id}`,
   }))
 
   const secondaryArtistRows = await albumsService.findSecondaryArtistsByAlbumId(id)
