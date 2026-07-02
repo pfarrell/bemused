@@ -116,6 +116,7 @@ artists.get('/:id', async (c) => {
       artist: { id: t.artist_id, name: t.artist_name },
       album: { id: t.album_id, title: t.album_title, artist: { id: artist.id, name: artist.name } },
       url: `${streamBase()}/stream/${t.id}`,
+      download_url: `${streamBase()}/download/${t.id}`,
     }))
   }
 

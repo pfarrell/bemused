@@ -421,7 +421,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
               📋 Add to Playlist
             </button>
 
-            {downloadsEnabled && isAuthenticated && (
+            {downloadsEnabled && isAuthenticated && track.download_url && (
               <button
                 onClick={handleDownload}
                 onTouchStart={(e) => {
