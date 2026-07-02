@@ -14,7 +14,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
   const [pressedButton, setPressedButton] = useState(null);
   const { playlist, addTrack, addTracks, clearPlaylist, playTrackAtIndex } = usePlayerStore();
   const { isAuthenticated } = useAuthStore();
-  const downloadsEnabled = import.meta.env.VITE_ENABLE_DOWNLOADS === 'true';
+  const downloadsEnabled = import.meta.env.VITE_ENABLE_DOWNLOADS !== 'false';
   const navigate = useNavigate();
   const longPressTimer = useRef(null);
   const touchStartPos = useRef({ x: 0, y: 0 });

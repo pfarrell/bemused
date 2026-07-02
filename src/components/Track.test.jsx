@@ -185,6 +185,14 @@ describe('Track component', () => {
       expect(screen.getByText('⬇ Download')).toBeInTheDocument();
     });
 
+    test('renders by default when the flag is unset (on unless explicitly disabled)', () => {
+      delete import.meta.env.VITE_ENABLE_DOWNLOADS;
+      useAuthStore.setState({ isAuthenticated: true });
+      renderTrack();
+      fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+      expect(screen.getByText('⬇ Download')).toBeInTheDocument();
+    });
+
     test('clicking Download navigates to the track download_url and closes the menu', () => {
       import.meta.env.VITE_ENABLE_DOWNLOADS = 'true';
       useAuthStore.setState({ isAuthenticated: true });
