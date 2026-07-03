@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import type { Context } from 'hono'
 import { db } from '../db/database.js'
 import { streamBase } from '../db/streamUrl.js'
 import { sql } from 'kysely'
@@ -6,7 +7,7 @@ import type { Variables } from '../types.js'
 
 const playlists = new Hono<{ Variables: Variables }>()
 
-function buildTrack(t: any) {
+function buildTrack(t: any, c: Context) {
   return {
     id: t.id,
     title: t.title,
@@ -15,12 +16,12 @@ function buildTrack(t: any) {
     album: t.album_id ? { id: t.album_id, title: t.album_title, artist: { id: t.album_artist_id, name: t.album_artist_name } } : null,
     artist: { id: t.track_artist_id ?? t.album_artist_id, name: t.track_artist_name ?? t.album_artist_name },
     image_path: t.album_image_path,
-    url: `${streamBase()}/stream/${t.id}`,
-    download_url: `${streamBase()}/download/${t.id}`,
+    url: `${streamBase(c)}/stream/${t.id}`,
+    download_url: `${streamBase(c)}/download/${t.id}`,
   }
 }
 
-async function fetchTracksForIds(trackIds: number[]) {
+async function fetchTracksForIds(trackIds: number[], c: Context) {
   if (!trackIds.length) return []
   const rows = await db
     .selectFrom('tracks')
@@ -38,7 +39,7 @@ async function fetchTracksForIds(trackIds: number[]) {
     .execute()
 
   const byId = new Map(rows.map((r) => [r.id, r]))
-  return trackIds.map((id) => byId.get(id)).filter(Boolean).map((t) => buildTrack(t))
+  return trackIds.map((id) => byId.get(id)).filter(Boolean).map((t) => buildTrack(t, c))
 }
 
 // GET /playlist/:id
@@ -54,7 +55,7 @@ playlists.get('/:id', async (c) => {
     .orderBy('order', 'asc')
     .execute()
 
-  const tracks = await fetchTracksForIds(ptRows.map((r) => r.track_id))
+  const tracks = await fetchTracksForIds(ptRows.map((r) => r.track_id), c)
   return c.json({ playlist, tracks })
 })
 
@@ -100,7 +101,7 @@ playlists.get('/top', async (c) => {
     .execute()
 
   const trackIds = topRows.map((r) => r.track_id as number)
-  const tracks = await fetchTracksForIds(trackIds)
+  const tracks = await fetchTracksForIds(trackIds, c)
 
   return c.json({
     playlist: { name: 'Top 20', image_path: null },
@@ -120,7 +121,7 @@ playlists.get('/newborns', async (c) => {
     .limit(size)
     .execute()
 
-  const tracks = await fetchTracksForIds(recentTracks.map((r) => r.id))
+  const tracks = await fetchTracksForIds(recentTracks.map((r) => r.id), c)
   return c.json({
     playlist: { name: 'New Arrivals', image_path: null },
     tracks,
@@ -133,7 +134,7 @@ playlists.get('/surprise', async (c) => {
     SELECT id FROM tracks WHERE approved = true ORDER BY random() LIMIT 20
   `.execute(db)
 
-  const tracks = await fetchTracksForIds(randomTracks.rows.map((r) => r.id))
+  const tracks = await fetchTracksForIds(randomTracks.rows.map((r) => r.id), c)
   return c.json({
     playlist: { name: 'Surprise!', image_path: null },
     tracks,

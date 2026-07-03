@@ -47,7 +47,7 @@ search.get('/', async (c) => {
     searchService.fetchAlbumsByIds(grouped['Album'] ?? []),
     searchService.fetchArtistsWithCounts(grouped['Artist'] ?? []),
     searchService.fetchByIds('playlists', grouped['Playlist'] ?? []),
-    searchService.fetchTracksByIds(grouped['Track'] ?? []),
+    searchService.fetchTracksByIds(grouped['Track'] ?? [], c),
   ])
 
   return c.json({ artists, albums, tracks, playlists, count: 0 })

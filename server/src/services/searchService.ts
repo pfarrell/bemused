@@ -1,4 +1,5 @@
 import { Kysely } from 'kysely'
+import type { Context } from 'hono'
 import pg from 'pg'
 import { db, Database } from '../db/database.js'
 import { streamBase } from '../db/streamUrl.js'
@@ -110,7 +111,7 @@ export function createSearchService(db: Kysely<Database>) {
       return ids.map((id) => byId.get(id)).filter(Boolean)
     },
 
-    async fetchTracksByIds(ids: number[]) {
+    async fetchTracksByIds(ids: number[], c: Context) {
       if (!ids?.length) return []
       const rows = await db
         .selectFrom('tracks')
@@ -142,8 +143,8 @@ export function createSearchService(db: Kysely<Database>) {
         album: t.album_id ? { id: t.album_id, title: t.album_title, artist: { id: t.album_artist_id, name: t.album_artist_name } } : null,
         artist: { id: t.track_artist_id ?? t.album_artist_id, name: t.track_artist_name ?? t.album_artist_name },
         image_path: t.album_image_path,
-        url: `${streamBase()}/stream/${t.id}`,
-        download_url: `${streamBase()}/download/${t.id}`,
+        url: `${streamBase(c)}/stream/${t.id}`,
+        download_url: `${streamBase(c)}/download/${t.id}`,
       }))
     },
   }
