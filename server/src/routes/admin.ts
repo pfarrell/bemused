@@ -95,7 +95,7 @@ admin.put('/album/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
   const body = await c.req.json()
 
-  const { title, artist_id, release_year, image_path, wikipedia } = body
+  const { title, artist_id, release_year, image_path, wikipedia, is_compilation } = body
 
   if (!title) {
     return c.json({ error: 'Title is required' }, 400)
@@ -121,6 +121,7 @@ admin.put('/album/:id', async (c) => {
         release_year: release_year || null,
         image_path: image_path || null,
         wikipedia: wikipedia || null,
+        is_compilation: Boolean(is_compilation),
         updated_at: new Date(),
       })
       .where('id', '=', id)
@@ -915,9 +916,7 @@ admin.post('/album/:id/move-to-artist', async (c) => {
 // POST /admin/album/:id/merge — merge all tracks into another album, then delete this album
 // Body: { destination_album_id: number, track_offset: number }
 // track_offset is added to each track's track_number (0 = no change)
-// Track artist_id is updated to match destination album's artist, unless destination is Various Artists (id=161)
-const VARIOUS_ARTISTS_ID = 161
-
+// Track artist_id is updated to match destination album's artist, unless destination is a flagged compilation
 admin.post('/album/:id/merge', async (c) => {
   const sourceAlbumId = parseInt(c.req.param('id'))
   const body = await c.req.json()
@@ -928,7 +927,7 @@ admin.post('/album/:id/merge', async (c) => {
 
   const destAlbum = await db
     .selectFrom('albums')
-    .select(['id', 'artist_id'])
+    .select(['id', 'artist_id', 'is_compilation'])
     .where('id', '=', parseInt(destination_album_id))
     .executeTakeFirst()
 
@@ -954,7 +953,7 @@ admin.post('/album/:id/merge', async (c) => {
     }
 
     const updateSet: Record<string, any> = { album_id: destAlbum.id, updated_at: new Date() }
-    if (destAlbum.artist_id !== VARIOUS_ARTISTS_ID) {
+    if (!destAlbum.is_compilation) {
       updateSet.artist_id = destAlbum.artist_id
     }
 
