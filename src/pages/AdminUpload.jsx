@@ -326,7 +326,7 @@ const AdminUpload = () => {
               id="file-input"
               type="file"
               multiple
-              accept=".mp3,.m4a,.flac"
+              accept=".mp3"
               onChange={handleFileChange}
               style={{
                 width: '100%',
