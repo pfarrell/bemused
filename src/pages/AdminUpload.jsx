@@ -37,6 +37,8 @@ const AdminUpload = () => {
   const [albumSearching, setAlbumSearching] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
 
+  const [isCompilation, setIsCompilation] = useState(false);
+
   useEffect(() => {
     loadRecentUploads();
     loadStats();
@@ -133,6 +135,7 @@ const AdminUpload = () => {
       } else if (albumQuery.trim()) {
         formData.append('album_name', albumQuery.trim());
       }
+      formData.append('is_compilation', String(isCompilation));
       if (genre) formData.append('genre', genre);
       if (trackPad) formData.append('track_pad', trackPad);
       if (albumArtUrl) formData.append('album_art_url', albumArtUrl);
@@ -152,6 +155,7 @@ const AdminUpload = () => {
       setAlbumQuery('');
       setSelectedAlbum(null);
       setAlbumResults([]);
+      setIsCompilation(false);
       setGenre('');
       setTrackPad('0');
       setAlbumArtUrl('');
@@ -456,6 +460,21 @@ const AdminUpload = () => {
                 </small>
               </div>
             )}
+          </div>
+
+          {/* Various Artists Compilation Toggle */}
+          <div style={{ marginTop: '0.5rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={isCompilation}
+                onChange={(e) => setIsCompilation(e.target.checked)}
+              />
+              Various artists compilation
+            </label>
+            <small style={{ color: '#6b7280', fontSize: '0.875rem', display: 'block', marginTop: '0.25rem' }}>
+              Each track gets its own artist from its file's ID3 tag. The Artist field above applies to the album only.
+            </small>
           </div>
 
           {/* Album Picker */}

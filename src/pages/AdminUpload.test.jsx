@@ -135,3 +135,39 @@ describe('AdminUpload — Album picker', () => {
     expect(screen.queryByRole('button', { name: 'Search albums' })).not.toBeInTheDocument();
   });
 });
+
+describe('AdminUpload — Various artists compilation checkbox', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('sends is_compilation=true in the upload FormData when checked', async () => {
+    apiService.uploadTracks.mockResolvedValue({ data: { queued: 1 } });
+    const user = userEvent.setup();
+    renderUpload();
+
+    const file = new File([''], 'track.mp3', { type: 'audio/mpeg' });
+    await user.upload(document.getElementById('file-input'), file);
+
+    await user.click(screen.getByLabelText('Various artists compilation'));
+    await user.click(screen.getByRole('button', { name: 'Upload Tracks' }));
+
+    await screen.findByText(/Successfully queued/);
+    const formData = apiService.uploadTracks.mock.calls[0][0];
+    expect(formData.get('is_compilation')).toBe('true');
+  });
+
+  test('defaults to is_compilation=false when unchecked', async () => {
+    apiService.uploadTracks.mockResolvedValue({ data: { queued: 1 } });
+    const user = userEvent.setup();
+    renderUpload();
+
+    const file = new File([''], 'track.mp3', { type: 'audio/mpeg' });
+    await user.upload(document.getElementById('file-input'), file);
+    await user.click(screen.getByRole('button', { name: 'Upload Tracks' }));
+
+    await screen.findByText(/Successfully queued/);
+    const formData = apiService.uploadTracks.mock.calls[0][0];
+    expect(formData.get('is_compilation')).toBe('false');
+  });
+});
