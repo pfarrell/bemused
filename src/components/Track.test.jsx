@@ -211,3 +211,27 @@ describe('Track component', () => {
   });
 
 });
+
+describe('Track component — per-track artist display', () => {
+  test('shows track artist suffix when ids differ, even if names happen to match', () => {
+    renderTrack({
+      track: {
+        ...mockTrack,
+        artist: { id: 99, name: 'Album Artist' },
+        album: { ...mockTrack.album, artist: { id: 5, name: 'Album Artist' } },
+      },
+    });
+    expect(screen.getByText(/- Album Artist/)).toBeInTheDocument();
+  });
+
+  test('hides track artist suffix when ids match, even if names differ', () => {
+    renderTrack({
+      track: {
+        ...mockTrack,
+        artist: { id: 5, name: 'Renamed Artist' },
+        album: { ...mockTrack.album, artist: { id: 5, name: 'Album Artist' } },
+      },
+    });
+    expect(screen.queryByText(/- Renamed Artist/)).not.toBeInTheDocument();
+  });
+});
