@@ -460,6 +460,13 @@ admin.post('/artist/:id/merge-stubs', async (c) => {
 
       await db.updateTable('artist_relations').set({ related_artist_id: artist.id }).where('related_artist_id', '=', stub.id).execute()
       await db.updateTable('artist_relations').set({ artist_id: artist.id }).where('artist_id', '=', stub.id).execute()
+
+      // Re-point albums/tracks still pointing at the stub before deleting it — otherwise
+      // this orphans them (albums.artist_id / tracks.artist_id have no FK constraint, so
+      // the delete below would succeed silently and leave dangling references).
+      await db.updateTable('albums').set({ artist_id: artist.id }).where('artist_id', '=', stub.id).execute()
+      await db.updateTable('tracks').set({ artist_id: artist.id }).where('artist_id', '=', stub.id).execute()
+
       await db.deleteFrom('artists').where('id', '=', stub.id).execute()
     }
 
