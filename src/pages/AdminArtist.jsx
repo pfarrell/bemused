@@ -298,7 +298,7 @@ const AdminArtist = () => {
     setMoveArtistSearching(true);
     try {
       const response = await apiService.searchAdminArtists(moveArtistQuery);
-      setMoveArtistResults((response.data || []).filter(a => String(a.id) !== String(id)));
+      setMoveArtistResults(response.data || []);
     } catch (error) {
       console.error('Error searching artists:', error);
     } finally {
@@ -323,7 +323,7 @@ const AdminArtist = () => {
     try {
       if (relationTypeToAdd === 'related_artist' || relationTypeToAdd === 'member') {
         const response = await apiService.searchAdminArtists(addRelationQuery);
-        setAddRelationResults((response.data || []).filter(a => String(a.id) !== String(id)));
+        setAddRelationResults(response.data || []);
       } else {
         const response = await apiService.search(addRelationQuery);
         setAddRelationResults(response.data.albums || []);
@@ -529,6 +529,7 @@ const AdminArtist = () => {
                   <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
                     {!img.is_primary && (
                       <button
+                        type="button"
                         onClick={async () => {
                           await apiService.setArtistImagePrimary(id, img.id);
                           const res = await apiService.getArtistImages(id);
@@ -544,6 +545,7 @@ const AdminArtist = () => {
                       <span style={{ fontSize: '11px', color: '#4ade80' }}>✓ Primary</span>
                     )}
                     <button
+                      type="button"
                       onClick={async () => {
                         if (!confirm('Delete this image?')) return;
                         await apiService.deleteArtistImage(id, img.id);
@@ -581,6 +583,7 @@ const AdminArtist = () => {
               />
             </div>
             <button
+              type="button"
               onClick={async () => {
                 if (!newImageUrl || !newImageName) return;
                 setAddingImage(true);
@@ -881,6 +884,9 @@ const AdminArtist = () => {
                   <div key={item.id} style={{ padding: '0.6rem 0.75rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <span style={{ fontWeight: '500' }}>{item.name || item.title}</span>
+                      {String(item.id) === String(id) && (
+                        <span style={{ fontSize: '0.8rem', color: '#6b7280', fontStyle: 'italic', marginLeft: '0.5rem' }}>(this artist)</span>
+                      )}
                       {item.artist && <span style={{ fontSize: '0.8rem', color: '#6b7280', marginLeft: '0.5rem' }}>by {item.artist.name}</span>}
                       {(relationTypeToAdd === 'related_artist' || relationTypeToAdd === 'member') && (
                         <span style={{ fontSize: '0.8rem', color: '#6b7280', marginLeft: '0.5rem' }}>{item.album_count} album{item.album_count !== 1 ? 's' : ''} · ID {item.id}</span>
@@ -1167,7 +1173,12 @@ const AdminArtist = () => {
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fefce8')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'white')}
               >
-                <span style={{ fontWeight: '500' }}>{artist.name}</span>
+                <span style={{ fontWeight: '500' }}>
+                  {artist.name}
+                  {String(artist.id) === String(id) && (
+                    <span style={{ fontSize: '0.8rem', color: '#6b7280', fontStyle: 'italic', marginLeft: '0.5rem' }}>(this artist)</span>
+                  )}
+                </span>
                 <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>{artist.album_count} album{artist.album_count !== 1 ? 's' : ''} · ID {artist.id}</span>
               </div>
             ))}

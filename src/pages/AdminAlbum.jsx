@@ -336,8 +336,7 @@ const AdminAlbum = () => {
     try {
       if (transferMode === 'move') {
         const response = await apiService.searchAdminArtists(transferQuery);
-        const currentArtistId = albumData?.album?.artist_id;
-        setTransferResults((response.data || []).filter(a => a.id !== currentArtistId));
+        setTransferResults(response.data || []);
       } else {
         const response = await apiService.search(transferQuery);
         const currentArtistId = albumData?.album?.artist_id;
@@ -399,8 +398,7 @@ const AdminAlbum = () => {
     setAddArtistSearching(true);
     try {
       const response = await apiService.search(addArtistQuery);
-      const primaryArtistId = albumData?.album?.artist_id;
-      setAddArtistResults((response.data.artists || []).filter(a => a.id !== primaryArtistId));
+      setAddArtistResults(response.data.artists || []);
     } catch (error) {
       console.error('Search failed:', error);
     } finally {
@@ -614,6 +612,7 @@ const AdminAlbum = () => {
                   <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
                     {!img.is_primary && (
                       <button
+                        type="button"
                         onClick={async () => {
                           await apiService.setAlbumImagePrimary(id, img.id);
                           const res = await apiService.getAlbumImages(id);
@@ -629,6 +628,7 @@ const AdminAlbum = () => {
                       <span style={{ fontSize: '11px', color: '#4ade80' }}>✓ Primary</span>
                     )}
                     <button
+                      type="button"
                       onClick={async () => {
                         if (!confirm('Delete this image?')) return;
                         await apiService.deleteAlbumImage(id, img.id);
@@ -666,6 +666,7 @@ const AdminAlbum = () => {
               />
             </div>
             <button
+              type="button"
               onClick={async () => {
                 if (!newImageUrl || !newImageName) return;
                 setAddingImage(true);
@@ -848,22 +849,30 @@ const AdminAlbum = () => {
 
         {transferResults.length > 0 && (
           <div style={{ border: '1px solid #ffc107', borderRadius: '4px', marginBottom: '0.75rem', maxHeight: '200px', overflowY: 'auto' }}>
-            {transferResults.map(item => (
-              <div
-                key={item.id}
-                onClick={() => handleSelectTransferResult(item)}
-                style={{ padding: '0.5rem 0.75rem', cursor: 'pointer', borderBottom: '1px solid #fde68a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef9c3'}
-                onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}
-              >
-                <span>{item.name || item.title}</span>
-                <span style={{ fontSize: '0.8rem', color: '#92400e' }}>
-                  {transferMode === 'move'
-                    ? `${item.album_count != null ? `${item.album_count} albums` : ''}`
-                    : `${item.artist?.name}${item.track_count != null ? ` · ${item.track_count} tracks` : ''}`}
-                </span>
-              </div>
-            ))}
+            {transferResults.map(item => {
+              const isCurrent = transferMode === 'move'
+                ? item.id === albumData?.album?.artist_id
+                : String(item.id) === String(id);
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => handleSelectTransferResult(item)}
+                  style={{ padding: '0.5rem 0.75rem', cursor: 'pointer', borderBottom: '1px solid #fde68a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef9c3'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}
+                >
+                  <span>
+                    {item.name || item.title}
+                    {isCurrent && <span style={{ color: '#92400e', fontStyle: 'italic' }}> (current)</span>}
+                  </span>
+                  <span style={{ fontSize: '0.8rem', color: '#92400e' }}>
+                    {transferMode === 'move'
+                      ? `${item.album_count != null ? `${item.album_count} albums` : ''}`
+                      : `${item.artist?.name}${item.track_count != null ? ` · ${item.track_count} tracks` : ''}`}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -1060,7 +1069,12 @@ const AdminAlbum = () => {
                       alignItems: 'center',
                     }}
                   >
-                    <span style={{ fontWeight: '500' }}>{artist.name}</span>
+                    <span style={{ fontWeight: '500' }}>
+                      {artist.name}
+                      {artist.id === albumData?.album?.artist_id && (
+                        <span style={{ color: '#6b7280', fontWeight: 'normal', fontStyle: 'italic' }}> (current primary artist)</span>
+                      )}
+                    </span>
                     <button
                       type="button"
                       onClick={() => handleAddArtistToAlbum(artist)}
