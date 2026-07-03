@@ -11,13 +11,13 @@ vi.mock('../services/api', () => ({
 
 describe('TrackArtistPicker', () => {
   test('shows current artist name and a Change button', () => {
-    render(<TrackArtistPicker artistId={5} artistName="Album Artist" onSelect={vi.fn()} />);
+    render(<TrackArtistPicker artistName="Album Artist" onSelect={vi.fn()} />);
     expect(screen.getByText('Album Artist')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Change' })).toBeInTheDocument();
   });
 
   test('shows "Unassigned" when no artist is set', () => {
-    render(<TrackArtistPicker artistId={null} artistName={null} onSelect={vi.fn()} />);
+    render(<TrackArtistPicker artistName={null} onSelect={vi.fn()} />);
     expect(screen.getByText('Unassigned')).toBeInTheDocument();
   });
 
@@ -27,7 +27,7 @@ describe('TrackArtistPicker', () => {
     });
     const onSelect = vi.fn();
     const user = userEvent.setup();
-    render(<TrackArtistPicker artistId={5} artistName="Album Artist" onSelect={onSelect} />);
+    render(<TrackArtistPicker artistName="Album Artist" onSelect={onSelect} />);
 
     await user.click(screen.getByRole('button', { name: 'Change' }));
     await user.type(screen.getByPlaceholderText('Search artist name...'), 'Steppen');
@@ -42,7 +42,7 @@ describe('TrackArtistPicker', () => {
   test('Cancel returns to the read-only view without calling onSelect', async () => {
     const onSelect = vi.fn();
     const user = userEvent.setup();
-    render(<TrackArtistPicker artistId={5} artistName="Album Artist" onSelect={onSelect} />);
+    render(<TrackArtistPicker artistName="Album Artist" onSelect={onSelect} />);
 
     await user.click(screen.getByRole('button', { name: 'Change' }));
     expect(screen.getByPlaceholderText('Search artist name...')).toBeInTheDocument();

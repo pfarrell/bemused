@@ -1221,7 +1221,6 @@ const AdminAlbum = () => {
                       </td>
                       <td style={{ padding: '0.75rem' }}>
                         <TrackArtistPicker
-                          artistId={track.artist.id}
                           artistName={track.artist.name}
                           onSelect={(newArtistId, newArtistName) => handleTrackArtistSelect(track.id, newArtistId, newArtistName)}
                         />
