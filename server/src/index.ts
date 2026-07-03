@@ -80,7 +80,7 @@ adminApp.route('/', admin)
 adminApp.route('/upload', upload)
 app.route('/admin', adminApp)
 
-const port = parseInt(process.env.PORT ?? '3000')
+const port = parseInt(process.env.PORT ?? '3939')
 
 console.log(`Bemused API server starting on port ${port}`)
 
