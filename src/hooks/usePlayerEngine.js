@@ -140,7 +140,7 @@ export const usePlayerEngine = (audioRefA, audioRefB) => {
       : FALLBACK_ARTWORK;
     navigator.mediaSession.metadata = new MediaMetadata({
       title: currentTrack.title,
-      artist: currentTrack.artist?.name || currentTrack.artist || '',
+      artist: currentTrack.artist?.name || '',
       album: currentTrack.album?.title || '',
       artwork: [{ src: artworkUrl, sizes: '512x512', type: 'image/png' }],
     });

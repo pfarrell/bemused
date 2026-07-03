@@ -46,7 +46,7 @@ const NowPlaying = () => {
       )}
       <div className="track-info show">
         <div className="track-artist" onClick={() => handleArtistClick(currentTrack)} title="go to artist">
-          {currentTrack.artist?.name || currentTrack.artist || 'Unknown Artist'}
+          {currentTrack.artist?.name || 'Unknown Artist'}
         </div>
         <div className="track-title" onClick={() => handleTrackClick(currentTrack)} title="go to album">
           {currentTrack.title}
