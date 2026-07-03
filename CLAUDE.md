@@ -30,6 +30,8 @@ npm run db:reset     # Reset database
 
 **Deploy commands by change type**: `npm run deploy` (frontend changes only), `cd server && npm run deploy` (backend changes only), `npm run full-deploy` (both layers changed).
 
+**Deploying is a manual, per-layer step — committing to `main` does not make code live.** Frontend and backend are deployed independently and can drift out of sync with each other and with `main` by hours or days; a commit that's been on `main` for a while may simply never have been deployed. Before concluding a feature is "broken" in production, check whether the relevant layer was actually redeployed after the commit that introduced it (compare the deployed release timestamp — `ssh` in and check `/var/www/bemused-node/releases/` or the frontend asset file mtimes — against `git log` for the touched files) rather than assuming the code itself is at fault.
+
 ## Specs and Plans
 
 Design specs live in `docs/superpowers/specs/` and implementation plans in `docs/superpowers/plans/`. Never commit these files to git.
@@ -55,6 +57,8 @@ Images are served externally: `https://patf.net/images/` in production, `/images
 - `/tags/:name` — Tag browse
 - `/admin/artist/:id`, `/admin/album/:id`, `/admin/collection/:id`, `/admin/playlist/:id` — Admin edit pages (require admin)
 - `/admin/upload`, `/admin/logs`, `/admin/new` — Admin upload, log viewer, entity creation (require admin)
+
+**There is no error boundary anywhere in the app.** An uncaught exception during render — anywhere in the component tree — unmounts the entire React tree and leaves a blank white screen, with no fallback UI. This makes defensive handling of nullable/malformed API data a correctness requirement, not a nicety: prefer `field?.subfield` with a string/number fallback, never `field?.subfield || field` (if `field` is an object, that pattern renders the raw object as a JSX child, which React throws on rather than stringifying — this exact bug crashed the player on tracks with a null artist). When debugging a report of "the whole app went blank," suspect an uncaught render exception first.
 
 **Layout** (`src/components/Layout.jsx`): Fixed header with `SearchBar`, active tag filter chip (links to `/tags/:name`, has clear button), and hamburger/user menu containing: home mode toggle (artists/albums), tag filter with autocomplete (fetches `getTags()` lazily when menu opens), and nav links. Scrollable `.main-content` div with pull-to-refresh (increments `refreshKey` to remount current page on pull ≥ 60px). The fixed footer (`NowPlaying` + `MusicPlayerWrapper`) is rendered in `src/App.jsx`, not `Layout.jsx` — it sits outside `<Routes>` so `MusicPlayerWrapper`/`usePlayerEngine` never unmount during route changes.
 
@@ -124,8 +128,8 @@ Images are served externally: `https://patf.net/images/` in production, `/images
 
 **Database** (`server/src/db/database.ts`): Kysely with `pg.Pool` (max 10 connections). Connection string from `BEMUSED_DB` env var. Tables:
 - `artists` — name, image path, Wikipedia text, MusicBrainz ID + confidence + status
-- `albums` — title, artist FK, year, disc number, genre, image path, Wikipedia, MusicBrainz metadata
-- `tracks` — title, number, year, album/artist FKs, media file FK, Wikipedia, duration
+- `albums` — title, `artist_id`, year, disc number, genre, image path, Wikipedia, MusicBrainz metadata
+- `tracks` — title, number, year, `album_id`/`artist_id`, media file FK, Wikipedia, duration
 - `media_files` — file system records linking audio files to entities; `entity_id`/`entity_type` for current records (`track_id` is legacy)
 - `playlists` — named playlists with optional user ownership and auto-generated flag
 - `playlist_tracks` — ordered join table for playlist ↔ track
@@ -142,6 +146,8 @@ Images are served externally: `https://patf.net/images/` in production, `/images
 - `collection_albums` — ordered join table for collection ↔ album
 - `tags` — tag names
 - `albums_tags`, `artists_tags`, `tags_tracks` — many-to-many tag associations
+
+**`albums.artist_id` and `tracks.artist_id`/`tracks.album_id` have no foreign key constraint** — confirmed via `pg_constraint`, this is not an oversight in isolated code, it's the actual schema. Deleting an artist (directly, or via the `admin` route's stub-merging) does not cascade or get rejected; it silently orphans any album/track still pointing at it, which then 404s (`GET /album/:id` explicitly checks the artist exists) or surfaces with a null artist elsewhere (e.g. search, which left-joins). Any code path that deletes or merges an `artists` row must first reassign or null out dependent `albums.artist_id`/`tracks.artist_id` rows — the database will not catch a missed case.
 
 **Auth** (`server/src/middleware/auth.ts`): JWT in httpOnly `auth` cookie, 24h expiry. `authMiddleware` runs globally and sets `c.get('user')` if cookie is valid. `requireAdmin` blocks non-admin users with 403. Passwords hashed with bcrypt.
 
