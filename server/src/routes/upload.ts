@@ -86,6 +86,7 @@ upload.post('/', async (c) => {
     const trackPad = body.track_pad ? parseInt(body.track_pad as string) : 0
     const albumArtUrl = body.album_art_url as string | undefined
     const albumArtName = body.album_art_name as string | undefined
+    const isCompilation = body.is_compilation === 'true'
 
     // Get uploaded files
     const files = body.files
@@ -141,6 +142,7 @@ upload.post('/', async (c) => {
           artist_id: artistId,
           album_name: albumName || null,
           album_id: albumId,
+          is_compilation: isCompilation,
           genre: genre || null,
           track_pad: trackPad || 0,
           file_path: filePath,

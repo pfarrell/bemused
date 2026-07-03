@@ -121,35 +121,35 @@ async function processQueueItem(item: any) {
       }
     }
 
-    // If user provided artist_id, use it directly (don't look at names or tags)
-    // Otherwise, use artist_name if provided, else fall back to the overridden
-    // album's artist, else fall back to ID3 tag
-    let trackArtistId: number | null = null
+    // Album artist: manual pick (ID) > manual pick (name) > overridden album's
+    // artist > ID3 tag.
     let albumArtistId: number | null = null
-    let trackArtistName: string
     let albumArtistName: string
 
     if (item.artist_id) {
-      // User provided an ID - use it for both track and album artist
-      trackArtistId = item.artist_id
       albumArtistId = item.artist_id
-      trackArtistName = '' // Will be looked up from database
-      albumArtistName = ''
+      albumArtistName = '' // Will be looked up from database
     } else if (item.artist_name) {
-      // User provided a name - use it
-      trackArtistName = item.artist_name
       albumArtistName = item.artist_name
     } else if (overrideAlbum) {
-      // No artist override given, but an album override was — use the
-      // album's real artist instead of the ID3 tag
-      trackArtistId = overrideAlbum.artist_id
       albumArtistId = overrideAlbum.artist_id
-      trackArtistName = ''
       albumArtistName = ''
     } else {
-      // Fall back to ID3 tags
-      trackArtistName = tags.artist || 'Unknown Artist'
       albumArtistName = tags.artist || 'Unknown Artist'
+    }
+
+    // Track artist: for a flagged compilation, each track's own ID3 tag always
+    // wins — a batch-level artist pick must not stomp on per-track credits.
+    // Otherwise, track artist mirrors album artist exactly (unchanged behavior
+    // from before this split existed).
+    let trackArtistId: number | null = null
+    let trackArtistName: string
+
+    if (item.is_compilation) {
+      trackArtistName = tags.artist || 'Unknown Artist'
+    } else {
+      trackArtistId = albumArtistId
+      trackArtistName = albumArtistName
     }
 
     // Handle album similarly
@@ -271,11 +271,24 @@ async function processQueueItem(item: any) {
           .values({
             title: albumName,
             artist_id: albumArtist!.id,
-            release_year: releaseYear
+            release_year: releaseYear,
+            is_compilation: item.is_compilation,
           })
           .returningAll()
           .executeTakeFirst()
       }
+    }
+
+    // A compilation flag set at upload time is an explicit assertion about
+    // the album — stamp it even when reusing an existing album (found by
+    // title+artist, or targeted via album_id) that wasn't already flagged.
+    if (item.is_compilation && album && !album.is_compilation) {
+      album = await db
+        .updateTable('albums')
+        .set({ is_compilation: true, updated_at: new Date() })
+        .where('id', '=', album.id)
+        .returningAll()
+        .executeTakeFirst()
     }
 
     // Async MBID lookup — non-blocking, upload success does not depend on it
