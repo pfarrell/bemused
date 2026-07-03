@@ -361,9 +361,9 @@ admin.get('/artists/search', async (c) => {
       'artists.image_path',
       eb.fn.count<number>('albums.id').as('album_count'),
     ])
-    .where(sql<boolean>`lower(artists.name) LIKE ${'%' + q.toLowerCase() + '%'}`)
+    .where(sql<boolean>`unaccent(lower(artists.name)) LIKE unaccent(${'%' + q.toLowerCase() + '%'})`)
     .groupBy(['artists.id', 'artists.name', 'artists.image_path'])
-    .orderBy(sql<number>`similarity(lower(artists.name), lower(${q}))`, 'desc')
+    .orderBy(sql<number>`similarity(unaccent(lower(artists.name)), unaccent(lower(${q})))`, 'desc')
     .limit(20)
     .execute()
 
@@ -386,9 +386,9 @@ admin.get('/albums/search', async (c) => {
       'artists.name as artist_name',
       eb.fn.count<number>('tracks.id').as('track_count'),
     ])
-    .where(sql<boolean>`lower(albums.title) LIKE ${'%' + q.toLowerCase() + '%'}`)
+    .where(sql<boolean>`unaccent(lower(albums.title)) LIKE unaccent(${'%' + q.toLowerCase() + '%'})`)
     .groupBy(['albums.id', 'albums.title', 'albums.release_year', 'artists.name'])
-    .orderBy(sql<number>`similarity(lower(albums.title), lower(${q}))`, 'desc')
+    .orderBy(sql<number>`similarity(unaccent(lower(albums.title)), unaccent(lower(${q})))`, 'desc')
     .limit(10)
     .execute()
 
