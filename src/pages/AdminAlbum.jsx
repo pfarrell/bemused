@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import Loading from '../components/Loading';
 import TagsSection from '../components/TagsSection';
+import TrackArtistPicker from '../components/TrackArtistPicker';
 import toast from 'react-hot-toast';
 
 const toFilename = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
@@ -24,6 +25,7 @@ const AdminAlbum = () => {
   const [wikipedia, setWikipedia] = useState('');
   const [musicbrainzId, setMusicbrainzId] = useState('');
   const [mbidStatus, setMbidStatus] = useState('');
+  const [isCompilation, setIsCompilation] = useState(false);
 
   // Track if form has unsaved changes
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -73,6 +75,7 @@ const AdminAlbum = () => {
         setWikipedia(album.wikipedia || '');
         setMusicbrainzId(album.musicbrainz_id || '');
         setMbidStatus(album.mbid_status || '');
+        setIsCompilation(!!album.is_compilation);
         setTracks(tracks || []);
         const imagesRes = await apiService.getAlbumImages(id);
         setImages(imagesRes.data);
@@ -111,10 +114,11 @@ const AdminAlbum = () => {
       artistId !== String(album.artist_id || '') ||
       releaseYear !== (album.release_year || '') ||
       imagePath !== (album.image_path || '') ||
-      wikipedia !== (album.wikipedia || '');
+      wikipedia !== (album.wikipedia || '') ||
+      isCompilation !== !!album.is_compilation;
 
     setHasUnsavedChanges(hasChanges);
-  }, [title, artistId, releaseYear, imagePath, wikipedia, albumData]);
+  }, [title, artistId, releaseYear, imagePath, wikipedia, isCompilation, albumData]);
 
   // Warn user before leaving page with unsaved changes (browser navigation)
   useEffect(() => {
@@ -162,6 +166,7 @@ const AdminAlbum = () => {
             release_year: releaseYear,
             image_path: imagePath,
             wikipedia,
+            is_compilation: isCompilation,
           });
           setHasUnsavedChanges(false);
           // Navigate to the link destination
@@ -176,7 +181,7 @@ const AdminAlbum = () => {
     // Add click listener to the document
     document.addEventListener('click', handleClick, true);
     return () => document.removeEventListener('click', handleClick, true);
-  }, [hasUnsavedChanges, id, title, artistId, releaseYear, imagePath, wikipedia, navigate]);
+  }, [hasUnsavedChanges, id, title, artistId, releaseYear, imagePath, wikipedia, isCompilation, navigate]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -190,6 +195,7 @@ const AdminAlbum = () => {
         release_year: releaseYear,
         image_path: imagePath,
         wikipedia,
+        is_compilation: isCompilation,
       });
 
       // Clear unsaved changes flag before navigating
@@ -236,6 +242,7 @@ const AdminAlbum = () => {
             release_year: releaseYear,
             image_path: imagePath,
             wikipedia,
+            is_compilation: isCompilation,
           });
           setHasUnsavedChanges(false);
           navigate(destination);
@@ -302,6 +309,20 @@ const AdminAlbum = () => {
     } catch (error) {
       console.error('Error updating track:', error);
       alert('Failed to update track: ' + (error.response?.data?.error || error.message));
+    }
+  };
+
+  const handleTrackArtistSelect = async (trackId, newArtistId, newArtistName) => {
+    try {
+      await apiService.updateTrack(trackId, { artist_id: newArtistId });
+      setTracks(prevTracks =>
+        prevTracks.map(t =>
+          t.id === trackId ? { ...t, artist: { id: newArtistId, name: newArtistName } } : t
+        )
+      );
+    } catch (error) {
+      console.error('Error updating track artist:', error);
+      alert('Failed to update track artist: ' + (error.response?.data?.error || error.message));
     }
   };
 
@@ -539,6 +560,20 @@ const AdminAlbum = () => {
           />
           <small style={{ color: '#666', fontSize: '0.875rem' }}>
             Current artist: {albumData?.artist?.name}
+          </small>
+        </div>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={isCompilation}
+              onChange={(e) => setIsCompilation(e.target.checked)}
+            />
+            Is compilation
+          </label>
+          <small style={{ color: '#666', fontSize: '0.875rem' }}>
+            Various-artists album — track artists are shown individually and the "Also featuring" list is hidden.
           </small>
         </div>
 
@@ -1117,7 +1152,7 @@ const AdminAlbum = () => {
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 'bold' }}>Track #</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 'bold' }}>Title</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 'bold' }}>Album ID</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 'bold' }}>Artist ID</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 'bold' }}>Artist</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 'bold' }}>Duration</th>
                   <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold' }}>Actions</th>
                 </tr>
@@ -1185,22 +1220,10 @@ const AdminAlbum = () => {
                         />
                       </td>
                       <td style={{ padding: '0.75rem' }}>
-                        <input
-                          type="number"
-                          defaultValue={track.artist.id || ''}
-                          onFocus={(e) => e.target.dataset.originalValue = e.target.value}
-                          onChange={(e) => handleTrackFieldChange(track.id, 'artist_id', parseInt(e.target.value))}
-                          onBlur={(e) => {
-                            if (e.target.value !== e.target.dataset.originalValue) {
-                              handleTrackBlur(track.id, 'artist_id');
-                            }
-                          }}
-                          style={{
-                            width: '80px',
-                            padding: '0.25rem 0.5rem',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '4px',
-                          }}
+                        <TrackArtistPicker
+                          artistId={track.artist.id}
+                          artistName={track.artist.name}
+                          onSelect={(newArtistId, newArtistName) => handleTrackArtistSelect(track.id, newArtistId, newArtistName)}
                         />
                       </td>
                       <td style={{ padding: '0.75rem', color: '#6b7280' }}>
