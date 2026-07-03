@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import type { Context } from 'hono'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { setCookie, deleteCookie } from 'hono/cookie'
@@ -18,6 +19,23 @@ function generateToken(userId: number, username: string, admin: boolean): string
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   )
+}
+
+// Cookie scoping differs by which host the request came in on (nginx passes the
+// real Host through unchanged). The LAN IP gets a host-only, non-Secure cookie
+// since it's plain HTTP; patf.com keeps the existing Secure, domain-scoped cookie.
+// The two are independent sessions by design — see
+// docs/superpowers/specs/2026-07-03-lan-access-design.md.
+function cookieOptionsForRequest(c: Context): { secure: boolean; domain: string | undefined } {
+  if (process.env.NODE_ENV !== 'production') {
+    return { secure: false, domain: undefined }
+  }
+  const host = (c.req.header('host') || '').split(':')[0]
+  const isLan = host === '172.16.1.10'
+  return {
+    secure: !isLan,
+    domain: isLan ? undefined : '.patf.com',
+  }
 }
 
 // POST /auth/signup - Create new user account
@@ -67,11 +85,10 @@ auth.post('/signup', async (c) => {
     // Path must be '/' so cookie is sent to both /bemused/api and /bemused/app
     setCookie(c, 'auth', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
       sameSite: 'Lax',
       maxAge: 86400 * 14, // 2 weeks
       path: '/',
-      domain: process.env.NODE_ENV === 'production' ? '.patf.com' : undefined,
+      ...cookieOptionsForRequest(c),
     })
 
     // Return user data (without password)
@@ -122,11 +139,10 @@ auth.post('/login', async (c) => {
     // Path must be '/' so cookie is sent to both /bemused/api and /bemused/app
     setCookie(c, 'auth', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
       sameSite: 'Lax',
       maxAge: 86400 * 14, // 2 weeks
       path: '/',
-      domain: process.env.NODE_ENV === 'production' ? '.patf.com' : undefined,
+      ...cookieOptionsForRequest(c),
     })
 
     // Return user data (without password)
@@ -147,8 +163,11 @@ auth.post('/login', async (c) => {
 
 // POST /auth/logout - Clear auth cookie
 auth.post('/logout', async (c) => {
+  // Must match the domain the cookie was set with, or the browser won't clear it.
+  const { domain } = cookieOptionsForRequest(c)
   deleteCookie(c, 'auth', {
     path: '/',
+    domain,
   })
 
   return c.json({ message: 'Logged out successfully' })
