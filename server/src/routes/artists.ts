@@ -137,13 +137,48 @@ artists.get('/:id', async (c) => {
     .orderBy('albums.release_year', 'asc')
     .execute()
 
-  const appears_on = appearsOnRows.map(a => ({
-    id: a.id,
-    title: a.title,
-    release_year: a.release_year,
-    image_path: a.image_path,
-    artist: { id: a.primary_artist_id, name: a.primary_artist_name },
-  }))
+  // Albums where this artist has a track credit (tracks.artist_id) but isn't
+  // the album's primary artist and isn't already covered by an artist_albums
+  // secondary-credit row above — e.g. a compilation track (Easy Rider's
+  // Steppenwolf track showing on Steppenwolf's own artist page).
+  const trackCreditRows = await sql<{
+    id: number
+    title: string
+    release_year: string | null
+    image_path: string | null
+    primary_artist_id: number
+    primary_artist_name: string
+  }>`
+    SELECT DISTINCT albums.id, albums.title, albums.release_year, albums.image_path,
+           al_artist.id AS primary_artist_id, al_artist.name AS primary_artist_name
+    FROM tracks
+    INNER JOIN albums ON albums.id = tracks.album_id
+    INNER JOIN artists al_artist ON al_artist.id = albums.artist_id
+    WHERE tracks.artist_id = ${id}
+      AND tracks.approved = true
+      AND albums.artist_id != ${id}
+      AND NOT EXISTS (
+        SELECT 1 FROM artist_albums
+        WHERE artist_albums.album_id = albums.id AND artist_albums.artist_id = ${id}
+      )
+  `.execute(db)
+
+  const appears_on = [
+    ...appearsOnRows.map(a => ({
+      id: a.id,
+      title: a.title,
+      release_year: a.release_year,
+      image_path: a.image_path,
+      artist: { id: a.primary_artist_id, name: a.primary_artist_name },
+    })),
+    ...trackCreditRows.rows.map(a => ({
+      id: a.id,
+      title: a.title,
+      release_year: a.release_year,
+      image_path: a.image_path,
+      artist: { id: a.primary_artist_id, name: a.primary_artist_name },
+    })),
+  ]
 
   const relationRows = await db
     .selectFrom('artist_relations')
