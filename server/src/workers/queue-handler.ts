@@ -104,8 +104,26 @@ async function processQueueItem(item: any) {
     // Determine artist, album, and track info
     // Priority: manual input (ID or name) > ID3 tags > filename
 
+    // If an album override was given, fetch it up front so artist resolution
+    // can be reconciled against the album's real artist rather than trusting
+    // a possibly-mismatched ID3 tag artist (this is exactly why an album
+    // override would be used in the first place).
+    let overrideAlbum = null
+    if (item.album_id) {
+      overrideAlbum = await db
+        .selectFrom('albums')
+        .selectAll()
+        .where('id', '=', item.album_id)
+        .executeTakeFirst()
+
+      if (!overrideAlbum) {
+        throw new Error(`Album ID ${item.album_id} not found`)
+      }
+    }
+
     // If user provided artist_id, use it directly (don't look at names or tags)
-    // Otherwise, use artist_name if provided, else fall back to ID3 tag
+    // Otherwise, use artist_name if provided, else fall back to the overridden
+    // album's artist, else fall back to ID3 tag
     let trackArtistId: number | null = null
     let albumArtistId: number | null = null
     let trackArtistName: string
@@ -121,6 +139,13 @@ async function processQueueItem(item: any) {
       // User provided a name - use it
       trackArtistName = item.artist_name
       albumArtistName = item.artist_name
+    } else if (overrideAlbum) {
+      // No artist override given, but an album override was — use the
+      // album's real artist instead of the ID3 tag
+      trackArtistId = overrideAlbum.artist_id
+      albumArtistId = overrideAlbum.artist_id
+      trackArtistName = ''
+      albumArtistName = ''
     } else {
       // Fall back to ID3 tags
       trackArtistName = tags.artist || 'Unknown Artist'
@@ -128,16 +153,15 @@ async function processQueueItem(item: any) {
     }
 
     // Handle album similarly
-    let albumId: number | null = null
-    let albumName: string
+    const albumId: number | null = item.album_id || null
+    let albumName: string = ''
 
-    if (item.album_id) {
-      albumId = item.album_id
-      albumName = '' // Will be looked up
-    } else if (item.album_name) {
-      albumName = item.album_name
-    } else {
-      albumName = tags.album || 'Unknown Album'
+    if (!item.album_id) {
+      if (item.album_name) {
+        albumName = item.album_name
+      } else {
+        albumName = tags.album || 'Unknown Album'
+      }
     }
 
     const trackTitle = safeStrip(tags.title) !== 'not set'
@@ -229,16 +253,8 @@ async function processQueueItem(item: any) {
     let album
     if (albumId) {
       console.log(`  💿 Using album ID: ${albumId}`)
-      album = await db
-        .selectFrom('albums')
-        .selectAll()
-        .where('id', '=', albumId)
-        .executeTakeFirst()
-
-      if (!album) {
-        throw new Error(`Album ID ${albumId} not found`)
-      }
-      console.log(`  💿 Found album: ${album.title}`)
+      album = overrideAlbum
+      console.log(`  💿 Found album: ${album!.title}`)
     } else {
       console.log(`  💿 Finding/creating album: ${albumName}`)
       album = await db
@@ -365,7 +381,8 @@ async function processQueueItem(item: any) {
         .set({
           media_file_id: mediaFile!.id,
           duration_sec: durationSec,
-          track_number: trackNumber
+          track_number: trackNumber,
+          artist_id: trackArtist!.id
         })
         .where('id', '=', track.id)
         .returningAll()
@@ -408,11 +425,38 @@ async function processQueueItem(item: any) {
   }
 }
 
+// A row can be orphaned in 'processing' if the worker process dies mid-item
+// (crash, OOM, systemd restart) — the poll loop only ever looks at 'pending'
+// rows, so nothing would otherwise notice or recover it.
+const STALE_PROCESSING_THRESHOLD_MS = 30 * 60 * 1000 // 30 minutes
+
+async function reclaimStaleProcessingItems() {
+  const staleCutoff = new Date(Date.now() - STALE_PROCESSING_THRESHOLD_MS)
+
+  const stale = await db
+    .updateTable('upload_queue')
+    .set({
+      status: 'failed',
+      completed_at: new Date(),
+      error_message: 'Reclaimed: stuck in "processing" past the worker restart without completing (orphaned by a crashed or restarted worker process). Use Retry once the underlying issue is resolved.'
+    })
+    .where('status', '=', 'processing')
+    .where('started_at', '<', staleCutoff)
+    .returning(['id', 'original_filename'])
+    .execute()
+
+  for (const item of stale) {
+    console.warn(`  ⚠️  Reclaimed stale processing item ${item.id} (${item.original_filename})`)
+  }
+}
+
 // Main worker loop
 async function worker() {
   console.log('🚀 Bemused Upload Queue Worker started')
   console.log(`📁 Upload path: ${UPLOAD_PATH}`)
   console.log(`⏱️  Poll interval: ${POLL_INTERVAL_MS}ms\n`)
+
+  await reclaimStaleProcessingItems()
 
   while (true) {
     try {

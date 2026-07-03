@@ -174,6 +174,16 @@ const AdminUpload = () => {
     }
   };
 
+  const handleRetry = async (id) => {
+    try {
+      await apiService.retryUpload(id);
+      loadRecentUploads();
+      loadStats();
+    } catch (error) {
+      console.error('Failed to retry upload:', error);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed': return '#10b981';
@@ -307,6 +317,67 @@ const AdminUpload = () => {
         </h2>
 
         <div style={{ display: 'grid', gap: '1.5rem' }}>
+          {/* File Upload */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Audio Files *
+            </label>
+            <input
+              id="file-input"
+              type="file"
+              multiple
+              accept=".mp3,.m4a,.flac"
+              onChange={handleFileChange}
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                fontSize: '1rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+              }}
+            />
+            {selectedFiles.length > 0 && (
+              <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                {selectedFiles.length} file(s) selected
+              </div>
+            )}
+            {filePreviews.length > 0 && (
+              <div style={{ marginTop: '0.75rem' }}>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f3f4f6' }}>
+                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>Filename</th>
+                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>Title</th>
+                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>Artist</th>
+                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>Album</th>
+                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>#</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filePreviews.map((p, i) => {
+                        const displayTitle = p.title || p.filename.replace(/\.[^.]+$/, '');
+                        const isFallback = !p.title;
+                        return (
+                          <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                            <td style={{ padding: '0.4rem 0.6rem', color: '#6b7280', fontFamily: 'monospace' }}>{p.filename}</td>
+                            <td style={{ padding: '0.4rem 0.6rem', fontStyle: isFallback ? 'italic' : 'normal', color: isFallback ? '#9ca3af' : 'inherit' }}>{displayTitle}</td>
+                            <td style={{ padding: '0.4rem 0.6rem', color: p.artist ? 'inherit' : '#9ca3af' }}>{p.artist || '—'}</td>
+                            <td style={{ padding: '0.4rem 0.6rem', color: p.album ? 'inherit' : '#9ca3af' }}>{p.album || '—'}</td>
+                            <td style={{ padding: '0.4rem 0.6rem', color: p.track ? 'inherit' : '#9ca3af' }}>{p.track || '—'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <small style={{ color: '#6b7280', fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
+                  Artist and album overrides below take precedence over these tags.
+                </small>
+              </div>
+            )}
+          </div>
+
           {/* Artist Picker */}
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
@@ -562,67 +633,6 @@ const AdminUpload = () => {
             </div>
           </div>
 
-          {/* File Upload */}
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Audio Files *
-            </label>
-            <input
-              id="file-input"
-              type="file"
-              multiple
-              accept=".mp3,.m4a,.flac"
-              onChange={handleFileChange}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                fontSize: '1rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-              }}
-            />
-            {selectedFiles.length > 0 && (
-              <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                {selectedFiles.length} file(s) selected
-              </div>
-            )}
-            {filePreviews.length > 0 && (
-              <div style={{ marginTop: '0.75rem' }}>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                    <thead>
-                      <tr style={{ backgroundColor: '#f3f4f6' }}>
-                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>Filename</th>
-                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>Title</th>
-                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>Artist</th>
-                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>Album</th>
-                        <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: '600' }}>#</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filePreviews.map((p, i) => {
-                        const displayTitle = p.title || p.filename.replace(/\.[^.]+$/, '');
-                        const isFallback = !p.title;
-                        return (
-                          <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                            <td style={{ padding: '0.4rem 0.6rem', color: '#6b7280', fontFamily: 'monospace' }}>{p.filename}</td>
-                            <td style={{ padding: '0.4rem 0.6rem', fontStyle: isFallback ? 'italic' : 'normal', color: isFallback ? '#9ca3af' : 'inherit' }}>{displayTitle}</td>
-                            <td style={{ padding: '0.4rem 0.6rem', color: p.artist ? 'inherit' : '#9ca3af' }}>{p.artist || '—'}</td>
-                            <td style={{ padding: '0.4rem 0.6rem', color: p.album ? 'inherit' : '#9ca3af' }}>{p.album || '—'}</td>
-                            <td style={{ padding: '0.4rem 0.6rem', color: p.track ? 'inherit' : '#9ca3af' }}>{p.track || '—'}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <small style={{ color: '#6b7280', fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
-                  Artist and album overrides above take precedence over these tags.
-                </small>
-              </div>
-            )}
-          </div>
-
           {/* Submit Button */}
           <button
             type="submit"
@@ -682,6 +692,7 @@ const AdminUpload = () => {
                   <th style={{ padding: '0.75rem', textAlign: 'left' }}>Album</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left' }}>Created</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left' }}>Error</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left' }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -700,11 +711,30 @@ const AdminUpload = () => {
                       </span>
                     </td>
                     <td style={{ padding: '0.75rem' }}>{upload.original_filename}</td>
-                    <td style={{ padding: '0.75rem' }}>{upload.artist_name || upload.artist_id || '-'}</td>
-                    <td style={{ padding: '0.75rem' }}>{upload.album_name || upload.album_id || '-'}</td>
+                    <td style={{ padding: '0.75rem' }}>{upload.resolved_artist_name || upload.artist_name || upload.artist_id || '-'}</td>
+                    <td style={{ padding: '0.75rem' }}>{upload.resolved_album_title || upload.album_name || upload.album_id || '-'}</td>
                     <td style={{ padding: '0.75rem' }}>{formatDate(upload.created_at)}</td>
                     <td style={{ padding: '0.75rem', color: '#ef4444', fontSize: '0.75rem' }}>
                       {upload.error_message || '-'}
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
+                      {(upload.status === 'failed' || upload.status === 'processing') && (
+                        <button
+                          onClick={() => handleRetry(upload.id)}
+                          style={{
+                            padding: '0.35rem 0.75rem',
+                            backgroundColor: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          Retry
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

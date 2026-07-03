@@ -66,7 +66,7 @@ describe('AdminUpload — ID3 preview panel', () => {
     const file = new File([''], 'tagged.mp3', { type: 'audio/mpeg' });
     await user.upload(document.getElementById('file-input'), file);
 
-    await screen.findByText(/Artist and album overrides above take precedence/i);
+    await screen.findByText(/Artist and album overrides below take precedence/i);
   });
 });
 

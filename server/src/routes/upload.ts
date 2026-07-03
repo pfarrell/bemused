@@ -187,8 +187,12 @@ upload.get('/status', async (c) => {
 
     const recentJobs = await db
       .selectFrom('upload_queue')
-      .selectAll()
-      .orderBy('created_at', 'desc')
+      .leftJoin('tracks', 'tracks.id', 'upload_queue.track_id')
+      .leftJoin('albums', 'albums.id', 'tracks.album_id')
+      .leftJoin('artists', 'artists.id', 'tracks.artist_id')
+      .selectAll('upload_queue')
+      .select(['albums.title as resolved_album_title', 'artists.name as resolved_artist_name'])
+      .orderBy('upload_queue.created_at', 'desc')
       .limit(20)
       .execute()
 
@@ -212,14 +216,18 @@ upload.get('/recent', async (c) => {
 
     const recent = await db
       .selectFrom('upload_queue')
-      .selectAll()
+      .leftJoin('tracks', 'tracks.id', 'upload_queue.track_id')
+      .leftJoin('albums', 'albums.id', 'tracks.album_id')
+      .leftJoin('artists', 'artists.id', 'tracks.artist_id')
+      .selectAll('upload_queue')
+      .select(['albums.title as resolved_album_title', 'artists.name as resolved_artist_name'])
       .where((eb) =>
         eb.or([
-          eb('status', '!=', 'completed'),
-          eb('completed_at', '>', thirtySecondsAgo)
+          eb('upload_queue.status', '!=', 'completed'),
+          eb('upload_queue.completed_at', '>', thirtySecondsAgo)
         ])
       )
-      .orderBy('created_at', 'desc')
+      .orderBy('upload_queue.created_at', 'desc')
       .limit(limit)
       .execute()
 
@@ -227,6 +235,36 @@ upload.get('/recent', async (c) => {
   } catch (error) {
     console.error('Recent uploads error:', error)
     return c.json({ error: 'Failed to get recent uploads' }, 500)
+  }
+})
+
+// POST /admin/upload/:id/retry - reset a failed or stuck (processing) upload back to pending
+upload.post('/:id/retry', async (c) => {
+  const id = parseInt(c.req.param('id'))
+  if (isNaN(id)) return c.json({ error: 'Invalid id' }, 400)
+
+  try {
+    const item = await db
+      .updateTable('upload_queue')
+      .set({
+        status: 'pending',
+        error_message: null,
+        started_at: null,
+        completed_at: null,
+      })
+      .where('id', '=', id)
+      .where('status', 'in', ['failed', 'processing'])
+      .returningAll()
+      .executeTakeFirst()
+
+    if (!item) {
+      return c.json({ error: 'Upload not found, or not in a retryable state' }, 404)
+    }
+
+    return c.json(item)
+  } catch (error) {
+    console.error('Retry upload error:', error)
+    return c.json({ error: 'Failed to retry upload' }, 500)
   }
 })
 
