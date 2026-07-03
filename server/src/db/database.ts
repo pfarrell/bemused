@@ -27,6 +27,7 @@ interface AlbumTable {
   musicbrainz_id: string | null
   mbid_confidence: number | null
   mbid_status: string | null
+  is_compilation: boolean
   created_at: ColumnType<Date, string | undefined, never>
   updated_at: ColumnType<Date, string | undefined, string | Date>
 }
@@ -108,6 +109,7 @@ interface UploadQueueTable {
   artist_id: number | null
   album_name: string | null
   album_id: number | null
+  is_compilation: boolean
   genre: string | null
   track_pad: number | null
   file_path: string
