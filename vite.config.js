@@ -85,5 +85,20 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.js'],
     globals: true,
+    // Default excludes don't cover nested worktree checkouts (e.g.
+    // .claude/worktrees/<name>/), which live inside this repo's directory
+    // tree and have their own node_modules — without this, vitest
+    // double-discovers every test file and loads two conflicting copies
+    // of React.
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/cypress/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
+      '**/.worktrees/**',
+      '**/worktrees/**',
+      '**/.claude/worktrees/**',
+    ],
   },
 })
