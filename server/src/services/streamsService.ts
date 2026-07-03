@@ -33,9 +33,12 @@ export function createStreamsService(db: Kysely<Database>) {
 
       if (!row?.absolute_path) return null
 
+      const rawFileType = row.file_type?.trim()
+      const fileType = rawFileType ? (rawFileType.startsWith('.') ? rawFileType : `.${rawFileType}`) : '.mp3'
+
       return {
         absolutePath: row.absolute_path,
-        fileType: row.file_type || '.mp3',
+        fileType,
         title: row.title,
         artistName: row.track_artist_name || row.album_artist_name || 'Unknown Artist',
       }
