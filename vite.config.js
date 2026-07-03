@@ -41,6 +41,12 @@ export default defineConfig({
             handler: 'NetworkOnly',
           },
           {
+            // Admin endpoints are all live, mutable state (upload queue polling,
+            // logs, search) for a single admin user — never serve them stale.
+            urlPattern: /\/bemused\/api\/admin\//,
+            handler: 'NetworkOnly',
+          },
+          {
             urlPattern: /\/bemused\/api\//,
             handler: 'StaleWhileRevalidate',
           },
