@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken'
 import { setCookie, deleteCookie } from 'hono/cookie'
 import type { Variables } from '../types.js'
 import { authService } from '../services/authService.js'
+import { isLanHost } from '../db/streamUrl.js'
 
 const auth = new Hono<{ Variables: Variables }>()
 
@@ -30,8 +31,7 @@ function cookieOptionsForRequest(c: Context): { secure: boolean; domain: string 
   if (process.env.NODE_ENV !== 'production') {
     return { secure: false, domain: undefined }
   }
-  const host = (c.req.header('host') || '').split(':')[0]
-  const isLan = host === '172.16.1.10'
+  const isLan = isLanHost(c)
   return {
     secure: !isLan,
     domain: isLan ? undefined : '.patf.com',
