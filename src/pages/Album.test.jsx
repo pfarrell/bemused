@@ -51,3 +51,30 @@ describe('Album page', () => {
     expect(addTracks).toHaveBeenCalledWith(albumData.tracks, false, { flashActivity: true });
   });
 });
+
+describe('Album page — compilation secondary-artist suppression', () => {
+  const baseData = {
+    artist: { id: 5, name: 'Album Artist' },
+    tracks: albumData.tracks,
+    summary: {},
+    secondary_artists: [{ id: 8, name: 'Featured Artist', role: 'featured' }],
+  };
+
+  test('shows "Also featuring" when album is not a compilation', async () => {
+    apiService.getAlbum.mockResolvedValue({
+      data: { ...baseData, album: { id: 10, title: 'Test Album', image_path: 'a.jpg', is_compilation: false } },
+    });
+    renderAlbum();
+    await screen.findByText('Test Album');
+    expect(screen.getByText(/Also featuring/)).toBeInTheDocument();
+  });
+
+  test('hides "Also featuring" when album is a compilation', async () => {
+    apiService.getAlbum.mockResolvedValue({
+      data: { ...baseData, album: { id: 10, title: 'Test Album', image_path: 'a.jpg', is_compilation: true } },
+    });
+    renderAlbum();
+    await screen.findByText('Test Album');
+    expect(screen.queryByText(/Also featuring/)).not.toBeInTheDocument();
+  });
+});

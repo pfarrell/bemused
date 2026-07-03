@@ -175,7 +175,7 @@ const Album = () => {
           >
             {artist.name}
           </h2>
-          {secondary_artists && secondary_artists.length > 0 && artist.id !== 161 && (
+          {secondary_artists && secondary_artists.length > 0 && !album.is_compilation && (
             <p style={{ fontSize: '0.95rem', margin: '0 0 1rem 0', color: '#6b7280' }}>
               Also featuring:{' '}
               {secondary_artists.map((sa, i) => (
