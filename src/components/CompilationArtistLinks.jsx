@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 const VISIBLE_COUNT = 15;
 
-const CompilationArtistLinks = ({ artists }) => {
+const CompilationArtistLinks = ({ artists = [] }) => {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
 

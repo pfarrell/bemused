@@ -58,10 +58,17 @@ albums.get('/:id', async (c) => {
   // For various-artists albums, list every distinct artist credited on a
   // track (deduplicated, first-occurrence/track order) so the frontend can
   // show them in place of a single owning artist.
+  // The "Various Artists" placeholder itself (id 161, see docs/architecture.md)
+  // must never appear in this list: a track with a null artist_id falls back
+  // to the album's own artist above, which for a compilation IS the
+  // placeholder — surfacing it here would leak the placeholder's identity
+  // into a display specifically designed to decouple from it.
+  const VARIOUS_ARTISTS_ID = 161
   const compilation_artists: { id: number; name: string }[] = []
   if (album.is_compilation) {
     const seen = new Set<number>()
     for (const t of tracks) {
+      if (t.artist.id === VARIOUS_ARTISTS_ID) continue
       if (!seen.has(t.artist.id)) {
         seen.add(t.artist.id)
         compilation_artists.push(t.artist)

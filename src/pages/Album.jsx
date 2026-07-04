@@ -172,7 +172,7 @@ const Album = () => {
           </h1>
           
           {album.is_compilation ? (
-            <CompilationArtistLinks artists={compilation_artists} />
+            <CompilationArtistLinks artists={compilation_artists || []} />
           ) : (
             <h2 style={{ fontSize: '1.5rem', fontWeight: 'normal', margin: '0 0 0.5rem 0', color: '#7c3aed', cursor: 'pointer' }}
               onClick={() => navigate(`/artist/${artist.id}`)}
