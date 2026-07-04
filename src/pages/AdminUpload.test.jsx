@@ -170,4 +170,40 @@ describe('AdminUpload — Various artists compilation checkbox', () => {
     const formData = apiService.uploadTracks.mock.calls[0][0];
     expect(formData.get('is_compilation')).toBe('false');
   });
+
+  test('checking the checkbox locks the artist field to Various Artists', async () => {
+    const user = userEvent.setup();
+    renderUpload();
+
+    await user.click(screen.getByLabelText('Various artists compilation'));
+
+    expect(screen.getByText('Various Artists')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Clear artist' })).not.toBeInTheDocument();
+  });
+
+  test('unchecking the checkbox restores the clear button', async () => {
+    const user = userEvent.setup();
+    renderUpload();
+
+    const checkbox = screen.getByLabelText('Various artists compilation');
+    await user.click(checkbox);
+    await user.click(checkbox);
+
+    expect(screen.getByRole('button', { name: 'Clear artist' })).toBeInTheDocument();
+  });
+
+  test('sends artist_id=161 when compilation is checked', async () => {
+    apiService.uploadTracks.mockResolvedValue({ data: { queued: 1 } });
+    const user = userEvent.setup();
+    renderUpload();
+
+    const file = new File([''], 'track.mp3', { type: 'audio/mpeg' });
+    await user.upload(document.getElementById('file-input'), file);
+    await user.click(screen.getByLabelText('Various artists compilation'));
+    await user.click(screen.getByRole('button', { name: 'Upload Tracks' }));
+
+    await screen.findByText(/Successfully queued/);
+    const formData = apiService.uploadTracks.mock.calls[0][0];
+    expect(formData.get('artist_id')).toBe('161');
+  });
 });

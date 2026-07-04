@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import jsmediatags from 'jsmediatags';
 
+const VARIOUS_ARTISTS = { id: 161, name: 'Various Artists' };
+
 const AdminUpload = () => {
   // Form state
   const [genre, setGenre] = useState('');
@@ -38,6 +40,18 @@ const AdminUpload = () => {
   const [selectedAlbum, setSelectedAlbum] = useState(null);
 
   const [isCompilation, setIsCompilation] = useState(false);
+
+  // Prevent the exact bug that fragmented a real upload into one album per
+  // ID3 artist tag: a various-artists batch must always resolve to a single,
+  // stable album artist, never per-file tags. Locking the field to the
+  // placeholder as soon as compilation is checked closes that gap entirely.
+  useEffect(() => {
+    if (isCompilation) {
+      setSelectedArtist(VARIOUS_ARTISTS);
+      setArtistQuery('');
+      setArtistResults([]);
+    }
+  }, [isCompilation]);
 
   useEffect(() => {
     loadRecentUploads();
@@ -398,14 +412,16 @@ const AdminUpload = () => {
                 }}>
                   {selectedArtist.name}
                 </span>
-                <button
-                  type="button"
-                  onClick={handleArtistClear}
-                  aria-label="Clear artist"
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: '1rem' }}
-                >
-                  ✕
-                </button>
+                {!isCompilation && (
+                  <button
+                    type="button"
+                    onClick={handleArtistClear}
+                    aria-label="Clear artist"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: '1rem' }}
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             ) : (
               <div>
