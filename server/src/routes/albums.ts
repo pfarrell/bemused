@@ -55,6 +55,20 @@ albums.get('/:id', async (c) => {
 
   const secondary_artists = secondaryArtistRows.map(r => ({ id: r.id, name: r.name, role: r.role }))
 
+  // For various-artists albums, list every distinct artist credited on a
+  // track (deduplicated, first-occurrence/track order) so the frontend can
+  // show them in place of a single owning artist.
+  const compilation_artists: { id: number; name: string }[] = []
+  if (album.is_compilation) {
+    const seen = new Set<number>()
+    for (const t of tracks) {
+      if (!seen.has(t.artist.id)) {
+        seen.add(t.artist.id)
+        compilation_artists.push(t.artist)
+      }
+    }
+  }
+
   const summary = await getAlbumSummary(
     artist.name,
     album.title,
@@ -62,7 +76,7 @@ albums.get('/:id', async (c) => {
     album.wikipedia
   )
 
-  return c.json({ album, artist, secondary_artists, tracks, summary: summary ?? {} })
+  return c.json({ album, artist, secondary_artists, compilation_artists, tracks, summary: summary ?? {} })
 })
 
 export default albums
