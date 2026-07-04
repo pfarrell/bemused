@@ -70,6 +70,24 @@ describe('AdminAlbum — compilation checkbox', () => {
       expect.objectContaining({ is_compilation: false })
     ));
   });
+
+  test('checking the checkbox locks the Artist ID field to 161', async () => {
+    apiService.getAlbum.mockResolvedValue({
+      data: { ...albumPayload, album: { ...albumPayload.album, is_compilation: false, artist_id: 5 } },
+    });
+    const user = userEvent.setup();
+    renderAdminAlbum();
+
+    const checkbox = await screen.findByLabelText('Is compilation');
+    expect(checkbox).not.toBeChecked();
+    const artistInput = screen.getByLabelText('Artist ID *');
+    expect(artistInput).not.toBeDisabled();
+
+    await user.click(checkbox);
+
+    expect(artistInput).toBeDisabled();
+    expect(artistInput).toHaveValue(161);
+  });
 });
 
 describe('AdminAlbum — per-track artist picker', () => {

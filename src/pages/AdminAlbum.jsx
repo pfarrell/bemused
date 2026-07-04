@@ -27,6 +27,14 @@ const AdminAlbum = () => {
   const [mbidStatus, setMbidStatus] = useState('');
   const [isCompilation, setIsCompilation] = useState(false);
 
+  // Same rationale as AdminUpload's lock: a compilation album must always
+  // resolve to the placeholder artist, never something else set by mistake.
+  useEffect(() => {
+    if (isCompilation) {
+      setArtistId('161');
+    }
+  }, [isCompilation]);
+
   // Track if form has unsaved changes
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -542,20 +550,23 @@ const AdminAlbum = () => {
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+          <label htmlFor="album-artist-id" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
             Artist ID *
           </label>
           <input
+            id="album-artist-id"
             type="number"
             value={artistId}
             onChange={(e) => setArtistId(e.target.value)}
             required
+            disabled={isCompilation}
             style={{
               width: '100%',
               padding: '0.5rem',
               fontSize: '1rem',
               border: '1px solid #ccc',
               borderRadius: '4px',
+              backgroundColor: isCompilation ? '#f3f4f6' : 'white',
             }}
           />
           <small style={{ color: '#666', fontSize: '0.875rem' }}>
