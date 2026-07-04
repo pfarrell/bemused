@@ -8,6 +8,7 @@ import { useAuthStore } from '../stores/authStore';
 import Wikipedia from '../components/Wikipedia';
 import Track from '../components/Track';
 import TagsSection from '../components/TagsSection';
+import CompilationArtistLinks from '../components/CompilationArtistLinks';
 
 const Album = () => {
   const { id } = useParams();
@@ -115,7 +116,7 @@ const Album = () => {
     );
   }
 
-  const { artist, album, tracks, summary, secondary_artists } = albumData;
+  const { artist, album, tracks, summary, secondary_artists, compilation_artists } = albumData;
 
   return (
     <div style={{ padding: '.5rem', maxWidth: '1400px', margin: '0 auto' }}>
@@ -170,11 +171,15 @@ const Album = () => {
             {album.title}
           </h1>
           
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'normal', margin: '0 0 0.5rem 0', color: '#7c3aed', cursor: 'pointer' }}
-            onClick={() => navigate(`/artist/${artist.id}`)}
-          >
-            {artist.name}
-          </h2>
+          {album.is_compilation ? (
+            <CompilationArtistLinks artists={compilation_artists} />
+          ) : (
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 'normal', margin: '0 0 0.5rem 0', color: '#7c3aed', cursor: 'pointer' }}
+              onClick={() => navigate(`/artist/${artist.id}`)}
+            >
+              {artist.name}
+            </h2>
+          )}
           {secondary_artists && secondary_artists.length > 0 && !album.is_compilation && (
             <p style={{ fontSize: '0.95rem', margin: '0 0 1rem 0', color: '#6b7280' }}>
               Also featuring:{' '}

@@ -71,10 +71,34 @@ describe('Album page — compilation secondary-artist suppression', () => {
 
   test('hides "Also featuring" when album is a compilation', async () => {
     apiService.getAlbum.mockResolvedValue({
-      data: { ...baseData, album: { id: 10, title: 'Test Album', image_path: 'a.jpg', is_compilation: true } },
+      data: { ...baseData, album: { id: 10, title: 'Test Album', image_path: 'a.jpg', is_compilation: true }, compilation_artists: [] },
     });
     renderAlbum();
     await screen.findByText('Test Album');
     expect(screen.queryByText(/Also featuring/)).not.toBeInTheDocument();
+  });
+});
+
+describe('Album page — compilation artist links header', () => {
+  test('renders CompilationArtistLinks instead of the artist heading for a compilation album', async () => {
+    apiService.getAlbum.mockResolvedValue({
+      data: {
+        ...albumData,
+        album: { ...albumData.album, is_compilation: true },
+        compilation_artists: [{ id: 200, name: 'Steppenwolf' }, { id: 201, name: 'The Byrds' }],
+      },
+    });
+    renderAlbum();
+    await screen.findByText('Test Album');
+    expect(screen.getByText('Steppenwolf')).toBeInTheDocument();
+    expect(screen.getByText('The Byrds')).toBeInTheDocument();
+    expect(screen.queryByText('Album Artist')).not.toBeInTheDocument();
+  });
+
+  test('renders the normal artist heading for a non-compilation album', async () => {
+    apiService.getAlbum.mockResolvedValue({ data: albumData });
+    renderAlbum();
+    await screen.findByText('Test Album');
+    expect(screen.getByText('Album Artist')).toBeInTheDocument();
   });
 });
