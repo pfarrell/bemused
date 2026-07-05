@@ -464,8 +464,11 @@ const AdminAlbum = () => {
       return;
     }
 
+    const isCompilationAlbum = !!albumData?.album?.is_compilation;
     const confirmed = window.confirm(
-      `Move "${albumData?.album?.title}" and ALL its tracks to ${selectedArtistName || `artist ID ${targetArtistId}`}?\n\nThis will update the album and all tracks to belong to the new artist. This cannot be undone.`
+      isCompilationAlbum
+        ? `Move "${albumData?.album?.title}" to ${selectedArtistName || `artist ID ${targetArtistId}`}?\n\nThis is a compilation — its tracks keep their own individual artist credits and will NOT be changed. Only the album's own artist will move. This cannot be undone.`
+        : `Move "${albumData?.album?.title}" and ALL its tracks to ${selectedArtistName || `artist ID ${targetArtistId}`}?\n\nThis will update the album and all tracks to belong to the new artist. This cannot be undone.`
     );
 
     if (!confirmed) return;
@@ -475,8 +478,12 @@ const AdminAlbum = () => {
 
     try {
       const response = await apiService.moveAlbumToArtist(id, targetArtistId);
-      const { tracks_moved } = response.data;
-      toast.success(`Moved album and ${tracks_moved} track(s) to ${selectedArtistName}.`);
+      const { tracks_moved, is_compilation } = response.data;
+      toast.success(
+        is_compilation
+          ? `Moved album to ${selectedArtistName}. Track credits were left unchanged (compilation).`
+          : `Moved album and ${tracks_moved} track(s) to ${selectedArtistName}.`
+      );
       navigate(`/album/${id}`);
     } catch (error) {
       console.error('Error moving album:', error);

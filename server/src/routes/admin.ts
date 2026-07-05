@@ -468,6 +468,20 @@ admin.post('/artist/:id/merge-stubs', async (c) => {
       await db.updateTable('albums').set({ artist_id: artist.id }).where('artist_id', '=', stub.id).execute()
       await db.updateTable('tracks').set({ artist_id: artist.id }).where('artist_id', '=', stub.id).execute()
 
+      // Re-point non-primary album credits (collaborator/featured/guest/compilation)
+      // too. Unlike albums/tracks above, artist_albums.artist_id has ON DELETE CASCADE
+      // — without this, the stub's credits would just be silently destroyed by the
+      // delete below instead of transferred to the target artist.
+      await db.deleteFrom('artist_albums').where(eb =>
+        eb.and([
+          eb('artist_id', '=', stub.id),
+          eb('album_id', 'in',
+            db.selectFrom('artist_albums').select('album_id').where('artist_id', '=', artist.id)
+          )
+        ])
+      ).execute()
+      await db.updateTable('artist_albums').set({ artist_id: artist.id }).where('artist_id', '=', stub.id).execute()
+
       await db.deleteFrom('artists').where('id', '=', stub.id).execute()
     }
 
@@ -870,7 +884,7 @@ admin.post('/album/:id/move-to-artist', async (c) => {
     // Verify album exists
     const album = await db
       .selectFrom('albums')
-      .select(['id', 'artist_id'])
+      .select(['id', 'artist_id', 'is_compilation'])
       .where('id', '=', albumId)
       .executeTakeFirst()
 
@@ -896,16 +910,25 @@ admin.post('/album/:id/move-to-artist', async (c) => {
       .where('id', '=', albumId)
       .execute()
 
-    // Update all tracks for this album
-    const tracksResult = await db
-      .updateTable('tracks')
-      .set({ artist_id: targetArtistId, updated_at: new Date() })
-      .where('album_id', '=', albumId)
-      .execute()
+    // Update all tracks for this album — but only when it's a normal album,
+    // where every track legitimately shares the album's artist. A compilation's
+    // tracks are individually credited (see docs/architecture.md); blindly
+    // overwriting tracks.artist_id here would destroy every per-track credit
+    // just because the album's own container artist_id changed.
+    let tracksMovedCount = 0
+    if (!album.is_compilation) {
+      const tracksResult = await db
+        .updateTable('tracks')
+        .set({ artist_id: targetArtistId, updated_at: new Date() })
+        .where('album_id', '=', albumId)
+        .execute()
+      tracksMovedCount = Number(tracksResult[0]?.numUpdatedRows || 0)
+    }
 
     return c.json({
       success: true,
-      tracks_moved: Number(tracksResult[0]?.numUpdatedRows || 0),
+      tracks_moved: tracksMovedCount,
+      is_compilation: album.is_compilation,
     })
   } catch (error) {
     console.error('Error moving album to new artist:', error)
