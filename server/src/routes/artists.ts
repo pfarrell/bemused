@@ -62,27 +62,45 @@ artists.get('/:id', async (c) => {
 
   if (!artist) return c.json({ error: 'Not found' }, 404)
 
-  const albums = await db
-    .selectFrom('albums')
-    .selectAll()
-    .where('artist_id', '=', id)
-    .orderBy('release_year', 'asc')
-    .execute()
+  // A collaboration (role='collaborator') is treated as a full release for
+  // every artist on it, not just its primary owner — so this pulls in both
+  // albums this artist owns outright AND albums where they're credited as a
+  // collaborator (e.g. "The Union" appears on both Elton John's and Leon
+  // Russell's own album list, not tucked away in "Appears On"). Every other
+  // non-primary role (featured/guest/compilation) stays out of this list —
+  // see appears_on below.
+  const albumRows = await sql<{
+    id: number
+    title: string
+    release_year: string | null
+    image_path: string | null
+    primary_artist_id: number
+    primary_artist_name: string
+    has_collaborators: boolean
+  }>`
+    SELECT DISTINCT albums.id, albums.title, albums.release_year, albums.image_path,
+           pa.id AS primary_artist_id, pa.name AS primary_artist_name,
+           EXISTS (
+             SELECT 1 FROM artist_albums caa WHERE caa.album_id = albums.id AND caa.role = 'collaborator'
+           ) AS has_collaborators
+    FROM albums
+    INNER JOIN artists pa ON pa.id = albums.artist_id
+    INNER JOIN tracks ON tracks.album_id = albums.id AND tracks.approved = true
+    WHERE albums.artist_id = ${id}
+       OR EXISTS (
+         SELECT 1 FROM artist_albums ca WHERE ca.album_id = albums.id AND ca.artist_id = ${id} AND ca.role = 'collaborator'
+       )
+    ORDER BY albums.release_year ASC
+  `.execute(db)
 
-  // Only return albums that have at least one track
-  const albumsWithTracks = await db
-    .selectFrom('albums')
-    .innerJoin('tracks', 'tracks.album_id', 'albums.id')
-    .select('albums.id')
-    .where('albums.artist_id', '=', id)
-    .where('tracks.approved', '=', true)
-    .distinct()
-    .execute()
-
-  const albumIdsWithTracks = new Set(albumsWithTracks.map((a) => a.id))
-  const allFilteredAlbums = albums
-    .filter((a) => albumIdsWithTracks.has(a.id))
-    .map((a) => ({ ...a, artist: { id: artist.id, name: artist.name } }))
+  const allFilteredAlbums = albumRows.rows.map((a) => ({
+    id: a.id,
+    title: a.title,
+    release_year: a.release_year,
+    image_path: a.image_path,
+    artist: { id: a.primary_artist_id, name: a.primary_artist_name },
+    has_collaborators: a.has_collaborators,
+  }))
 
   const singlesAlbumIds = allFilteredAlbums.filter(a => a.title === '_Singles').map(a => a.id)
   const filteredAlbums = allFilteredAlbums.filter(a => a.title !== '_Singles')
@@ -134,6 +152,7 @@ artists.get('/:id', async (c) => {
     ])
     .where('artist_albums.artist_id', '=', id)
     .where('artist_albums.role', '!=', 'primary')
+    .where('artist_albums.role', '!=', 'collaborator')
     .orderBy('albums.release_year', 'asc')
     .execute()
 

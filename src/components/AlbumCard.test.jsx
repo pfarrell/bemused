@@ -6,6 +6,30 @@ vi.mock('./AddToCollectionModal', () => ({ default: () => null }));
 const album = { id: 7, title: 'Test Album', image_path: 'x.jpg' };
 const artist = { id: 3, name: 'Test Artist' };
 
+test('shows a "+" after the artist name when the album has collaborators', () => {
+  render(
+    <AlbumCard
+      album={{ ...album, has_collaborators: true }}
+      artist={artist}
+      onClick={vi.fn()}
+      imageUrl="/img/sm/x.jpg"
+    />
+  );
+  expect(screen.getByText('Test Artist +')).toBeInTheDocument();
+});
+
+test('does not show a "+" when the album has no collaborators', () => {
+  render(
+    <AlbumCard
+      album={album}
+      artist={artist}
+      onClick={vi.fn()}
+      imageUrl="/img/sm/x.jpg"
+    />
+  );
+  expect(screen.getByText('Test Artist')).toBeInTheDocument();
+});
+
 test('tapping the cover image navigates via onClick, not an expand modal, even when a full image URL is supplied', () => {
   const onClick = vi.fn();
   render(

@@ -1,4 +1,4 @@
-import { Kysely } from 'kysely'
+import { Kysely, sql } from 'kysely'
 import type { Context } from 'hono'
 import pg from 'pg'
 import { db, Database } from '../db/database.js'
@@ -117,6 +117,9 @@ export function createSearchService(db: Kysely<Database>) {
           'albums.id', 'albums.title', 'albums.image_path', 'albums.release_year', 'albums.wikipedia',
           'artists.id as artist_id', 'artists.name as artist_name',
           eb.fn.count<number>('tracks.id').distinct().as('track_count'),
+          sql<boolean>`EXISTS (
+            SELECT 1 FROM artist_albums caa WHERE caa.album_id = albums.id AND caa.role = 'collaborator'
+          )`.as('has_collaborators'),
         ])
         .where('albums.id', 'in', ids)
         .where((eb) => eb.or([eb('tracks.approved', '=', true), eb('tracks.id', 'is', null)]))

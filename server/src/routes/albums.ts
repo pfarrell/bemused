@@ -19,6 +19,7 @@ albums.get('/random', async (c) => {
     title: row.title,
     image_path: row.image_path,
     artist: { id: row.artist_id, name: row.artist_name },
+    has_collaborators: row.has_collaborators,
   })))
 })
 

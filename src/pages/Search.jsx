@@ -130,7 +130,7 @@ const Search = () => {
                   <div className="artist-card-title">
                     <h3>{album.title}</h3>
                     <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.25rem 0 0 0' }}>
-                      {album.artist.name}
+                      {album.artist.name}{album.has_collaborators && ' +'}
                     </p>
                   </div>
                 </div>

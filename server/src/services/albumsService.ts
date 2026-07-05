@@ -17,7 +17,10 @@ export function createAlbumsService(db: Kysely<Database>) {
           SELECT id FROM eligible_album_ids ORDER BY random() LIMIT ${size}
         )
         SELECT al.id, al.title, al.image_path,
-               ar.id AS artist_id, ar.name AS artist_name
+               ar.id AS artist_id, ar.name AS artist_name,
+               EXISTS (
+                 SELECT 1 FROM artist_albums caa WHERE caa.album_id = al.id AND caa.role = 'collaborator'
+               ) AS has_collaborators
         FROM albums al
         INNER JOIN random_ids r ON al.id = r.id
         INNER JOIN artists ar ON ar.id = al.artist_id
@@ -36,7 +39,10 @@ export function createAlbumsService(db: Kysely<Database>) {
           SELECT id FROM eligible_album_ids ORDER BY random() LIMIT ${size}
         )
         SELECT al.id, al.title, al.image_path,
-               ar.id AS artist_id, ar.name AS artist_name
+               ar.id AS artist_id, ar.name AS artist_name,
+               EXISTS (
+                 SELECT 1 FROM artist_albums caa WHERE caa.album_id = al.id AND caa.role = 'collaborator'
+               ) AS has_collaborators
         FROM albums al
         INNER JOIN random_ids r ON al.id = r.id
         INNER JOIN artists ar ON ar.id = al.artist_id
