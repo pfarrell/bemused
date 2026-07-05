@@ -1,0 +1,135 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Routes, Route, useParams } from 'react-router-dom';
+import AdminArtist from './AdminArtist';
+import { apiService } from '../services/api';
+
+vi.mock('../components/TagsSection', () => ({ default: () => null }));
+vi.mock('../services/api', () => ({
+  apiService: {
+    getArtist: vi.fn(),
+    getArtistImages: vi.fn(),
+    getArtistSecondaryAlbums: vi.fn(),
+    getRelatedArtists: vi.fn(),
+    searchAdminArtists: vi.fn(),
+    previewArtistStubs: vi.fn(),
+    mergeArtists: vi.fn(),
+    createArtist: vi.fn(),
+  },
+}));
+
+const TargetArtistPage = () => {
+  const { id } = useParams();
+  return <div>Target artist page: {id}</div>;
+};
+
+const renderAdminArtist = () =>
+  render(
+    <MemoryRouter initialEntries={['/admin/artist/5']}>
+      <Routes>
+        <Route path="/admin/artist/:id" element={<AdminArtist />} />
+        <Route path="/artist/:id" element={<TargetArtistPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+
+beforeEach(() => {
+  apiService.getArtist.mockResolvedValue({
+    data: {
+      artist: { id: 5, name: 'EWF', image_path: null, wikipedia: '', musicbrainz_id: null, mbid_status: null },
+      albums: [{ id: 1 }, { id: 2 }],
+    },
+  });
+  apiService.getArtistImages.mockResolvedValue({ data: [] });
+  apiService.getArtistSecondaryAlbums.mockResolvedValue({ data: [] });
+  apiService.getRelatedArtists.mockResolvedValue({ data: [] });
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+});
+
+describe('AdminArtist — unified merge section', () => {
+  test('renders the unified section and no longer renders the old separate sections', async () => {
+    renderAdminArtist();
+    await screen.findByText('Merge With Another Artist');
+
+    expect(screen.queryByRole('button', { name: 'Merge Stubs' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Move All Artifacts to Another Artist')).not.toBeInTheDocument();
+  });
+
+  test('"Suggest possible duplicates" lists candidates and merges the selected ones into this artist', async () => {
+    apiService.previewArtistStubs.mockResolvedValue({
+      data: [{ id: 99, name: 'E.W.F.', album_count: 0, similarity: 0.6 }],
+    });
+    apiService.mergeArtists.mockResolvedValue({ data: { success: true, merged: 1 } });
+    const user = userEvent.setup();
+    renderAdminArtist();
+    await screen.findByText('Merge With Another Artist');
+
+    await user.click(screen.getByRole('button', { name: 'Suggest possible duplicates' }));
+    await screen.findByText('E.W.F.');
+
+    await user.click(screen.getByRole('button', { name: /Merge 1 selected into "EWF"/ }));
+
+    await waitFor(() => expect(apiService.mergeArtists).toHaveBeenCalledWith('5', [99]));
+  });
+
+  test('manual search defaults to keeping whichever artist has more albums, and merging deletes the other', async () => {
+    // Fixture: "this" artist (EWF, id 5) has 2 albums (see beforeEach), the
+    // found target has 14 — the default should keep the target and delete EWF.
+    apiService.searchAdminArtists.mockResolvedValue({
+      data: [{ id: 200, name: 'Earth, Wind & Fire', album_count: 14 }],
+    });
+    apiService.mergeArtists.mockResolvedValue({ data: { success: true, merged: 1 } });
+    const user = userEvent.setup();
+    renderAdminArtist();
+    await screen.findByText('Merge With Another Artist');
+
+    await user.type(screen.getByPlaceholderText('Search for another artist...'), 'Earth Wind');
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+    await user.click(await screen.findByText('Earth, Wind & Fire'));
+
+    expect(screen.getByLabelText(/Keep "Earth, Wind & Fire"/)).toBeChecked();
+
+    await user.click(screen.getByRole('button', { name: 'Merge' }));
+
+    await waitFor(() => expect(apiService.mergeArtists).toHaveBeenCalledWith(200, ['5']));
+    await screen.findByText('Target artist page: 200');
+  });
+
+  test('overriding the direction keeps this artist and merges the found one into it instead', async () => {
+    apiService.searchAdminArtists.mockResolvedValue({
+      data: [{ id: 200, name: 'Earth, Wind & Fire', album_count: 14 }],
+    });
+    apiService.mergeArtists.mockResolvedValue({ data: { success: true, merged: 1 } });
+    const user = userEvent.setup();
+    renderAdminArtist();
+    await screen.findByText('Merge With Another Artist');
+
+    await user.type(screen.getByPlaceholderText('Search for another artist...'), 'Earth Wind');
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+    await user.click(await screen.findByText('Earth, Wind & Fire'));
+
+    await user.click(screen.getByLabelText(/Keep this artist \("EWF"\)/));
+    await user.click(screen.getByRole('button', { name: 'Merge' }));
+
+    await waitFor(() => expect(apiService.mergeArtists).toHaveBeenCalledWith('5', [200]));
+  });
+
+  test('typing a name with no matches offers create-and-merge, which creates then merges and redirects', async () => {
+    apiService.searchAdminArtists.mockResolvedValue({ data: [] });
+    apiService.createArtist.mockResolvedValue({ data: { id: 300, name: 'Earth, Wind and Fire' } });
+    apiService.mergeArtists.mockResolvedValue({ data: { success: true, merged: 1 } });
+    const user = userEvent.setup();
+    renderAdminArtist();
+    await screen.findByText('Merge With Another Artist');
+
+    await user.type(screen.getByPlaceholderText('Search for another artist...'), 'Earth Wind and Fire');
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+
+    const createButton = await screen.findByRole('button', { name: 'Create "Earth Wind and Fire" & merge this artist into it' });
+    await user.click(createButton);
+
+    await waitFor(() => expect(apiService.createArtist).toHaveBeenCalledWith('Earth Wind and Fire'));
+    await waitFor(() => expect(apiService.mergeArtists).toHaveBeenCalledWith(300, ['5']));
+    await screen.findByText('Target artist page: 300');
+  });
+});

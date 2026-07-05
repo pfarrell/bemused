@@ -32,22 +32,23 @@ const AdminArtist = () => {
   const [newImageName, setNewImageName] = useState('');
   const [addingImage, setAddingImage] = useState(false);
 
-  // Move artifacts state
-  const [movingArtifacts, setMovingArtifacts] = useState(false);
-  const [moveArtistQuery, setMoveArtistQuery] = useState('');
-  const [moveArtistResults, setMoveArtistResults] = useState([]);
-  const [moveArtistSearching, setMoveArtistSearching] = useState(false);
-  const [selectedTargetArtist, setSelectedTargetArtist] = useState(null);
+  // Merge with another artist state
+  const [ownAlbumCount, setOwnAlbumCount] = useState(0);
+  const [suggestedDuplicates, setSuggestedDuplicates] = useState(null); // null = not fetched, [] = none found
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [selectedSuggestionIds, setSelectedSuggestionIds] = useState(new Set());
+  const [mergingSuggestions, setMergingSuggestions] = useState(false);
+  const [mergeQuery, setMergeQuery] = useState('');
+  const [mergeResults, setMergeResults] = useState([]);
+  const [mergeSearching, setMergeSearching] = useState(false);
+  const [hasSearchedMerge, setHasSearchedMerge] = useState(false);
+  const [selectedMergeTarget, setSelectedMergeTarget] = useState(null);
+  const [keepThisArtist, setKeepThisArtist] = useState(true);
+  const [merging, setMerging] = useState(false);
 
   // Related artists state
   const [relatedArtists, setRelatedArtists] = useState([]);
   const [showHiddenRelations, setShowHiddenRelations] = useState(false);
-
-  // Merge stubs state
-  const [stubCandidates, setStubCandidates] = useState(null); // null = not open, [] = no candidates
-  const [selectedStubIds, setSelectedStubIds] = useState(new Set());
-  const [loadingStubs, setLoadingStubs] = useState(false);
-  const [mergingStubs, setMergingStubs] = useState(false);
 
   // Unified relations add form state
   const [showAddRelationSection, setShowAddRelationSection] = useState(false);
@@ -67,6 +68,7 @@ const AdminArtist = () => {
         const response = await apiService.getArtist(id);
         const { artist } = response.data;
         setArtistData(artist);
+        setOwnAlbumCount(response.data.albums?.length ?? 0);
         setName(artist.name || '');
         setImagePath(artist.image_path || '');
         setNewImageName(toFilename(artist.name || '') + '.jpg');
@@ -209,33 +211,119 @@ const AdminArtist = () => {
     }
   };
 
-  const handlePreviewStubs = async () => {
-    setLoadingStubs(true);
+  const handleSuggestDuplicates = async () => {
+    setLoadingSuggestions(true);
     try {
       const res = await apiService.previewArtistStubs(id);
-      setStubCandidates(res.data);
-      setSelectedStubIds(new Set(res.data.map(s => s.id)));
+      setSuggestedDuplicates(res.data);
+      setSelectedSuggestionIds(new Set(res.data.map(s => s.id)));
+      setMergeQuery('');
+      setMergeResults([]);
+      setHasSearchedMerge(false);
+      setSelectedMergeTarget(null);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to load candidates');
     } finally {
-      setLoadingStubs(false);
+      setLoadingSuggestions(false);
     }
   };
 
-  const handleMergeStubs = async () => {
-    if (selectedStubIds.size === 0) return;
-    setMergingStubs(true);
+  const handleMergeSuggestions = async () => {
+    if (selectedSuggestionIds.size === 0) return;
+    setMergingSuggestions(true);
     try {
-      await apiService.mergeArtistStubs(id, [...selectedStubIds]);
-      toast.success(`Merged ${selectedStubIds.size} stub(s)`);
-      setStubCandidates(null);
-      setSelectedStubIds(new Set());
+      await apiService.mergeArtists(id, [...selectedSuggestionIds]);
+      toast.success(`Merged ${selectedSuggestionIds.size} artist(s) into "${artistData.name}"`);
+      setSuggestedDuplicates(null);
+      setSelectedSuggestionIds(new Set());
       const response = await apiService.getRelatedArtists(id);
       setRelatedArtists(response.data);
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to merge stubs');
+      toast.error(error.response?.data?.error || 'Failed to merge');
     } finally {
-      setMergingStubs(false);
+      setMergingSuggestions(false);
+    }
+  };
+
+  const handleMergeSearch = async (e) => {
+    e.preventDefault();
+    if (mergeQuery.length < 2) return;
+    setMergeSearching(true);
+    try {
+      const response = await apiService.searchAdminArtists(mergeQuery);
+      setMergeResults((response.data || []).filter(a => String(a.id) !== String(id)));
+      setHasSearchedMerge(true);
+      setSuggestedDuplicates(null);
+      setSelectedSuggestionIds(new Set());
+    } catch (error) {
+      console.error('Error searching artists:', error);
+    } finally {
+      setMergeSearching(false);
+    }
+  };
+
+  const handleSelectMergeTarget = (artist) => {
+    setSelectedMergeTarget(artist);
+    setMergeResults([]);
+    setKeepThisArtist(ownAlbumCount >= (artist.album_count ?? 0));
+  };
+
+  const handleMerge = async () => {
+    if (!selectedMergeTarget) return;
+    const survivorId = keepThisArtist ? id : selectedMergeTarget.id;
+    const survivorName = keepThisArtist ? artistData.name : selectedMergeTarget.name;
+    const loserId = keepThisArtist ? selectedMergeTarget.id : id;
+    const loserName = keepThisArtist ? selectedMergeTarget.name : artistData.name;
+
+    const confirmed = window.confirm(
+      `This will delete "${loserName}" and move all its albums, tracks, and credits to "${survivorName}". This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setMerging(true);
+    setError(null);
+    try {
+      await apiService.mergeArtists(survivorId, [loserId]);
+      toast.success(`Merged "${loserName}" into "${survivorName}".`);
+      if (keepThisArtist) {
+        setSelectedMergeTarget(null);
+        setMergeQuery('');
+        setHasSearchedMerge(false);
+        const response = await apiService.getRelatedArtists(id);
+        setRelatedArtists(response.data);
+      } else {
+        navigate(`/artist/${survivorId}`);
+      }
+    } catch (error) {
+      console.error('Error merging artists:', error);
+      setError(error.response?.data?.error || 'Failed to merge');
+    } finally {
+      setMerging(false);
+    }
+  };
+
+  const handleCreateAndMerge = async () => {
+    const newName = mergeQuery.trim();
+    if (!newName) return;
+
+    const confirmed = window.confirm(
+      `Create a new artist "${newName}" and merge "${artistData.name}" into it? This will delete "${artistData.name}" and move all its albums, tracks, and credits to the new artist. This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setMerging(true);
+    setError(null);
+    try {
+      const createResponse = await apiService.createArtist(newName);
+      const newArtistId = createResponse.data.id;
+      await apiService.mergeArtists(newArtistId, [id]);
+      toast.success(`Created "${newName}" and merged "${artistData.name}" into it.`);
+      navigate(`/artist/${newArtistId}`);
+    } catch (error) {
+      console.error('Error creating and merging:', error);
+      setError(error.response?.data?.error || 'Failed to create and merge');
+    } finally {
+      setMerging(false);
     }
   };
 
@@ -290,20 +378,6 @@ const AdminArtist = () => {
   const handleNavigateBack = (e) => {
     e.preventDefault();
     handleNavigateAway(`/artist/${id}`);
-  };
-
-  const handleMoveArtistSearch = async (e) => {
-    e.preventDefault();
-    if (moveArtistQuery.length < 2) return;
-    setMoveArtistSearching(true);
-    try {
-      const response = await apiService.searchAdminArtists(moveArtistQuery);
-      setMoveArtistResults(response.data || []);
-    } catch (error) {
-      console.error('Error searching artists:', error);
-    } finally {
-      setMoveArtistSearching(false);
-    }
   };
 
   const handleRemoveAlbumFromArtist = async (albumId) => {
@@ -384,34 +458,6 @@ const AdminArtist = () => {
       ));
     } catch (error) {
       alert(error.response?.data?.error || 'Failed to update relation');
-    }
-  };
-
-  const handleMoveArtifacts = async (e) => {
-    e.preventDefault();
-    if (!selectedTargetArtist) return;
-
-    const confirmed = window.confirm(
-      `Are you sure you want to move ALL albums and tracks from "${artistData.name}" to "${selectedTargetArtist.name}"?\n\nThis will update all albums and tracks to belong to the new artist. This action cannot be undone.`
-    );
-
-    if (!confirmed) return;
-
-    setMovingArtifacts(true);
-    setError(null);
-
-    try {
-      const response = await apiService.moveArtistArtifacts(id, selectedTargetArtist.id);
-      const { albums_moved, tracks_moved } = response.data;
-
-      toast.success(`Moved ${albums_moved} album(s) and ${tracks_moved} track(s) to "${selectedTargetArtist.name}".`);
-
-      navigate(`/artist/${selectedTargetArtist.id}`);
-    } catch (error) {
-      console.error('Error moving artifacts:', error);
-      setError(error.response?.data?.error || 'Failed to move artifacts');
-    } finally {
-      setMovingArtifacts(false);
     }
   };
 
@@ -706,78 +752,12 @@ const AdminArtist = () => {
             Cancel
           </button>
 
-          <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-            <button
-              type="button"
-              onClick={stubCandidates !== null ? () => { setStubCandidates(null); setSelectedStubIds(new Set()); } : handlePreviewStubs}
-              disabled={saving || loadingStubs}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#6b7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                cursor: (saving || loadingStubs) ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {loadingStubs ? 'Loading...' : stubCandidates !== null ? 'Cancel' : 'Merge Stubs'}
-            </button>
-
-            {stubCandidates !== null && (
-              <div style={{ backgroundColor: '#1e2d3a', border: '1px solid #374151', borderRadius: '6px', padding: '0.75rem', minWidth: '240px' }}>
-                {stubCandidates.length === 0 ? (
-                  <p style={{ color: '#9ca3af', fontSize: '0.875rem', margin: 0 }}>No matching stubs found.</p>
-                ) : (
-                  <>
-                    <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
-                      Select stubs to merge into this artist:
-                    </div>
-                    {stubCandidates.map(stub => (
-                      <label key={stub.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0', cursor: 'pointer', fontSize: '0.875rem', color: 'white' }}>
-                        <input
-                          type="checkbox"
-                          checked={selectedStubIds.has(stub.id)}
-                          onChange={e => {
-                            const next = new Set(selectedStubIds);
-                            e.target.checked ? next.add(stub.id) : next.delete(stub.id);
-                            setSelectedStubIds(next);
-                          }}
-                        />
-                        <span style={{ flex: 1 }}>{stub.name}</span>
-                        <span style={{ color: '#9ca3af', fontSize: '0.7rem' }}>{stub.album_count} {stub.album_count === 1 ? 'album' : 'albums'}</span>
-                        <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>{(stub.similarity * 100).toFixed(0)}%</span>
-                      </label>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={handleMergeStubs}
-                      disabled={mergingStubs || selectedStubIds.size === 0}
-                      style={{
-                        marginTop: '0.5rem',
-                        width: '100%',
-                        padding: '0.5rem',
-                        backgroundColor: selectedStubIds.size === 0 ? '#374151' : '#3b82f6',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        fontSize: '0.875rem',
-                        cursor: (mergingStubs || selectedStubIds.size === 0) ? 'not-allowed' : 'pointer',
-                      }}
-                    >
-                      {mergingStubs ? 'Merging...' : `Merge ${selectedStubIds.size} selected`}
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
           <button
             type="button"
             onClick={handleDelete}
             disabled={saving}
             style={{
+              marginLeft: 'auto',
               padding: '0.75rem 1.5rem',
               backgroundColor: '#ef4444',
               color: 'white',
@@ -1102,7 +1082,7 @@ const AdminArtist = () => {
 
       </div>
 
-      {/* Move Artifacts Section */}
+      {/* Merge With Another Artist Section */}
       <div style={{
         marginTop: '3rem',
         padding: '1.5rem',
@@ -1111,22 +1091,90 @@ const AdminArtist = () => {
         border: '1px solid #ffc107'
       }}>
         <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#856404' }}>
-          Move All Artifacts to Another Artist
+          Merge With Another Artist
         </h3>
         <p style={{ marginBottom: '1rem', color: '#856404', fontSize: '0.875rem' }}>
-          This will move ALL albums and tracks from this artist to another artist. Use this when duplicate artists were created during import.
+          Use this to fix duplicate or misspelled artists (e.g. from bad ID3 tags). One artist is always deleted; its albums, tracks, and credits move to the other.
         </p>
-        <form onSubmit={handleMoveArtistSearch} style={{ marginBottom: '1rem' }}>
+
+        <button
+          type="button"
+          onClick={suggestedDuplicates !== null ? () => { setSuggestedDuplicates(null); setSelectedSuggestionIds(new Set()); } : handleSuggestDuplicates}
+          disabled={loadingSuggestions}
+          style={{
+            padding: '0.5rem 1rem',
+            backgroundColor: '#6b7280',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            fontSize: '0.875rem',
+            cursor: loadingSuggestions ? 'not-allowed' : 'pointer',
+            marginBottom: '1rem',
+          }}
+        >
+          {loadingSuggestions ? 'Loading...' : suggestedDuplicates !== null ? 'Hide suggestions' : 'Suggest possible duplicates'}
+        </button>
+
+        {suggestedDuplicates !== null && (
+          <div style={{ backgroundColor: 'white', border: '1px solid #ffc107', borderRadius: '6px', padding: '0.75rem', marginBottom: '1rem' }}>
+            {suggestedDuplicates.length === 0 ? (
+              <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>No matching duplicates found.</p>
+            ) : (
+              <>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+                  Select artists to merge into "{artistData.name}":
+                </div>
+                {suggestedDuplicates.map(stub => (
+                  <label key={stub.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0', cursor: 'pointer', fontSize: '0.875rem' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedSuggestionIds.has(stub.id)}
+                      onChange={e => {
+                        const next = new Set(selectedSuggestionIds);
+                        e.target.checked ? next.add(stub.id) : next.delete(stub.id);
+                        setSelectedSuggestionIds(next);
+                      }}
+                    />
+                    <span style={{ flex: 1 }}>{stub.name}</span>
+                    <span style={{ color: '#6b7280', fontSize: '0.7rem' }}>{stub.album_count} {stub.album_count === 1 ? 'album' : 'albums'}</span>
+                    <span style={{ color: '#9ca3af', fontSize: '0.75rem' }}>{(stub.similarity * 100).toFixed(0)}%</span>
+                  </label>
+                ))}
+                <button
+                  type="button"
+                  onClick={handleMergeSuggestions}
+                  disabled={mergingSuggestions || selectedSuggestionIds.size === 0}
+                  style={{
+                    marginTop: '0.5rem',
+                    width: '100%',
+                    padding: '0.5rem',
+                    backgroundColor: selectedSuggestionIds.size === 0 ? '#e5e7eb' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '0.875rem',
+                    cursor: (mergingSuggestions || selectedSuggestionIds.size === 0) ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {mergingSuggestions ? 'Merging...' : `Merge ${selectedSuggestionIds.size} selected into "${artistData.name}"`}
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
+        <form onSubmit={handleMergeSearch} style={{ marginBottom: '1rem' }}>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <input
               type="text"
-              value={moveArtistQuery}
+              value={mergeQuery}
               onChange={(e) => {
-                setMoveArtistQuery(e.target.value);
-                setSelectedTargetArtist(null);
-                setMoveArtistResults([]);
+                setMergeQuery(e.target.value);
+                setSelectedMergeTarget(null);
+                setMergeResults([]);
+                setHasSearchedMerge(false);
               }}
-              placeholder="Search for target artist..."
+              placeholder="Search for another artist..."
               style={{
                 flex: 1,
                 padding: '0.5rem',
@@ -1137,7 +1185,7 @@ const AdminArtist = () => {
             />
             <button
               type="submit"
-              disabled={moveArtistSearching || moveArtistQuery.length < 2}
+              disabled={mergeSearching || mergeQuery.length < 2}
               style={{
                 padding: '0.5rem 1rem',
                 backgroundColor: '#6b7280',
@@ -1149,19 +1197,17 @@ const AdminArtist = () => {
                 whiteSpace: 'nowrap',
               }}
             >
-              {moveArtistSearching ? 'Searching...' : 'Search'}
+              {mergeSearching ? 'Searching...' : 'Search'}
             </button>
           </div>
         </form>
-        {moveArtistResults.length > 0 && !selectedTargetArtist && (
+
+        {mergeResults.length > 0 && !selectedMergeTarget && (
           <div style={{ marginBottom: '1rem', border: '1px solid #ffc107', borderRadius: '4px', backgroundColor: 'white', maxHeight: '200px', overflowY: 'auto' }}>
-            {moveArtistResults.map(artist => (
+            {mergeResults.map(artist => (
               <div
                 key={artist.id}
-                onClick={() => {
-                  setSelectedTargetArtist(artist);
-                  setMoveArtistResults([]);
-                }}
+                onClick={() => handleSelectMergeTarget(artist)}
                 style={{
                   padding: '0.6rem 0.75rem',
                   borderBottom: '1px solid #e5e7eb',
@@ -1173,47 +1219,74 @@ const AdminArtist = () => {
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fefce8')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'white')}
               >
-                <span style={{ fontWeight: '500' }}>
-                  {artist.name}
-                  {String(artist.id) === String(id) && (
-                    <span style={{ fontSize: '0.8rem', color: '#6b7280', fontStyle: 'italic', marginLeft: '0.5rem' }}>(this artist)</span>
-                  )}
-                </span>
+                <span style={{ fontWeight: '500' }}>{artist.name}</span>
                 <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>{artist.album_count} album{artist.album_count !== 1 ? 's' : ''} · ID {artist.id}</span>
               </div>
             ))}
           </div>
         )}
-        {selectedTargetArtist && (
-          <p style={{ marginBottom: '1rem', color: '#856404', fontSize: '0.875rem' }}>
-            Target: <strong>{selectedTargetArtist.name}</strong>
-            <button
-              type="button"
-              onClick={() => { setSelectedTargetArtist(null); setMoveArtistQuery(''); }}
-              style={{ marginLeft: '0.5rem', background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '0.875rem' }}
-            >
-              ✕
-            </button>
-          </p>
-        )}
-        <form onSubmit={handleMoveArtifacts}>
+
+        {hasSearchedMerge && mergeResults.length === 0 && !mergeSearching && !selectedMergeTarget && (
           <button
-            type="submit"
-            disabled={movingArtifacts || !selectedTargetArtist}
+            type="button"
+            onClick={handleCreateAndMerge}
+            disabled={merging}
             style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#ff8c00',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#3b82f6',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
-              fontSize: '1rem',
-              cursor: (movingArtifacts || !selectedTargetArtist) ? 'not-allowed' : 'pointer',
-              opacity: (movingArtifacts || !selectedTargetArtist) ? 0.6 : 1,
+              fontSize: '0.875rem',
+              cursor: merging ? 'not-allowed' : 'pointer',
+              marginBottom: '1rem',
             }}
           >
-            {movingArtifacts ? 'Moving...' : 'Move All Artifacts'}
+            {merging ? 'Creating...' : `Create "${mergeQuery.trim()}" & merge this artist into it`}
           </button>
-        </form>
+        )}
+
+        {selectedMergeTarget && (
+          <div style={{ marginBottom: '1rem' }}>
+            <p style={{ color: '#856404', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+              Target: <strong>{selectedMergeTarget.name}</strong>
+              <button
+                type="button"
+                onClick={() => { setSelectedMergeTarget(null); setMergeQuery(''); }}
+                style={{ marginLeft: '0.5rem', background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '0.875rem' }}
+              >
+                ✕
+              </button>
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '0.75rem', fontSize: '0.875rem', color: '#856404' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+                <input type="radio" checked={keepThisArtist} onChange={() => setKeepThisArtist(true)} />
+                Keep this artist ("{artistData.name}") — delete "{selectedMergeTarget.name}"
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+                <input type="radio" checked={!keepThisArtist} onChange={() => setKeepThisArtist(false)} />
+                Keep "{selectedMergeTarget.name}" — delete this artist ("{artistData.name}")
+              </label>
+            </div>
+            <button
+              type="button"
+              onClick={handleMerge}
+              disabled={merging}
+              style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: '#ff8c00',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '1rem',
+                cursor: merging ? 'not-allowed' : 'pointer',
+                opacity: merging ? 0.6 : 1,
+              }}
+            >
+              {merging ? 'Merging...' : 'Merge'}
+            </button>
+          </div>
+        )}
       </div>
 
     </div>
