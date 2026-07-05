@@ -66,7 +66,6 @@ export const apiService = {
   updateTrack: (id, data) => api.put(`/admin/track/${id}`, data),
   deleteTrack: (id) => api.delete(`/admin/track/${id}`),
   bulkUpdateTracks: (album_id, data) => api.patch(`/admin/album/${album_id}/tracks`, data),
-  moveArtistArtifacts: (id, target_artist_id) => api.post(`/admin/artist/${id}/move-artifacts`, { target_artist_id }),
   moveAlbumToArtist: (id, target_artist_id) => api.post(`/admin/album/${id}/move-to-artist`, { target_artist_id }),
   mergeAlbum: (id, destination_album_id, track_offset) => api.post(`/admin/album/${id}/merge`, { destination_album_id, track_offset }),
   getAlbumSecondaryArtists: (id) => api.get(`/admin/album/${id}/artists`),
@@ -79,7 +78,7 @@ export const apiService = {
   hideArtistRelation: (artistId, relatedId, hidden) => api.patch(`/admin/artist/${artistId}/related/${relatedId}/hide`, { hidden }),
   forceShowArtistRelation: (artistId, relatedId, force_show) => api.patch(`/admin/artist/${artistId}/related/${relatedId}/force-show`, { force_show }),
   previewArtistStubs: (id) => api.get(`/admin/artist/${id}/merge-stubs`),
-  mergeArtistStubs: (id, stub_ids) => api.post(`/admin/artist/${id}/merge-stubs`, { stub_ids }),
+  mergeArtists: (id, loser_ids) => api.post(`/admin/artist/${id}/merge`, { loser_ids }),
   addRelatedArtist: (artistId, relatedArtistId, kind = 'related') => api.post(`/admin/artist/${artistId}/related`, { related_artist_id: relatedArtistId, kind }),
   removeRelatedArtist: (artistId, relatedArtistId) => api.delete(`/admin/artist/${artistId}/related/${relatedArtistId}`),
 

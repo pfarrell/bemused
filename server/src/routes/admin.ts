@@ -423,18 +423,21 @@ admin.get('/artist/:id/merge-stubs', async (c) => {
   }
 })
 
-// POST /admin/artist/:id/merge-stubs — merge selected stubs into this artist
-admin.post('/artist/:id/merge-stubs', async (c) => {
+// POST /admin/artist/:id/merge — merge one or more other artists into this one.
+// Direction-agnostic: the frontend decides which artist survives by choosing
+// which id goes in the URL vs loser_ids (see docs/superpowers/specs/2026-07-05-artist-merge-ux-design.md).
+admin.post('/artist/:id/merge', async (c) => {
   const id = parseInt(c.req.param('id'))
   const body = await c.req.json()
-  const stubIds: number[] = body.stub_ids ?? []
-  if (stubIds.length === 0) return c.json({ error: 'No stub IDs provided' }, 400)
+  const loserIds: number[] = body.loser_ids ?? []
+  if (loserIds.length === 0) return c.json({ error: 'No loser_ids provided' }, 400)
+  if (loserIds.includes(id)) return c.json({ error: 'Cannot merge an artist into itself' }, 400)
 
   try {
     const artist = await db.selectFrom('artists').select(['id', 'name']).where('id', '=', id).executeTakeFirst()
     if (!artist) return c.json({ error: 'Artist not found' }, 404)
 
-    for (const stubId of stubIds) {
+    for (const stubId of loserIds) {
       const stub = await db.selectFrom('artists').select(['id', 'name']).where('id', '=', stubId).executeTakeFirst()
       if (!stub) continue
 
@@ -485,10 +488,10 @@ admin.post('/artist/:id/merge-stubs', async (c) => {
       await db.deleteFrom('artists').where('id', '=', stub.id).execute()
     }
 
-    return c.json({ success: true, merged: stubIds.length })
+    return c.json({ success: true, merged: loserIds.length })
   } catch (error) {
-    console.error('Error merging stubs:', error)
-    return c.json({ error: 'Failed to merge stubs' }, 500)
+    console.error('Error merging artists:', error)
+    return c.json({ error: 'Failed to merge artists' }, 500)
   }
 })
 
@@ -805,68 +808,6 @@ admin.patch('/album/:id/tracks', async (c) => {
   }
 })
 
-// POST /admin/artist/:id/move-artifacts — move all albums and tracks to a new artist
-admin.post('/artist/:id/move-artifacts', async (c) => {
-  const sourceArtistId = parseInt(c.req.param('id'))
-  const body = await c.req.json()
-  const { target_artist_id } = body
-
-  if (!target_artist_id) {
-    return c.json({ error: 'target_artist_id is required' }, 400)
-  }
-
-  const targetArtistId = parseInt(target_artist_id)
-
-  if (sourceArtistId === targetArtistId) {
-    return c.json({ error: 'Source and target artists cannot be the same' }, 400)
-  }
-
-  try {
-    // Verify both artists exist
-    const sourceArtist = await db
-      .selectFrom('artists')
-      .select('id')
-      .where('id', '=', sourceArtistId)
-      .executeTakeFirst()
-
-    if (!sourceArtist) {
-      return c.json({ error: 'Source artist not found' }, 404)
-    }
-
-    const targetArtist = await db
-      .selectFrom('artists')
-      .select('id')
-      .where('id', '=', targetArtistId)
-      .executeTakeFirst()
-
-    if (!targetArtist) {
-      return c.json({ error: 'Target artist not found' }, 404)
-    }
-
-    // Update all albums
-    const albumsResult = await db
-      .updateTable('albums')
-      .set({ artist_id: targetArtistId, updated_at: new Date() })
-      .where('artist_id', '=', sourceArtistId)
-      .execute()
-
-    // Update all tracks
-    const tracksResult = await db
-      .updateTable('tracks')
-      .set({ artist_id: targetArtistId, updated_at: new Date() })
-      .where('artist_id', '=', sourceArtistId)
-      .execute()
-
-    return c.json({
-      success: true,
-      albums_moved: Number(albumsResult[0]?.numUpdatedRows || 0),
-      tracks_moved: Number(tracksResult[0]?.numUpdatedRows || 0),
-    })
-  } catch (error) {
-    console.error('Error moving artist artifacts:', error)
-    return c.json({ error: 'Failed to move artifacts' }, 500)
-  }
-})
 
 // POST /admin/album/:id/move-to-artist — move album and all its tracks to a new artist
 admin.post('/album/:id/move-to-artist', async (c) => {
