@@ -118,6 +118,14 @@ const Album = () => {
 
   const { artist, album, tracks, summary, secondary_artists, compilation_artists } = albumData;
 
+  // Collaborators are folded into the primary artist heading itself
+  // ("Elton John, Ray Charles"); every other non-primary role (featured,
+  // guest, compilation) stays in the smaller "Also featuring" line below.
+  const collaborators = (secondary_artists || []).filter((sa) => sa.role === 'collaborator');
+  const featuringArtists = album.is_compilation
+    ? (compilation_artists || [])
+    : (secondary_artists || []).filter((sa) => sa.role !== 'collaborator');
+
   return (
     <div style={{ padding: '.5rem', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Album Header */}
@@ -171,29 +179,23 @@ const Album = () => {
             {album.title}
           </h1>
           
-          {album.is_compilation ? (
-            <CompilationArtistLinks artists={compilation_artists || []} />
-          ) : (
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 'normal', margin: '0 0 0.5rem 0', color: '#7c3aed', cursor: 'pointer' }}
-              onClick={() => navigate(`/artist/${artist.id}`)}
-            >
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'normal', margin: '0 0 0.5rem 0', color: '#7c3aed' }}>
+            <span style={{ cursor: 'pointer' }} onClick={() => navigate(`/artist/${artist.id}`)}>
               {artist.name}
-            </h2>
-          )}
-          {secondary_artists && secondary_artists.length > 0 && !album.is_compilation && (
+            </span>
+            {collaborators.map((c) => (
+              <span key={c.id}>
+                {', '}
+                <span style={{ cursor: 'pointer' }} onClick={() => navigate(`/artist/${c.id}`)}>
+                  {c.name}
+                </span>
+              </span>
+            ))}
+          </h2>
+          {featuringArtists.length > 0 && (
             <p style={{ fontSize: '0.95rem', margin: '0 0 1rem 0', color: '#6b7280' }}>
               Also featuring:{' '}
-              {secondary_artists.map((sa, i) => (
-                <span key={sa.id}>
-                  {i > 0 && ' · '}
-                  <span
-                    style={{ color: '#7c3aed', cursor: 'pointer' }}
-                    onClick={() => navigate(`/artist/${sa.id}`)}
-                  >
-                    {sa.name}
-                  </span>
-                </span>
-              ))}
+              <CompilationArtistLinks artists={featuringArtists} />
             </p>
           )}
           {summary && Object.keys(summary).length > 0 && (

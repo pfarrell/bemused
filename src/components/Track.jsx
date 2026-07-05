@@ -276,7 +276,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
           color: isPlaying ? '#1d4ed8' : '#1f2937'
         }}>
           {String(index + 1).padStart(2, '0')}. {track.title}
-          {track.artist.id !== track.album.artist.id && (' - ' + track.artist.name)}
+          {track.artist.id !== track.album?.artist?.id && (' - ' + track.artist.name)}
            
           {track.duration && (
             <span style={{ 

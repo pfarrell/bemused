@@ -234,4 +234,15 @@ describe('Track component — per-track artist display', () => {
     });
     expect(screen.queryByText(/- Renamed Artist/)).not.toBeInTheDocument();
   });
+
+  test('does not crash when the track has no album (orphaned track, no FK constraint on tracks.album_id)', () => {
+    renderTrack({
+      track: {
+        ...mockTrack,
+        artist: { id: 99, name: 'Orphan Artist' },
+        album: null,
+      },
+    });
+    expect(screen.getByText(/- Orphan Artist/)).toBeInTheDocument();
+  });
 });
