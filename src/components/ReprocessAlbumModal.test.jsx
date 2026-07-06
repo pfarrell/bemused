@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ReprocessAlbumModal from './ReprocessAlbumModal';
 import { apiService } from '../services/api';
@@ -48,5 +48,20 @@ describe('ReprocessAlbumModal', () => {
     expect(await screen.findByDisplayValue('Motown Hits Vol. 1')).toBeInTheDocument();
     expect(screen.getByDisplayValue("Ain't No Mountain High Enough")).toBeInTheDocument();
     expect(screen.getByText(/file missing on disk/)).toBeInTheDocument();
+  });
+
+  test('checkbox defaults to checked only when proposed differs from current', async () => {
+    render(<ReprocessAlbumModal albumId={42} onClose={() => {}} onApplied={() => {}} />);
+    await screen.findByDisplayValue('Motown Hits Vol. 1');
+
+    // release_year: current 1975, proposed 1975 — unchanged, box should be unchecked
+    const yearInput = screen.getByDisplayValue('1975');
+    const yearRow = yearInput.closest('tr');
+    expect(within(yearRow).getByRole('checkbox')).not.toBeChecked();
+
+    // title: current 'Motown Hits', proposed 'Motown Hits Vol. 1' — changed, box should be checked
+    const titleInput = screen.getByDisplayValue('Motown Hits Vol. 1');
+    const titleRow = titleInput.closest('tr');
+    expect(within(titleRow).getByRole('checkbox')).toBeChecked();
   });
 });
