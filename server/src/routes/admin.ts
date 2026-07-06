@@ -1141,20 +1141,27 @@ admin.post('/album/:id/reprocess-apply', async (c) => {
         }
 
         if (t.artist_name !== undefined) {
-          let artist = await trx
-            .selectFrom('artists')
-            .select('id')
-            .where('name', '=', t.artist_name)
-            .executeTakeFirst()
+          // A null/empty artist_name means "no artist was proposed" (e.g. a
+          // compilation track with no assigned artist and no ID3 artist tag
+          // on its file) — treat it as "no change" rather than looking up or
+          // creating a blank-named artist row.
+          const artistName = typeof t.artist_name === 'string' ? t.artist_name.trim() : t.artist_name
+          if (artistName) {
+            let artist = await trx
+              .selectFrom('artists')
+              .select('id')
+              .where('name', '=', artistName)
+              .executeTakeFirst()
 
-          if (!artist) {
-            artist = await trx
-              .insertInto('artists')
-              .values({ name: t.artist_name })
-              .returning('id')
-              .executeTakeFirstOrThrow()
+            if (!artist) {
+              artist = await trx
+                .insertInto('artists')
+                .values({ name: artistName })
+                .returning('id')
+                .executeTakeFirstOrThrow()
+            }
+            trackUpdate.artist_id = artist.id
           }
-          trackUpdate.artist_id = artist.id
         }
 
         if (Object.keys(trackUpdate).length > 0) {

@@ -4,6 +4,11 @@ import TrackArtistPicker from './TrackArtistPicker';
 
 const fieldChanged = (field) => field.current !== field.proposed;
 
+// release_year and track_number are the only numeric fields in this form;
+// clearing one to '' means "no value," which must never be sent to the
+// apply route (it 400s on a non-integer and fails the whole request).
+const NUMERIC_FIELDS = new Set(['release_year', 'track_number']);
+
 const ReprocessAlbumModal = ({ albumId, onClose, onApplied }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,7 +53,12 @@ const ReprocessAlbumModal = ({ albumId, onClose, onApplied }) => {
             initialArtistNames[track.id] = track.artist.matched_artist
               ? track.artist.matched_artist.name
               : track.artist.proposed_name;
-            initialArtistChecked[track.id] = track.artist.proposed_name !== track.artist.current?.name;
+            // A falsy proposed_name (null/empty) means there's nothing to
+            // propose — e.g. a compilation track with no assigned artist and
+            // no ID3 artist tag on its file — so default unchecked rather
+            // than pre-selecting a blank artist name for Apply.
+            initialArtistChecked[track.id] = Boolean(track.artist.proposed_name)
+              && track.artist.proposed_name !== track.artist.current?.name;
           }
         });
         setTrackValues(initialTrackValues);
@@ -90,13 +100,19 @@ const ReprocessAlbumModal = ({ albumId, onClose, onApplied }) => {
     try {
       const albumPayload = {};
       Object.entries(albumChecked).forEach(([key, checked]) => {
-        if (checked) albumPayload[key] = albumValues[key];
+        if (!checked) return;
+        // A numeric field cleared to '' means "no value" — omit the key
+        // entirely rather than sending '' and failing the whole apply.
+        if (NUMERIC_FIELDS.has(key) && albumValues[key] === '') return;
+        albumPayload[key] = albumValues[key];
       });
 
       const trackPayload = preview.tracks.map((track) => {
         const entry = { id: track.id };
         Object.entries(trackChecked[track.id] || {}).forEach(([key, checked]) => {
-          if (checked) entry[key] = trackValues[track.id][key];
+          if (!checked) return;
+          if (NUMERIC_FIELDS.has(key) && trackValues[track.id][key] === '') return;
+          entry[key] = trackValues[track.id][key];
         });
         if (track.artist && artistChecked[track.id]) {
           entry.artist_name = artistNames[track.id];

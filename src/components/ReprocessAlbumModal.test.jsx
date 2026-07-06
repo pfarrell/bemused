@@ -112,4 +112,65 @@ describe('ReprocessAlbumModal', () => {
     expect(payload.album.release_year).toBe(1980);
     expect(typeof payload.album.release_year).toBe('number');
   });
+
+  test('artist checkbox defaults unchecked when proposed_name is null (no blank artist proposal)', async () => {
+    apiService.getReprocessPreview.mockResolvedValue({
+      data: {
+        ...previewPayload,
+        tracks: [
+          {
+            id: 502,
+            fields: {
+              title: { current: 'Track 2', proposed: 'Track 2' },
+              track_number: { current: 2, proposed: 2 },
+            },
+            artist: {
+              current: null,
+              proposed_name: null,
+              matched_artist: null,
+            },
+          },
+        ],
+      },
+    });
+
+    render(<ReprocessAlbumModal albumId={42} onClose={() => {}} onApplied={() => {}} />);
+    await screen.findByDisplayValue('Track 2');
+
+    // The artist checkbox lives in the track's row, alongside the title/track_number
+    // checkboxes/inputs and the TrackArtistPicker. Find the row via the track title
+    // input, then grab all checkboxes in that row — the last one is the artist checkbox.
+    const titleInput = screen.getByDisplayValue('Track 2');
+    const trackRow = titleInput.closest('tr');
+    const checkboxes = within(trackRow).getAllByRole('checkbox');
+    const artistCheckbox = checkboxes[checkboxes.length - 1];
+    expect(artistCheckbox).not.toBeChecked();
+  });
+
+  test('apply omits a numeric field key entirely when cleared to empty, instead of sending an empty string', async () => {
+    apiService.applyReprocess.mockClear();
+    apiService.applyReprocess.mockResolvedValue({ data: { success: true } });
+    const user = userEvent.setup();
+
+    render(<ReprocessAlbumModal albumId={42} onClose={() => {}} onApplied={() => {}} />);
+    await screen.findByDisplayValue('Motown Hits Vol. 1');
+
+    // release_year starts unchecked (current === proposed); clear it to '' and check the box.
+    const yearInput = screen.getByDisplayValue('1975');
+    await user.clear(yearInput);
+
+    const yearRow = yearInput.closest('tr');
+    const yearCheckbox = within(yearRow).getByRole('checkbox');
+    await user.click(yearCheckbox);
+    expect(yearCheckbox).toBeChecked();
+
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    await waitFor(() => expect(apiService.applyReprocess).toHaveBeenCalled());
+    const [, payload] = apiService.applyReprocess.mock.calls[0];
+    // release_year must be omitted, not sent as ''. The title change (which is
+    // checked by default since proposed differs from current) must still go through.
+    expect(payload.album).not.toHaveProperty('release_year');
+    expect(payload.album.title).toBe('Motown Hits Vol. 1');
+  });
 });
