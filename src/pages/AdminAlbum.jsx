@@ -5,6 +5,7 @@ import { apiService } from '../services/api';
 import Loading from '../components/Loading';
 import TagsSection from '../components/TagsSection';
 import TrackArtistPicker from '../components/TrackArtistPicker';
+import ReprocessAlbumModal from '../components/ReprocessAlbumModal';
 import toast from 'react-hot-toast';
 
 const toFilename = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
@@ -68,36 +69,40 @@ const AdminAlbum = () => {
   const [addArtistRole, setAddArtistRole] = useState('featured');
   const [addArtistSearching, setAddArtistSearching] = useState(false);
 
-  useEffect(() => {
-    const fetchAlbumData = async () => {
-      try {
-        setLoading(true);
-        const response = await apiService.getAlbum(id);
-        const { album, artist, tracks } = response.data;
-        setAlbumData({ album, artist });
-        setTitle(album.title || '');
-        setArtistId(String(album.artist_id) || '');
-        setNewImageName(toFilename(artist.name || '') + '-' + toFilename(album.title || '') + '.jpg');
-        setReleaseYear(album.release_year || '');
-        setImagePath(album.image_path || '');
-        setWikipedia(album.wikipedia || '');
-        setMusicbrainzId(album.musicbrainz_id || '');
-        setMbidStatus(album.mbid_status || '');
-        setIsCompilation(!!album.is_compilation);
-        setTracks(tracks || []);
-        const imagesRes = await apiService.getAlbumImages(id);
-        setImages(imagesRes.data);
-      } catch (error) {
-        console.error('Error fetching album data:', error);
-        setError('Failed to load album');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Reprocess-from-files modal
+  const [showReprocessModal, setShowReprocessModal] = useState(false);
 
+  const fetchAlbumData = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getAlbum(id);
+      const { album, artist, tracks } = response.data;
+      setAlbumData({ album, artist });
+      setTitle(album.title || '');
+      setArtistId(String(album.artist_id) || '');
+      setNewImageName(toFilename(artist.name || '') + '-' + toFilename(album.title || '') + '.jpg');
+      setReleaseYear(album.release_year || '');
+      setImagePath(album.image_path || '');
+      setWikipedia(album.wikipedia || '');
+      setMusicbrainzId(album.musicbrainz_id || '');
+      setMbidStatus(album.mbid_status || '');
+      setIsCompilation(!!album.is_compilation);
+      setTracks(tracks || []);
+      const imagesRes = await apiService.getAlbumImages(id);
+      setImages(imagesRes.data);
+    } catch (error) {
+      console.error('Error fetching album data:', error);
+      setError('Failed to load album');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (id) {
       fetchAlbumData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
@@ -857,6 +862,22 @@ const AdminAlbum = () => {
           </button>
         </div>
       </form>
+
+      <button
+        type="button"
+        onClick={() => setShowReprocessModal(true)}
+        style={{ marginTop: '2rem', padding: '0.75rem 1.5rem', backgroundColor: '#6b7280', color: 'white', border: 'none', borderRadius: '4px', fontSize: '1rem', cursor: 'pointer' }}
+      >
+        Reprocess from Files
+      </button>
+
+      {showReprocessModal && (
+        <ReprocessAlbumModal
+          albumId={id}
+          onClose={() => setShowReprocessModal(false)}
+          onApplied={() => fetchAlbumData()}
+        />
+      )}
 
       {/* Transfer Section — Move to Artist or Merge into Album */}
       <div style={{ marginTop: '3rem', padding: '1.5rem', backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffc107' }}>

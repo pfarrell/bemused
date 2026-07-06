@@ -13,6 +13,7 @@ vi.mock('../services/api', () => ({
     updateAlbum: vi.fn(),
     updateTrack: vi.fn(),
     searchAdminArtists: vi.fn(),
+    getReprocessPreview: vi.fn(),
   },
 }));
 
@@ -112,5 +113,25 @@ describe('AdminAlbum — per-track artist picker', () => {
     await user.click(screen.getByText('The Electric Prunes'));
 
     expect(apiService.updateTrack).toHaveBeenCalledWith(1, { artist_id: 300 });
+  });
+});
+
+describe('AdminAlbum — reprocess from files', () => {
+  test('opens the reprocess modal and reloads album data after apply', async () => {
+    apiService.getReprocessPreview.mockResolvedValue({
+      data: {
+        album: { id: 10, is_compilation: true, fields: { title: { current: 'Easy Rider', proposed: 'Easy Rider' }, release_year: { current: 1969, proposed: 1969 } } },
+        tracks: [],
+        skipped: [],
+      },
+    });
+    const user = userEvent.setup();
+    renderAdminAlbum();
+
+    await screen.findByDisplayValue('Easy Rider');
+    await user.click(screen.getByRole('button', { name: 'Reprocess from Files' }));
+
+    await waitFor(() => expect(apiService.getReprocessPreview).toHaveBeenCalledWith('10'));
+    expect(await screen.findByText('Reprocess Album From Files')).toBeInTheDocument();
   });
 });
