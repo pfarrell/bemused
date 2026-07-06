@@ -151,7 +151,10 @@ const ReprocessAlbumModal = ({ albumId, onClose, onApplied }) => {
                 <input
                   type="number"
                   value={albumValues.release_year ?? ''}
-                  onChange={(e) => setAlbumValues({ ...albumValues, release_year: e.target.value })}
+                  onChange={(e) => setAlbumValues({
+                    ...albumValues,
+                    release_year: e.target.value === '' ? '' : Number(e.target.value),
+                  })}
                 />
               </td>
             </tr>
@@ -194,7 +197,10 @@ const ReprocessAlbumModal = ({ albumId, onClose, onApplied }) => {
                     value={trackValues[track.id]?.track_number ?? ''}
                     onChange={(e) => setTrackValues({
                       ...trackValues,
-                      [track.id]: { ...trackValues[track.id], track_number: e.target.value },
+                      [track.id]: {
+                        ...trackValues[track.id],
+                        track_number: e.target.value === '' ? '' : Number(e.target.value),
+                      },
                     })}
                   />
                 </td>

@@ -86,4 +86,30 @@ describe('ReprocessAlbumModal', () => {
     expect(onApplied).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
   });
+
+  test('editing a numeric field sends a number, not a string, in the apply payload', async () => {
+    apiService.applyReprocess.mockClear();
+    apiService.applyReprocess.mockResolvedValue({ data: { success: true } });
+    const user = userEvent.setup();
+
+    render(<ReprocessAlbumModal albumId={42} onClose={() => {}} onApplied={() => {}} />);
+    await screen.findByDisplayValue('Motown Hits Vol. 1');
+
+    // release_year starts unchecked (current === proposed); edit it and check the box.
+    const yearInput = screen.getByDisplayValue('1975');
+    await user.clear(yearInput);
+    await user.type(yearInput, '1980');
+
+    const yearRow = yearInput.closest('tr');
+    const yearCheckbox = within(yearRow).getByRole('checkbox');
+    expect(yearCheckbox).not.toBeChecked();
+    await user.click(yearCheckbox);
+
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    await waitFor(() => expect(apiService.applyReprocess).toHaveBeenCalled());
+    const [, payload] = apiService.applyReprocess.mock.calls[0];
+    expect(payload.album.release_year).toBe(1980);
+    expect(typeof payload.album.release_year).toBe('number');
+  });
 });
