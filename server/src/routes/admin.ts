@@ -1086,6 +1086,87 @@ admin.get('/album/:id/reprocess-preview', async (c) => {
   })
 })
 
+// POST /admin/album/:id/reprocess-apply — commit only the accepted/edited
+// fields from a prior reprocess-preview response, in one transaction.
+admin.post('/album/:id/reprocess-apply', async (c) => {
+  const albumId = parseInt(c.req.param('id'))
+  const body = await c.req.json()
+  const albumFields = body.album || {}
+  const trackFields: any[] = body.tracks || []
+
+  const album = await db
+    .selectFrom('albums')
+    .select(['id', 'is_compilation'])
+    .where('id', '=', albumId)
+    .executeTakeFirst()
+
+  if (!album) {
+    return c.json({ error: 'Album not found' }, 404)
+  }
+
+  if (albumFields.release_year !== undefined && albumFields.release_year !== null) {
+    if (!/^\d+$/.test(String(albumFields.release_year))) {
+      return c.json({ error: 'album.release_year must be an integer' }, 400)
+    }
+  }
+
+  for (const t of trackFields) {
+    if (t.track_number !== undefined && t.track_number !== null) {
+      if (!/^\d+$/.test(String(t.track_number))) {
+        return c.json({ error: `tracks[id=${t.id}].track_number must be an integer` }, 400)
+      }
+    }
+    if (t.artist_name !== undefined && !album.is_compilation) {
+      return c.json({ error: `tracks[id=${t.id}].artist_name is only allowed on compilation albums` }, 400)
+    }
+  }
+
+  try {
+    await db.transaction().execute(async (trx) => {
+      const albumUpdate: any = {}
+      if (albumFields.title !== undefined) albumUpdate.title = albumFields.title
+      if (albumFields.release_year !== undefined) albumUpdate.release_year = String(albumFields.release_year)
+      if (Object.keys(albumUpdate).length > 0) {
+        albumUpdate.updated_at = new Date()
+        await trx.updateTable('albums').set(albumUpdate).where('id', '=', albumId).execute()
+      }
+
+      for (const t of trackFields) {
+        const trackUpdate: any = {}
+        if (t.title !== undefined) trackUpdate.title = t.title
+        if (t.track_number !== undefined) trackUpdate.track_number = String(t.track_number)
+
+        if (t.artist_name !== undefined) {
+          let artist = await trx
+            .selectFrom('artists')
+            .select('id')
+            .where('name', '=', t.artist_name)
+            .executeTakeFirst()
+
+          if (!artist) {
+            artist = await trx
+              .insertInto('artists')
+              .values({ name: t.artist_name })
+              .returning('id')
+              .executeTakeFirstOrThrow()
+          }
+          trackUpdate.artist_id = artist.id
+        }
+
+        if (Object.keys(trackUpdate).length > 0) {
+          trackUpdate.updated_at = new Date()
+          await trx.updateTable('tracks').set(trackUpdate).where('id', '=', t.id).execute()
+        }
+      }
+    })
+
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('Error applying reprocess changes:', error)
+    return c.json({ error: 'Failed to apply changes' }, 500)
+  }
+})
+
 // GET /admin/album/:id/artists — list non-primary artists for an album
 admin.get('/album/:id/artists', async (c) => {
   const id = parseInt(c.req.param('id'))
