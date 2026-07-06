@@ -1125,7 +1125,9 @@ admin.post('/album/:id/reprocess-apply', async (c) => {
     await db.transaction().execute(async (trx) => {
       const albumUpdate: any = {}
       if (albumFields.title !== undefined) albumUpdate.title = albumFields.title
-      if (albumFields.release_year !== undefined) albumUpdate.release_year = String(albumFields.release_year)
+      if (albumFields.release_year !== undefined) {
+        albumUpdate.release_year = albumFields.release_year === null ? null : String(albumFields.release_year)
+      }
       if (Object.keys(albumUpdate).length > 0) {
         albumUpdate.updated_at = new Date()
         await trx.updateTable('albums').set(albumUpdate).where('id', '=', albumId).execute()
@@ -1134,7 +1136,9 @@ admin.post('/album/:id/reprocess-apply', async (c) => {
       for (const t of trackFields) {
         const trackUpdate: any = {}
         if (t.title !== undefined) trackUpdate.title = t.title
-        if (t.track_number !== undefined) trackUpdate.track_number = String(t.track_number)
+        if (t.track_number !== undefined) {
+          trackUpdate.track_number = t.track_number === null ? null : String(t.track_number)
+        }
 
         if (t.artist_name !== undefined) {
           let artist = await trx
@@ -1155,7 +1159,11 @@ admin.post('/album/:id/reprocess-apply', async (c) => {
 
         if (Object.keys(trackUpdate).length > 0) {
           trackUpdate.updated_at = new Date()
-          await trx.updateTable('tracks').set(trackUpdate).where('id', '=', t.id).execute()
+          // Scope to albumId too — a stale/malformed payload posting a track id that
+          // belongs to a different album must never write to it. If the id doesn't
+          // belong to this album, this simply affects 0 rows (silent no-op for that
+          // entry), which is acceptable per the finding's scope.
+          await trx.updateTable('tracks').set(trackUpdate).where('id', '=', t.id).where('album_id', '=', albumId).execute()
         }
       }
     })
