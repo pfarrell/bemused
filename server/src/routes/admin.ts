@@ -11,6 +11,8 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { createSmallVersion } from '../services/imageResize.js'
+import NodeID3 from 'node-id3'
+import { parseFile } from 'music-metadata'
 
 const MBID_RETRYABLE = ['unmatched', 'not_found', 'low_confidence']
 
@@ -934,6 +936,154 @@ admin.post('/album/:id/merge', async (c) => {
     console.error('Error merging album:', error)
     return c.json({ error: 'Failed to merge album' }, 500)
   }
+})
+
+// Re-reads ID3 tags for a single track's file. Returns null if the file
+// can't be read (missing media_file_id, file_missing flag, or fs error) —
+// callers must skip that track rather than propose changes for it.
+async function readTrackTags(track: { media_file_id: number | null }): Promise<{
+  title: string | undefined
+  trackNumber: number | null
+  artist: string | undefined
+  year: string | undefined
+  album: string | undefined
+} | null> {
+  if (!track.media_file_id) return null
+
+  const mediaFile = await db
+    .selectFrom('media_files')
+    .select(['absolute_path', 'file_missing'])
+    .where('id', '=', track.media_file_id)
+    .executeTakeFirst()
+
+  if (!mediaFile || !mediaFile.absolute_path || mediaFile.file_missing) return null
+  if (!fs.existsSync(mediaFile.absolute_path)) return null
+
+  try {
+    const tags = NodeID3.read(mediaFile.absolute_path)
+    const metadata = await parseFile(mediaFile.absolute_path)
+    const rawTrackNumber = extractTrackNumber(tags.trackNumber)
+    return {
+      title: tags.title,
+      trackNumber: rawTrackNumber,
+      artist: tags.artist,
+      year: tags.year || metadata.common.year?.toString(),
+      album: tags.album,
+    }
+  } catch {
+    return null
+  }
+}
+
+// Mirrors the "5/12" track-number tag format handled in
+// server/src/workers/queue-handler.ts's extractTrackNumber.
+function extractTrackNumber(trackTag: string | null | undefined): number | null {
+  if (!trackTag) return null
+  const match = trackTag.toString().match(/^(\d+)/)
+  return match ? parseInt(match[1]) : null
+}
+
+// GET /admin/album/:id/reprocess-preview — re-read ID3 tags from each
+// track's file and diff against the DB. Read-only; no writes happen here.
+admin.get('/album/:id/reprocess-preview', async (c) => {
+  const albumId = parseInt(c.req.param('id'))
+
+  const album = await db
+    .selectFrom('albums')
+    .select(['id', 'title', 'release_year', 'is_compilation'])
+    .where('id', '=', albumId)
+    .executeTakeFirst()
+
+  if (!album) {
+    return c.json({ error: 'Album not found' }, 404)
+  }
+
+  const tracks = await db
+    .selectFrom('tracks')
+    .leftJoin('artists', 'artists.id', 'tracks.artist_id')
+    .select([
+      'tracks.id as id',
+      'tracks.title as title',
+      'tracks.track_number as track_number',
+      'tracks.media_file_id as media_file_id',
+      'artists.id as artist_id',
+      'artists.name as artist_name',
+    ])
+    .where('tracks.album_id', '=', albumId)
+    .execute()
+
+  const trackDiffs = []
+  const skipped: { track_id: number; reason: string }[] = []
+  let proposedYear: string | undefined
+  let proposedAlbumTitle: string | undefined
+
+  for (const track of tracks) {
+    const tags = await readTrackTags({ media_file_id: track.media_file_id })
+
+    if (!tags) {
+      skipped.push({
+        track_id: track.id,
+        reason: track.media_file_id ? 'file missing on disk' : 'no media file linked',
+      })
+      continue
+    }
+
+    if (proposedYear === undefined) proposedYear = tags.year
+    if (proposedAlbumTitle === undefined) proposedAlbumTitle = tags.album
+
+    const diff: any = {
+      id: track.id,
+      fields: {
+        title: {
+          current: track.title,
+          proposed: tags.title ?? track.title,
+        },
+        track_number: {
+          current: track.track_number !== null ? parseInt(track.track_number) : null,
+          // Fall back to the current value when the file has no track-number
+          // tag, same as title/release_year/artist below — never propose
+          // blanking a field just because this one file lacks that tag.
+          proposed: tags.trackNumber ?? (track.track_number !== null ? parseInt(track.track_number) : null),
+        },
+      },
+    }
+
+    if (album.is_compilation) {
+      const proposedName = tags.artist || track.artist_name
+      const matched = await db
+        .selectFrom('artists')
+        .select(['id', 'name'])
+        .where('name', '=', proposedName)
+        .executeTakeFirst()
+
+      diff.artist = {
+        current: track.artist_id ? { id: track.artist_id, name: track.artist_name } : null,
+        proposed_name: proposedName,
+        matched_artist: matched || null,
+      }
+    }
+
+    trackDiffs.push(diff)
+  }
+
+  return c.json({
+    album: {
+      id: album.id,
+      is_compilation: album.is_compilation,
+      fields: {
+        title: {
+          current: album.title,
+          proposed: proposedAlbumTitle ?? album.title,
+        },
+        release_year: {
+          current: album.release_year !== null ? parseInt(album.release_year) : null,
+          proposed: proposedYear !== undefined ? parseInt(proposedYear) : (album.release_year !== null ? parseInt(album.release_year) : null),
+        },
+      },
+    },
+    tracks: trackDiffs,
+    skipped,
+  })
 })
 
 // GET /admin/album/:id/artists — list non-primary artists for an album
