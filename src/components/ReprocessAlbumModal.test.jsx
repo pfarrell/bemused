@@ -64,4 +64,26 @@ describe('ReprocessAlbumModal', () => {
     const titleRow = titleInput.closest('tr');
     expect(within(titleRow).getByRole('checkbox')).toBeChecked();
   });
+
+  test('apply sends only checked/edited fields', async () => {
+    apiService.applyReprocess.mockResolvedValue({ data: { success: true } });
+    const onApplied = vi.fn();
+    const onClose = vi.fn();
+    const user = userEvent.setup();
+
+    render(<ReprocessAlbumModal albumId={42} onClose={onClose} onApplied={onApplied} />);
+    await screen.findByDisplayValue('Motown Hits Vol. 1');
+
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    await waitFor(() => expect(apiService.applyReprocess).toHaveBeenCalled());
+    const [calledAlbumId, payload] = apiService.applyReprocess.mock.calls[0];
+    expect(calledAlbumId).toBe(42);
+    expect(payload.album).toEqual({ title: 'Motown Hits Vol. 1' });
+    expect(payload.tracks).toEqual([
+      { id: 501, title: "Ain't No Mountain High Enough", artist_name: 'Marvin Gaye' },
+    ]);
+    expect(onApplied).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
+  });
 });
