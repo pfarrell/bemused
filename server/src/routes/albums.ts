@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { getAlbumSummary } from '../services/wikipedia.js'
 import { streamBase } from '../db/streamUrl.js'
 import { albumsService } from '../services/albumsService.js'
+import { countsService } from '../services/countsService.js'
 
 const albums = new Hono()
 
@@ -14,12 +15,16 @@ albums.get('/random', async (c) => {
     ? await albumsService.randomByTag(tag, size)
     : await albumsService.randomAll(size)
 
+  const albumIds = rows.rows.map((row: any) => row.id)
+  const trackCounts = await countsService.trackCountsByAlbumIds(albumIds)
+
   return c.json(rows.rows.map((row: any) => ({
     id: row.id,
     title: row.title,
     image_path: row.image_path,
     artist: { id: row.artist_id, name: row.artist_name },
     has_collaborators: row.has_collaborators,
+    track_count: trackCounts.get(row.id) ?? 0,
   })))
 })
 
