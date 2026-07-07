@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { db } from '../db/database.js'
 import { requireAuth } from '../middleware/auth.js'
 import type { Variables } from '../types.js'
+import { countsService } from '../services/countsService.js'
 
 const tags = new Hono<{ Variables: Variables }>()
 
@@ -102,6 +103,9 @@ tags.get('/:name/content', async (c) => {
     .orderBy('artists.name', 'asc')
     .execute()
 
+  const trackCounts = await countsService.trackCountsByAlbumIds(albums.map((a) => a.id))
+  const albumCounts = await countsService.albumCountsByArtistIds(artists.map((a) => a.id))
+
   return c.json({
     tag: tag.name,
     albums: albums.map((a) => ({
@@ -110,8 +114,12 @@ tags.get('/:name/content', async (c) => {
       image_path: a.image_path,
       release_year: a.release_year,
       artist: { id: a.artist_id, name: a.artist_name },
+      track_count: trackCounts.get(a.id) ?? 0,
     })),
-    artists,
+    artists: artists.map((a) => ({
+      ...a,
+      album_count: albumCounts.get(a.id) ?? 0,
+    })),
   })
 })
 
