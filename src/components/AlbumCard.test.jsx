@@ -48,3 +48,39 @@ test('tapping the cover image navigates via onClick, not an expand modal, even w
   // No full-screen zoom overlay should exist, even though a fullImageUrl was provided
   expect(document.querySelector('[style*="zoom-out"]')).toBeNull();
 });
+
+test('shows the track count when present', () => {
+  render(
+    <AlbumCard
+      album={{ ...album, track_count: 12 }}
+      artist={artist}
+      onClick={vi.fn()}
+      imageUrl="/img/sm/x.jpg"
+    />
+  );
+  expect(screen.getByText('12 tracks')).toBeInTheDocument();
+});
+
+test('uses singular "track" for a count of 1', () => {
+  render(
+    <AlbumCard
+      album={{ ...album, track_count: 1 }}
+      artist={artist}
+      onClick={vi.fn()}
+      imageUrl="/img/sm/x.jpg"
+    />
+  );
+  expect(screen.getByText('1 track')).toBeInTheDocument();
+});
+
+test('does not render a track count when track_count is absent', () => {
+  render(
+    <AlbumCard
+      album={album}
+      artist={artist}
+      onClick={vi.fn()}
+      imageUrl="/img/sm/x.jpg"
+    />
+  );
+  expect(screen.queryByText(/track/)).toBeNull();
+});

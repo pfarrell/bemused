@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import AddToCollectionModal from './AddToCollectionModal';
+import { formatCount } from '../utils/formatters';
 
 const AlbumCard = ({ album, artist, onClick, imageUrl }) => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -104,6 +105,11 @@ const AlbumCard = ({ album, artist, onClick, imageUrl }) => {
           <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.25rem 0 0 0', cursor: 'pointer' }}>
             {artist.name}{album.has_collaborators && ' +'}
           </p>
+          {formatCount(album.track_count, 'track') && (
+            <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0.125rem 0 0 0' }}>
+              {formatCount(album.track_count, 'track')}
+            </p>
+          )}
         </div>
       </div>
 
