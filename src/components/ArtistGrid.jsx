@@ -19,7 +19,6 @@ const ArtistGrid = ({ artists, onArtistClick, imageContext = 'base', gridRef, se
       <div className="artist-grid-container" ref={gridRef}>
         {artists.map((artist) => {
           const imageUrl = apiService.getImageUrl(artist.image_path, imageContext);
-          console.log(`id: ${artist.id} Artist: ${artist.name}, Image Path: ${artist.image_path}, Final URL: ${imageUrl}`);
 
           return (
             <div
@@ -42,9 +41,9 @@ const ArtistGrid = ({ artists, onArtistClick, imageContext = 'base', gridRef, se
 
               <div className="artist-card-title">
                 <h3>{artist.name}</h3>
-                {formatCount(artist.album_count, 'album') && (
+                {formatCount(artist.album_count || null, 'album') && (
                   <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0.125rem 0 0 0' }}>
-                    {formatCount(artist.album_count, 'album')}
+                    {formatCount(artist.album_count || null, 'album')}
                   </p>
                 )}
               </div>
