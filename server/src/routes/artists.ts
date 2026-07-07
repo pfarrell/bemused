@@ -3,6 +3,7 @@ import { db } from '../db/database.js'
 import { getArtistSummary } from '../services/wikipedia.js'
 import { streamBase } from '../db/streamUrl.js'
 import { sql } from 'kysely'
+import { countsService } from '../services/countsService.js'
 
 // Minimum similarity score to include in similar_artists response (0–1 scale).
 // Adjust this constant to tune how many similar artists appear on artist pages.
@@ -47,7 +48,13 @@ artists.get('/random', async (c) => {
         INNER JOIN random_ids r ON a.id = r.id
       `.execute(db)
 
-  return c.json(rows.rows)
+  const artistIds = rows.rows.map((row: any) => row.id)
+  const albumCounts = await countsService.albumCountsByArtistIds(artistIds)
+
+  return c.json(rows.rows.map((row: any) => ({
+    ...row,
+    album_count: albumCounts.get(row.id) ?? 0,
+  })))
 })
 
 // GET /artist/:id
