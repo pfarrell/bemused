@@ -1,4 +1,4 @@
-import { formatDuration } from './formatters';
+import { formatDuration, formatCount } from './formatters';
 
 describe('formatDuration', () => {
   test('returns empty string for 0', () => {
@@ -31,5 +31,28 @@ describe('formatDuration', () => {
 
   test('formats durations over one hour', () => {
     expect(formatDuration(3661)).toBe('61:01');
+  });
+});
+
+describe('formatCount', () => {
+  test('returns null for null count', () => {
+    expect(formatCount(null, 'track')).toBeNull();
+  });
+
+  test('returns null for undefined count', () => {
+    expect(formatCount(undefined, 'track')).toBeNull();
+  });
+
+  test('uses singular for a count of 1', () => {
+    expect(formatCount(1, 'track')).toBe('1 track');
+  });
+
+  test('uses default pluralization for counts other than 1', () => {
+    expect(formatCount(0, 'track')).toBe('0 tracks');
+    expect(formatCount(5, 'track')).toBe('5 tracks');
+  });
+
+  test('uses an explicit plural form when given one', () => {
+    expect(formatCount(2, 'album', 'albums')).toBe('2 albums');
   });
 });

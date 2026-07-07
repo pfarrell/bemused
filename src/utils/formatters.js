@@ -5,10 +5,22 @@
  */
 export const formatDuration = (seconds) => {
   if (!seconds || isNaN(seconds)) return '';
-  
+
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
-  
+
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+/**
+ * Format a count with a pluralized unit label.
+ * @param {number|null|undefined} count
+ * @param {string} singular - e.g. "track"
+ * @param {string} [plural] - defaults to `${singular}s`
+ * @returns {string|null} e.g. "1 track", "5 tracks", or null if count is null/undefined
+ */
+export const formatCount = (count, singular, plural = `${singular}s`) => {
+  if (count === null || count === undefined) return null;
+  return `${count} ${count === 1 ? singular : plural}`;
 };
 
