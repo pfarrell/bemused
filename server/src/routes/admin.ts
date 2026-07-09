@@ -4,7 +4,16 @@ import { sql } from 'kysely'
 import pg from 'pg'
 
 const pool = new pg.Pool({ connectionString: process.env.BEMUSED_DB })
-import { lookupAlbumMBID, lookupArtistMBID } from '../services/musicbrainz.js'
+import {
+  lookupAlbumMBID,
+  lookupArtistMBID,
+  extractMbid,
+  getArtistByMbid,
+  getReleaseByMbid,
+  searchArtistsMB,
+  searchReleasesMB,
+} from '../services/musicbrainz.js'
+import { fetchAlbumArtFromCAA } from '../services/coverArtArchive.js'
 import { fetchArtistImageFromFanart } from '../services/fanart.js'
 import { fetchSimilarArtists } from '../services/lastfmSimilar.js'
 import fs from 'fs'
@@ -396,6 +405,34 @@ admin.get('/albums/search', async (c) => {
     .execute()
 
   return c.json(rows)
+})
+
+// GET /admin/musicbrainz/search-artist?q= — proxy an artist search to MusicBrainz
+admin.get('/musicbrainz/search-artist', async (c) => {
+  const q = (c.req.query('q') ?? '').trim()
+  if (q.length < 2) return c.json([])
+
+  try {
+    const results = await searchArtistsMB(q)
+    return c.json(results)
+  } catch (error) {
+    console.error('MusicBrainz artist search failed:', error)
+    return c.json({ error: 'Could not reach MusicBrainz to search — try again' }, 502)
+  }
+})
+
+// GET /admin/musicbrainz/search-release?q= — proxy a release search to MusicBrainz
+admin.get('/musicbrainz/search-release', async (c) => {
+  const q = (c.req.query('q') ?? '').trim()
+  if (q.length < 2) return c.json([])
+
+  try {
+    const results = await searchReleasesMB(q)
+    return c.json(results)
+  } catch (error) {
+    console.error('MusicBrainz release search failed:', error)
+    return c.json({ error: 'Could not reach MusicBrainz to search — try again' }, 502)
+  }
 })
 
 // GET /admin/artist/:id/merge-stubs — preview which stubs would be merged
