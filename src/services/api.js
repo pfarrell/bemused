@@ -57,6 +57,8 @@ export const apiService = {
   createAlbum: (title, artist_id) => api.post('/admin/album', { title, artist_id }),
   searchAdminArtists: (q) => api.get(`/admin/artists/search?q=${encodeURIComponent(q)}`),
   searchAdminAlbums: (q) => api.get(`/admin/albums/search?q=${encodeURIComponent(q)}`),
+  searchMusicbrainzArtist: (q) => api.get(`/admin/musicbrainz/search-artist?q=${encodeURIComponent(q)}`),
+  searchMusicbrainzRelease: (q) => api.get(`/admin/musicbrainz/search-release?q=${encodeURIComponent(q)}`),
   updateArtist: (id, data) => api.put(`/admin/artist/${id}`, data),
   deleteArtist: (id) => api.delete(`/admin/artist/${id}`),
   updateAlbum: (id, data) => api.put(`/admin/album/${id}`, data),
