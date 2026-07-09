@@ -29,6 +29,21 @@ describe('MusicBrainzPicker', () => {
     expect(screen.getByText('Status: manually set')).toBeInTheDocument();
   });
 
+  test('rendering with a full-URL value (e.g. right after pasting, before Save) still shows a clean link with just the id', () => {
+    render(
+      <MusicBrainzPicker
+        entityType="release"
+        value="https://musicbrainz.org/release/0e8e1b3b-388f-4404-900e-db88c3b47c2a"
+        mbidStatus=""
+        searchDefault="Hamilton"
+        pending={true}
+        onChange={vi.fn()}
+      />
+    );
+    const link = screen.getByRole('link', { name: '0e8e1b3b-388f-4404-900e-db88c3b47c2a' });
+    expect(link).toHaveAttribute('href', 'https://musicbrainz.org/release/0e8e1b3b-388f-4404-900e-db88c3b47c2a');
+  });
+
   test('shows "Not yet looked up" and no Clear button when there is no value or status', () => {
     render(
       <MusicBrainzPicker

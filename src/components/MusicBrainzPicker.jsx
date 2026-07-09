@@ -6,6 +6,13 @@ const MB_URL_BASE = {
   release: 'https://musicbrainz.org/release/',
 };
 
+const UUID_IN_TEXT_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
+const displayId = (raw) => {
+  const match = raw.match(UUID_IN_TEXT_RE);
+  return match ? match[0] : raw;
+};
+
 const MusicBrainzPicker = ({ entityType, value, mbidStatus, searchDefault, pending, onChange }) => {
   const [pasteText, setPasteText] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -71,12 +78,12 @@ const MusicBrainzPicker = ({ entityType, value, mbidStatus, searchDefault, pendi
     <div>
       {value ? (
         <a
-          href={`${MB_URL_BASE[entityType]}${value}`}
+          href={`${MB_URL_BASE[entityType]}${displayId(value)}`}
           target="_blank"
           rel="noopener noreferrer"
           style={{ color: '#3b82f6', fontSize: '0.875rem', wordBreak: 'break-all' }}
         >
-          {value}
+          {displayId(value)}
         </a>
       ) : (
         <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>{statusLabel}</span>
