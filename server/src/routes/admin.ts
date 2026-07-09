@@ -159,7 +159,7 @@ admin.put('/album/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
   const body = await c.req.json()
 
-  const { title, artist_id, release_year, image_path, wikipedia, is_compilation } = body
+  const { title, artist_id, release_year, image_path, wikipedia, is_compilation, musicbrainz_id } = body
 
   if (!title) {
     return c.json({ error: 'Title is required' }, 400)
@@ -173,9 +173,50 @@ admin.put('/album/:id', async (c) => {
     const current = await db
       .selectFrom('albums')
       .innerJoin('artists', 'artists.id', 'albums.artist_id')
-      .select(['albums.title', 'albums.artist_id', 'albums.mbid_status', 'albums.release_year', 'artists.name as artist_name'])
+      .select([
+        'albums.title',
+        'albums.artist_id',
+        'albums.mbid_status',
+        'albums.musicbrainz_id',
+        'albums.release_year',
+        'artists.name as artist_name',
+      ])
       .where('albums.id', '=', id)
       .executeTakeFirst()
+
+    if (!current) {
+      return c.json({ error: 'Album not found' }, 404)
+    }
+
+    let mbidUpdate: { musicbrainz_id: string | null; mbid_confidence: number | null; mbid_status: string } | null = null
+
+    if (musicbrainz_id !== undefined) {
+      const raw = typeof musicbrainz_id === 'string' ? musicbrainz_id.trim() : ''
+      if (!raw) {
+        if (current.musicbrainz_id) {
+          mbidUpdate = { musicbrainz_id: null, mbid_confidence: null, mbid_status: 'unmatched' }
+        }
+      } else {
+        let mbid: string
+        try {
+          mbid = extractMbid(raw, 'release')
+        } catch (err) {
+          return c.json({ error: (err as Error).message }, 400)
+        }
+        if (mbid !== current.musicbrainz_id) {
+          let entity
+          try {
+            entity = await getReleaseByMbid(mbid)
+          } catch {
+            return c.json({ error: 'Could not reach MusicBrainz to verify — try again' }, 502)
+          }
+          if (!entity) {
+            return c.json({ error: 'No such release found on MusicBrainz' }, 400)
+          }
+          mbidUpdate = { musicbrainz_id: mbid, mbid_confidence: 1.0, mbid_status: 'manual' }
+        }
+      }
+    }
 
     const updated = await db
       .updateTable('albums')
@@ -187,6 +228,7 @@ admin.put('/album/:id', async (c) => {
         wikipedia: wikipedia || null,
         is_compilation: Boolean(is_compilation),
         updated_at: new Date(),
+        ...(mbidUpdate ?? {}),
       })
       .where('id', '=', id)
       .returningAll()
@@ -197,7 +239,8 @@ admin.put('/album/:id', async (c) => {
     }
 
     // Re-trigger MBID lookup if matching fields changed and status is retryable
-    if (current && MBID_RETRYABLE.includes(current.mbid_status ?? 'unmatched')) {
+    // (skipped when this same request also manually set/cleared the MBID)
+    if (!mbidUpdate && MBID_RETRYABLE.includes(current.mbid_status ?? 'unmatched')) {
       const titleChanged = current.title !== title
       const artistChanged = current.artist_id !== artist_id
       if (titleChanged || artistChanged) {
@@ -212,6 +255,15 @@ admin.put('/album/:id', async (c) => {
           console.warn(`MBID re-lookup failed for album ${id}:`, err.message)
         )
       }
+    }
+
+    // Manually-set MBID: re-run the same side effect (Cover Art Archive image fetch)
+    // a fresh auto-match would trigger
+    if (mbidUpdate?.mbid_status === 'manual' && mbidUpdate.musicbrainz_id) {
+      const imagesDir = path.join(projectRoot, 'public', 'images')
+      fetchAlbumArtFromCAA(id, mbidUpdate.musicbrainz_id, imagesDir).catch(err =>
+        console.warn(`Manual MBID image fetch failed for album ${id}:`, err.message)
+      )
     }
 
     return c.json(updated)
