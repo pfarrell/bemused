@@ -52,14 +52,52 @@ admin.put('/artist/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
   const body = await c.req.json()
 
-  const { name, image_path, wikipedia } = body
+  const { name, image_path, wikipedia, musicbrainz_id } = body
 
   if (!name) {
     return c.json({ error: 'Name is required' }, 400)
   }
 
   try {
-    const current = await db.selectFrom('artists').select(['name', 'mbid_status']).where('id', '=', id).executeTakeFirst()
+    const current = await db
+      .selectFrom('artists')
+      .select(['name', 'mbid_status', 'musicbrainz_id'])
+      .where('id', '=', id)
+      .executeTakeFirst()
+
+    if (!current) {
+      return c.json({ error: 'Artist not found' }, 404)
+    }
+
+    let mbidUpdate: { musicbrainz_id: string | null; mbid_confidence: number | null; mbid_status: string } | null = null
+
+    if (musicbrainz_id !== undefined) {
+      const raw = typeof musicbrainz_id === 'string' ? musicbrainz_id.trim() : ''
+      if (!raw) {
+        if (current.musicbrainz_id) {
+          mbidUpdate = { musicbrainz_id: null, mbid_confidence: null, mbid_status: 'unmatched' }
+        }
+      } else {
+        let mbid: string
+        try {
+          mbid = extractMbid(raw, 'artist')
+        } catch (err) {
+          return c.json({ error: (err as Error).message }, 400)
+        }
+        if (mbid !== current.musicbrainz_id) {
+          let entity
+          try {
+            entity = await getArtistByMbid(mbid)
+          } catch {
+            return c.json({ error: 'Could not reach MusicBrainz to verify — try again' }, 502)
+          }
+          if (!entity) {
+            return c.json({ error: 'No such artist found on MusicBrainz' }, 400)
+          }
+          mbidUpdate = { musicbrainz_id: mbid, mbid_confidence: 1.0, mbid_status: 'manual' }
+        }
+      }
+    }
 
     const updated = await db
       .updateTable('artists')
@@ -68,6 +106,7 @@ admin.put('/artist/:id', async (c) => {
         image_path: image_path || null,
         wikipedia: wikipedia || null,
         updated_at: new Date(),
+        ...(mbidUpdate ?? {}),
       })
       .where('id', '=', id)
       .returningAll()
@@ -77,12 +116,14 @@ admin.put('/artist/:id', async (c) => {
       return c.json({ error: 'Artist not found' }, 404)
     }
 
-    // If name changed: merge stubs and re-trigger lookup chain
-    if (current && current.name !== name) {
+    // If name changed: merge stubs and re-trigger lookup chain (skipped when this
+    // same request also manually set/cleared the MBID, so the auto lookup can't
+    // race with — and overwrite — the admin's manual choice)
+    if (current.name !== name) {
       mergeArtistStubs(id, name).catch(err =>
         console.warn(`mergeArtistStubs failed for artist ${id}:`, err.message)
       )
-      if (MBID_RETRYABLE.includes(current.mbid_status ?? 'unmatched')) {
+      if (!mbidUpdate && MBID_RETRYABLE.includes(current.mbid_status ?? 'unmatched')) {
         const imagesDir = path.join(projectRoot, 'public', 'images')
         lookupArtistMBID(id, name).then(async result => {
           if (!result.mbid) return
@@ -92,6 +133,18 @@ admin.put('/artist/:id', async (c) => {
           console.warn(`Post-update lookup chain failed for artist ${id}:`, err.message)
         )
       }
+    }
+
+    // Manually-set MBID: re-run the same side effects a fresh auto-match would trigger
+    if (mbidUpdate?.mbid_status === 'manual' && mbidUpdate.musicbrainz_id) {
+      const imagesDir = path.join(projectRoot, 'public', 'images')
+      const mbid = mbidUpdate.musicbrainz_id
+      fetchArtistImageFromFanart(id, mbid, imagesDir).catch(err =>
+        console.warn(`Manual MBID image fetch failed for artist ${id}:`, err.message)
+      )
+      fetchSimilarArtists(id, name).catch(err =>
+        console.warn(`Manual MBID similar-artist fetch failed for artist ${id}:`, err.message)
+      )
     }
 
     return c.json(updated)
