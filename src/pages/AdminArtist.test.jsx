@@ -15,6 +15,7 @@ vi.mock('../services/api', () => ({
     previewArtistStubs: vi.fn(),
     mergeArtists: vi.fn(),
     createArtist: vi.fn(),
+    updateArtist: vi.fn(),
   },
 }));
 
@@ -131,5 +132,26 @@ describe('AdminArtist — unified merge section', () => {
     await waitFor(() => expect(apiService.createArtist).toHaveBeenCalledWith('Earth Wind and Fire'));
     await waitFor(() => expect(apiService.mergeArtists).toHaveBeenCalledWith(300, ['5']));
     await screen.findByText('Target artist page: 300');
+  });
+
+  test('saving includes a manually-pasted MusicBrainz id in the update payload', async () => {
+    apiService.updateArtist.mockResolvedValue({ data: {} });
+    const user = userEvent.setup();
+    renderAdminArtist();
+    await screen.findByText('Merge With Another Artist');
+
+    await user.type(
+      screen.getByPlaceholderText('Paste MusicBrainz ID or URL'),
+      '0e8e1b3b-388f-4404-900e-db88c3b47c2a'
+    );
+    await user.click(screen.getByRole('button', { name: 'Use' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(apiService.updateArtist).toHaveBeenCalledWith(
+        '5',
+        expect.objectContaining({ musicbrainz_id: '0e8e1b3b-388f-4404-900e-db88c3b47c2a' })
+      )
+    );
   });
 });
