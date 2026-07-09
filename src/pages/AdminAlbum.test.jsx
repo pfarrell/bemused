@@ -26,6 +26,7 @@ const albumPayload = {
     release_year: '1969',
     image_path: null,
     wikipedia: null,
+    musicbrainz_id: null,
     mbid_status: null,
   },
   artist: { id: 161, name: 'Various Artists' },
@@ -88,6 +89,29 @@ describe('AdminAlbum — compilation checkbox', () => {
 
     expect(artistInput).toBeDisabled();
     expect(artistInput).toHaveValue(161);
+  });
+
+  test('saving includes a manually-pasted MusicBrainz id in the update payload', async () => {
+    apiService.updateAlbum.mockResolvedValue({ data: {} });
+    const user = userEvent.setup();
+    renderAdminAlbum();
+    await screen.findByLabelText('Is compilation');
+
+    await user.type(
+      screen.getByPlaceholderText('Paste MusicBrainz ID or URL'),
+      'https://musicbrainz.org/release/0e8e1b3b-388f-4404-900e-db88c3b47c2a'
+    );
+    await user.click(screen.getByRole('button', { name: 'Use' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(apiService.updateAlbum).toHaveBeenCalledWith(
+        '10',
+        expect.objectContaining({
+          musicbrainz_id: 'https://musicbrainz.org/release/0e8e1b3b-388f-4404-900e-db88c3b47c2a',
+        })
+      )
+    );
   });
 });
 

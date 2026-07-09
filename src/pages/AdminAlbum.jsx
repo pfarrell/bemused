@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import Loading from '../components/Loading';
 import TagsSection from '../components/TagsSection';
+import MusicBrainzPicker from '../components/MusicBrainzPicker';
 import TrackArtistPicker from '../components/TrackArtistPicker';
 import ReprocessAlbumModal from '../components/ReprocessAlbumModal';
 import toast from 'react-hot-toast';
@@ -128,10 +129,11 @@ const AdminAlbum = () => {
       releaseYear !== (album.release_year || '') ||
       imagePath !== (album.image_path || '') ||
       wikipedia !== (album.wikipedia || '') ||
-      isCompilation !== !!album.is_compilation;
+      isCompilation !== !!album.is_compilation ||
+      musicbrainzId !== (album.musicbrainz_id || '');
 
     setHasUnsavedChanges(hasChanges);
-  }, [title, artistId, releaseYear, imagePath, wikipedia, isCompilation, albumData]);
+  }, [title, artistId, releaseYear, imagePath, wikipedia, isCompilation, musicbrainzId, albumData]);
 
   // Warn user before leaving page with unsaved changes (browser navigation)
   useEffect(() => {
@@ -180,6 +182,7 @@ const AdminAlbum = () => {
             image_path: imagePath,
             wikipedia,
             is_compilation: isCompilation,
+            musicbrainz_id: musicbrainzId,
           });
           setHasUnsavedChanges(false);
           // Navigate to the link destination
@@ -194,7 +197,7 @@ const AdminAlbum = () => {
     // Add click listener to the document
     document.addEventListener('click', handleClick, true);
     return () => document.removeEventListener('click', handleClick, true);
-  }, [hasUnsavedChanges, id, title, artistId, releaseYear, imagePath, wikipedia, isCompilation, navigate]);
+  }, [hasUnsavedChanges, id, title, artistId, releaseYear, imagePath, wikipedia, isCompilation, musicbrainzId, navigate]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -209,6 +212,7 @@ const AdminAlbum = () => {
         image_path: imagePath,
         wikipedia,
         is_compilation: isCompilation,
+        musicbrainz_id: musicbrainzId,
       });
 
       // Clear unsaved changes flag before navigating
@@ -256,6 +260,7 @@ const AdminAlbum = () => {
             image_path: imagePath,
             wikipedia,
             is_compilation: isCompilation,
+            musicbrainz_id: musicbrainzId,
           });
           setHasUnsavedChanges(false);
           navigate(destination);
@@ -787,25 +792,14 @@ const AdminAlbum = () => {
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
             MusicBrainz
           </label>
-          {musicbrainzId ? (
-            <a
-              href={`https://musicbrainz.org/release/${musicbrainzId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: '#3b82f6', fontSize: '0.875rem', wordBreak: 'break-all' }}
-            >
-              {musicbrainzId}
-            </a>
-          ) : (
-            <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
-              {mbidStatus === 'not_found' ? 'Not found on MusicBrainz' : mbidStatus === 'low_confidence' ? 'Low confidence match' : 'Not yet looked up'}
-            </span>
-          )}
-          {mbidStatus && (
-            <small style={{ display: 'block', color: '#9ca3af', marginTop: '0.25rem' }}>
-              Status: {mbidStatus}
-            </small>
-          )}
+          <MusicBrainzPicker
+            entityType="release"
+            value={musicbrainzId}
+            mbidStatus={mbidStatus}
+            searchDefault={title}
+            pending={musicbrainzId !== (albumData.album.musicbrainz_id || '')}
+            onChange={setMusicbrainzId}
+          />
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
