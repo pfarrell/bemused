@@ -1,10 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { usePlayerStore } from '../../stores/playerStore';
 import { apiService } from '../../services/api';
-
-const isMobileDevice = () =>
-  window.innerWidth <= 768 ||
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+import { isMobileDevice } from '../../utils/device';
 
 const formatTime = (seconds) => {
   if (!seconds || !Number.isFinite(seconds)) return '0:00';
