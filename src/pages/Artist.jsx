@@ -284,6 +284,7 @@ const Artist = () => {
                   artist={album.artist}
                   imageUrl={imageUrl}
                   onClick={handleAlbumClick}
+                  hideArtist={album.artist?.id === artist.id}
                 />
               )
             })}

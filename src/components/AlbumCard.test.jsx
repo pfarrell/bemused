@@ -84,3 +84,28 @@ test('does not render a track count when track_count is absent', () => {
   );
   expect(screen.queryByText(/track/)).toBeNull();
 });
+
+test('hides the artist name when hideArtist is set', () => {
+  render(
+    <AlbumCard
+      album={album}
+      artist={artist}
+      onClick={vi.fn()}
+      imageUrl="/img/sm/x.jpg"
+      hideArtist
+    />
+  );
+  expect(screen.queryByText('Test Artist')).toBeNull();
+});
+
+test('shows the artist name by default', () => {
+  render(
+    <AlbumCard
+      album={album}
+      artist={artist}
+      onClick={vi.fn()}
+      imageUrl="/img/sm/x.jpg"
+    />
+  );
+  expect(screen.getByText('Test Artist')).toBeInTheDocument();
+});
