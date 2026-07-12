@@ -3,6 +3,7 @@ import type { Context } from 'hono'
 import pg from 'pg'
 import { db, Database } from '../db/database.js'
 import { streamBase } from '../db/streamUrl.js'
+import { countsService } from './countsService.js'
 
 // TODO: standalone pool, separate from the shared `db` instance above — known debt,
 // tracked in follow-up issue "Consolidate search.ts's standalone pg.Pool into the shared db instance"
@@ -73,10 +74,12 @@ export function createSearchService(db: Kysely<Database>) {
       return rows
     },
 
-    async fetchByIds(table: 'artists' | 'playlists', ids: number[]) {
+    async fetchPlaylistsWithCounts(ids: number[]) {
       if (!ids?.length) return []
-      const rows = await db.selectFrom(table).selectAll().where('id', 'in', ids).execute()
-      const byId = new Map(rows.map((r: any) => [r.id, r]))
+
+      const rows = await db.selectFrom('playlists').selectAll().where('id', 'in', ids).execute()
+      const trackCounts = await countsService.trackCountsByPlaylistIds(ids)
+      const byId = new Map(rows.map((r: any) => [r.id, { ...r, track_count: trackCounts.get(r.id) ?? 0 }]))
       return ids.map((id) => byId.get(id)).filter(Boolean)
     },
 

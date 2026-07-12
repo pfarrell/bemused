@@ -4,6 +4,7 @@ import { db } from '../db/database.js'
 import { streamBase } from '../db/streamUrl.js'
 import { sql } from 'kysely'
 import type { Variables } from '../types.js'
+import { countsService } from '../services/countsService.js'
 
 const playlists = new Hono<{ Variables: Variables }>()
 
@@ -66,7 +67,9 @@ playlists.get('/', async (c) => {
     .selectAll()
     .where('auto_generated', 'is', null)
     .execute()
-  return c.json(rows)
+
+  const trackCounts = await countsService.trackCountsByPlaylistIds(rows.map((r) => r.id))
+  return c.json(rows.map((r) => ({ ...r, track_count: trackCounts.get(r.id) ?? 0 })))
 })
 
 // POST /playlists - Create a new playlist

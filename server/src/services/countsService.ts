@@ -29,6 +29,19 @@ export function createCountsService(db: Kysely<Database>) {
 
       return new Map(rows.map((r) => [r.artist_id as number, parseInt(r.count, 10)]))
     },
+
+    async trackCountsByPlaylistIds(playlistIds: number[]): Promise<Map<number, number>> {
+      if (playlistIds.length === 0) return new Map()
+
+      const rows = await db
+        .selectFrom('playlist_tracks')
+        .select(['playlist_id', sql<string>`count(*)`.as('count')])
+        .where('playlist_id', 'in', playlistIds)
+        .groupBy('playlist_id')
+        .execute()
+
+      return new Map(rows.map((r) => [r.playlist_id as number, parseInt(r.count, 10)]))
+    },
   }
 }
 

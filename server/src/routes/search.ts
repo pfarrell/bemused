@@ -46,7 +46,7 @@ search.get('/', async (c) => {
   const [albums, artists, playlists, tracks] = await Promise.all([
     searchService.fetchAlbumsByIds(grouped['Album'] ?? []),
     searchService.fetchArtistsWithCounts(grouped['Artist'] ?? []),
-    searchService.fetchByIds('playlists', grouped['Playlist'] ?? []),
+    searchService.fetchPlaylistsWithCounts(grouped['Playlist'] ?? []),
     searchService.fetchTracksByIds(grouped['Track'] ?? [], c),
   ])
 
