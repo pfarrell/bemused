@@ -1,3 +1,7 @@
+import { isMobileDevice } from '../utils/device';
+
+const toMobileUrl = (url) => url.replace('en.wikipedia.org', 'en.m.wikipedia.org');
+
 const Wikipedia = ({ summary }) => {
 
   if(Object.keys(summary).length === 0){
@@ -10,6 +14,8 @@ const Wikipedia = ({ summary }) => {
     return null;
   }
 
+  const href = isMobileDevice() ? toMobileUrl(summary.url) : summary.url;
+
   return (
     <div>
       <p style={{ lineHeight: '1.6', color: '#374151', margin: '0 0 1rem 0' }}>
@@ -17,7 +23,7 @@ const Wikipedia = ({ summary }) => {
         <a
           target="_blank"
           rel="noopener noreferrer"
-          href={summary.url}
+          href={href}
         >...more at wikipedia </a>
       </p>
     </div>
