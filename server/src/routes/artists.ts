@@ -100,6 +100,8 @@ artists.get('/:id', async (c) => {
     ORDER BY albums.release_year ASC
   `.execute(db)
 
+  const albumTrackCounts = await countsService.trackCountsByAlbumIds(albumRows.rows.map((a) => a.id))
+
   const allFilteredAlbums = albumRows.rows.map((a) => ({
     id: a.id,
     title: a.title,
@@ -107,6 +109,7 @@ artists.get('/:id', async (c) => {
     image_path: a.image_path,
     artist: { id: a.primary_artist_id, name: a.primary_artist_name },
     has_collaborators: a.has_collaborators,
+    track_count: albumTrackCounts.get(a.id) ?? 0,
   }))
 
   const singlesAlbumIds = allFilteredAlbums.filter(a => a.title === '_Singles').map(a => a.id)
@@ -189,6 +192,11 @@ artists.get('/:id', async (c) => {
       )
   `.execute(db)
 
+  const appearsOnTrackCounts = await countsService.trackCountsByAlbumIds([
+    ...appearsOnRows.map(a => a.id),
+    ...trackCreditRows.rows.map(a => a.id),
+  ])
+
   const appears_on = [
     ...appearsOnRows.map(a => ({
       id: a.id,
@@ -196,6 +204,7 @@ artists.get('/:id', async (c) => {
       release_year: a.release_year,
       image_path: a.image_path,
       artist: { id: a.primary_artist_id, name: a.primary_artist_name },
+      track_count: appearsOnTrackCounts.get(a.id) ?? 0,
     })),
     ...trackCreditRows.rows.map(a => ({
       id: a.id,
@@ -203,6 +212,7 @@ artists.get('/:id', async (c) => {
       release_year: a.release_year,
       image_path: a.image_path,
       artist: { id: a.primary_artist_id, name: a.primary_artist_name },
+      track_count: appearsOnTrackCounts.get(a.id) ?? 0,
     })),
   ]
 
