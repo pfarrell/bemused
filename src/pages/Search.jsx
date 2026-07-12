@@ -4,6 +4,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import Loading from '../components/Loading';
 import Track from '../components/Track';
+import { formatCount } from '../utils/formatters';
 
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -98,6 +99,11 @@ const Search = () => {
                   </div>
                   <div className="artist-card-title">
                     <h3>{artist.name}</h3>
+                    {formatCount(artist.album_count || null, 'album') && (
+                      <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0.125rem 0 0 0' }}>
+                        {formatCount(artist.album_count || null, 'album')}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -132,6 +138,11 @@ const Search = () => {
                     <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.25rem 0 0 0' }}>
                       {album.artist.name}{album.has_collaborators && ' +'}
                     </p>
+                    {formatCount(album.track_count || null, 'track') && (
+                      <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0.125rem 0 0 0' }}>
+                        {formatCount(album.track_count || null, 'track')}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -157,7 +168,7 @@ const Search = () => {
                 <div className="track-info">
                   <h4 className="track-title">{playlist.name}</h4>
                   <p className="track-artist-album">
-                    {playlist.track_count} tracks
+                    {formatCount(playlist.track_count || null, 'track')}
                   </p>
                 </div>
               </div>

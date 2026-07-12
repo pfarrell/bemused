@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import Loading from '../components/Loading';
 import Retry from '../components/Retry';
+import { formatCount } from '../utils/formatters';
 
 export default function Playlists() {
   const navigate = useNavigate();
@@ -122,6 +123,11 @@ export default function Playlists() {
                 }}>
                   {playlist.name}
                 </h3>
+                {formatCount(playlist.track_count || null, 'track') && (
+                  <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.25rem 0 0 0' }}>
+                    {formatCount(playlist.track_count || null, 'track')}
+                  </p>
+                )}
               </div>
             </div>
           ))}
