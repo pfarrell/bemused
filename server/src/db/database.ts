@@ -157,7 +157,7 @@ interface ArtistAlbumTable {
   id: Generated<number>
   artist_id: number
   album_id: number
-  role: 'primary' | 'compilation' | 'featured' | 'guest' | 'collaborator'
+  role: 'primary' | 'compilation' | 'featured' | 'guest' | 'collaborator' | 'composer' | 'performer'
   order: number
   created_at: ColumnType<Date, string | Date | undefined, never>
 }

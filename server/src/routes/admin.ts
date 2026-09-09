@@ -1565,8 +1565,8 @@ admin.post('/album/:id/artists', async (c) => {
   if (!artist_id || !role) {
     return c.json({ error: 'artist_id and role are required' }, 400)
   }
-  if (!['compilation', 'featured', 'guest', 'collaborator'].includes(role)) {
-    return c.json({ error: 'Invalid role. Must be compilation, featured, guest, or collaborator' }, 400)
+  if (!['compilation', 'featured', 'guest', 'collaborator', 'composer', 'performer'].includes(role)) {
+    return c.json({ error: 'Invalid role. Must be compilation, featured, guest, collaborator, composer, or performer' }, 400)
   }
 
   try {
@@ -1650,8 +1650,8 @@ admin.post('/artist/:id/albums', async (c) => {
   if (!album_id || !role) {
     return c.json({ error: 'album_id and role are required' }, 400)
   }
-  if (!['compilation', 'featured', 'guest', 'collaborator'].includes(role)) {
-    return c.json({ error: 'Invalid role. Must be compilation, featured, guest, or collaborator' }, 400)
+  if (!['compilation', 'featured', 'guest', 'collaborator', 'composer', 'performer'].includes(role)) {
+    return c.json({ error: 'Invalid role. Must be compilation, featured, guest, collaborator, composer, or performer' }, 400)
   }
 
   try {

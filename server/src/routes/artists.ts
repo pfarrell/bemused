@@ -11,6 +11,93 @@ const SIMILAR_ARTIST_MIN_SIMILARITY = 0.8
 
 const artists = new Hono()
 
+// Fetches an artist's own discography exactly as their own artist page would:
+// albums they own outright plus albums where they're credited as a
+// 'collaborator' (treated as a full release, not an "appears on" credit),
+// with any "_Singles" album split out into a flat singles list. Shared
+// between the requested artist and each group they're a member_of, so a
+// member's page can show a group's discography as its own section.
+async function fetchArtistDiscography(c: any, id: number, name: string, imagePath: string | null) {
+  const albumRows = await sql<{
+    id: number
+    title: string
+    release_year: string | null
+    image_path: string | null
+    primary_artist_id: number
+    primary_artist_name: string
+    has_collaborators: boolean
+  }>`
+    SELECT DISTINCT albums.id, albums.title, albums.release_year, albums.image_path,
+           pa.id AS primary_artist_id, pa.name AS primary_artist_name,
+           EXISTS (
+             SELECT 1 FROM artist_albums caa WHERE caa.album_id = albums.id AND caa.role = 'collaborator'
+           ) AS has_collaborators,
+           (albums.release_year IS NOT NULL AND albums.release_year != '' AND albums.release_year != '0') AS has_release_year,
+           CASE WHEN albums.release_year IS NOT NULL AND albums.release_year != '' AND albums.release_year != '0' THEN albums.release_year END AS sort_year
+    FROM albums
+    INNER JOIN artists pa ON pa.id = albums.artist_id
+    INNER JOIN tracks ON tracks.album_id = albums.id AND tracks.approved = true
+    WHERE albums.artist_id = ${id}
+       OR EXISTS (
+         SELECT 1 FROM artist_albums ca WHERE ca.album_id = albums.id AND ca.artist_id = ${id} AND ca.role = 'collaborator'
+       )
+    ORDER BY has_release_year DESC, sort_year DESC, albums.title ASC
+  `.execute(db)
+
+  const albumTrackCounts = await countsService.trackCountsByAlbumIds(albumRows.rows.map((a) => a.id))
+
+  const allFilteredAlbums = albumRows.rows.map((a) => ({
+    id: a.id,
+    title: a.title,
+    release_year: a.release_year,
+    image_path: a.image_path,
+    artist: { id: a.primary_artist_id, name: a.primary_artist_name },
+    has_collaborators: a.has_collaborators,
+    track_count: albumTrackCounts.get(a.id) ?? 0,
+  }))
+
+  const singlesAlbumIds = allFilteredAlbums.filter(a => a.title === '_Singles').map(a => a.id)
+  const albums = allFilteredAlbums.filter(a => a.title !== '_Singles')
+
+  let singles: any[] = []
+  if (singlesAlbumIds.length > 0) {
+    const singlesRows = await db
+      .selectFrom('tracks')
+      .innerJoin('artists as ta', 'ta.id', 'tracks.artist_id')
+      .innerJoin('albums', 'albums.id', 'tracks.album_id')
+      .select([
+        'tracks.id',
+        'tracks.title',
+        'tracks.duration_sec',
+        'tracks.track_number',
+        'ta.id as artist_id',
+        'ta.name as artist_name',
+        'albums.id as album_id',
+        'albums.title as album_title',
+      ])
+      .where('tracks.album_id', 'in', singlesAlbumIds)
+      .where('tracks.approved', '=', true)
+      .orderBy('tracks.track_number', 'asc')
+      .execute()
+
+    singlesRows.sort((a, b) => (parseInt(a.track_number ?? '0') || 0) - (parseInt(b.track_number ?? '0') || 0))
+
+    singles = singlesRows.map(t => ({
+      id: t.id,
+      title: t.title,
+      duration: t.duration_sec,
+      track_number: t.track_number,
+      artist: { id: t.artist_id, name: t.artist_name },
+      album: { id: t.album_id, title: t.album_title, artist: { id, name } },
+      image_path: imagePath,
+      url: `${streamBase(c)}/stream/${t.id}`,
+      download_url: `${streamBase(c)}/download/${t.id}`,
+    }))
+  }
+
+  return { albums, singles }
+}
+
 // GET /artists/random?size=N&tag=slug
 artists.get('/random', async (c) => {
   const size = Math.min(parseInt(c.req.query('size') ?? '10'), 200)
@@ -76,82 +163,7 @@ artists.get('/:id', async (c) => {
   // Russell's own album list, not tucked away in "Appears On"). Every other
   // non-primary role (featured/guest/compilation) stays out of this list —
   // see appears_on below.
-  const albumRows = await sql<{
-    id: number
-    title: string
-    release_year: string | null
-    image_path: string | null
-    primary_artist_id: number
-    primary_artist_name: string
-    has_collaborators: boolean
-  }>`
-    SELECT DISTINCT albums.id, albums.title, albums.release_year, albums.image_path,
-           pa.id AS primary_artist_id, pa.name AS primary_artist_name,
-           EXISTS (
-             SELECT 1 FROM artist_albums caa WHERE caa.album_id = albums.id AND caa.role = 'collaborator'
-           ) AS has_collaborators,
-           (albums.release_year IS NOT NULL AND albums.release_year != '' AND albums.release_year != '0') AS has_release_year,
-           CASE WHEN albums.release_year IS NOT NULL AND albums.release_year != '' AND albums.release_year != '0' THEN albums.release_year END AS sort_year
-    FROM albums
-    INNER JOIN artists pa ON pa.id = albums.artist_id
-    INNER JOIN tracks ON tracks.album_id = albums.id AND tracks.approved = true
-    WHERE albums.artist_id = ${id}
-       OR EXISTS (
-         SELECT 1 FROM artist_albums ca WHERE ca.album_id = albums.id AND ca.artist_id = ${id} AND ca.role = 'collaborator'
-       )
-    ORDER BY has_release_year DESC, sort_year DESC, albums.title ASC
-  `.execute(db)
-
-  const albumTrackCounts = await countsService.trackCountsByAlbumIds(albumRows.rows.map((a) => a.id))
-
-  const allFilteredAlbums = albumRows.rows.map((a) => ({
-    id: a.id,
-    title: a.title,
-    release_year: a.release_year,
-    image_path: a.image_path,
-    artist: { id: a.primary_artist_id, name: a.primary_artist_name },
-    has_collaborators: a.has_collaborators,
-    track_count: albumTrackCounts.get(a.id) ?? 0,
-  }))
-
-  const singlesAlbumIds = allFilteredAlbums.filter(a => a.title === '_Singles').map(a => a.id)
-  const filteredAlbums = allFilteredAlbums.filter(a => a.title !== '_Singles')
-
-  let singles: any[] = []
-  if (singlesAlbumIds.length > 0) {
-    const singlesRows = await db
-      .selectFrom('tracks')
-      .innerJoin('artists as ta', 'ta.id', 'tracks.artist_id')
-      .innerJoin('albums', 'albums.id', 'tracks.album_id')
-      .select([
-        'tracks.id',
-        'tracks.title',
-        'tracks.duration_sec',
-        'tracks.track_number',
-        'ta.id as artist_id',
-        'ta.name as artist_name',
-        'albums.id as album_id',
-        'albums.title as album_title',
-      ])
-      .where('tracks.album_id', 'in', singlesAlbumIds)
-      .where('tracks.approved', '=', true)
-      .orderBy('tracks.track_number', 'asc')
-      .execute()
-
-    singlesRows.sort((a, b) => (parseInt(a.track_number ?? '0') || 0) - (parseInt(b.track_number ?? '0') || 0))
-
-    singles = singlesRows.map(t => ({
-      id: t.id,
-      title: t.title,
-      duration: t.duration_sec,
-      track_number: t.track_number,
-      artist: { id: t.artist_id, name: t.artist_name },
-      album: { id: t.album_id, title: t.album_title, artist: { id: artist.id, name: artist.name } },
-      image_path: artist.image_path,
-      url: `${streamBase(c)}/stream/${t.id}`,
-      download_url: `${streamBase(c)}/download/${t.id}`,
-    }))
-  }
+  const { albums: filteredAlbums, singles: ownSingles } = await fetchArtistDiscography(c, artist.id, artist.name, artist.image_path)
 
   const appearsOnRows = await db
     .selectFrom('artist_albums')
@@ -166,10 +178,43 @@ artists.get('/:id', async (c) => {
       'al_artist.name as primary_artist_name',
     ])
     .where('artist_albums.artist_id', '=', id)
-    .where('artist_albums.role', '!=', 'primary')
-    .where('artist_albums.role', '!=', 'collaborator')
+    .where('artist_albums.role', 'not in', ['primary', 'collaborator', 'composer', 'performer'])
     .orderBy('albums.release_year', 'asc')
     .execute()
+
+  // Classical composer/performer credits — kept out of appears_on (composer
+  // and performer are full-recording credits, not guest/featured spots) and
+  // shown as their own section instead. Symmetric: whichever role isn't this
+  // artist's role on a given album is the "primary_artist" they performed
+  // with/composed for, since exactly one of composer/performer is the
+  // album's actual primary artist and the other is this secondary credit.
+  const performancesRows = await db
+    .selectFrom('artist_albums')
+    .innerJoin('albums', 'albums.id', 'artist_albums.album_id')
+    .innerJoin('artists as al_artist', 'al_artist.id', 'albums.artist_id')
+    .select([
+      'albums.id',
+      'albums.title',
+      'albums.release_year',
+      'albums.image_path',
+      'al_artist.id as primary_artist_id',
+      'al_artist.name as primary_artist_name',
+    ])
+    .where('artist_albums.artist_id', '=', id)
+    .where('artist_albums.role', 'in', ['composer', 'performer'])
+    .orderBy('albums.release_year', 'asc')
+    .execute()
+
+  const performancesTrackCounts = await countsService.trackCountsByAlbumIds(performancesRows.map(a => a.id))
+
+  const performances = performancesRows.map(a => ({
+    id: a.id,
+    title: a.title,
+    release_year: a.release_year,
+    image_path: a.image_path,
+    artist: { id: a.primary_artist_id, name: a.primary_artist_name },
+    track_count: performancesTrackCounts.get(a.id) ?? 0,
+  }))
 
   // Albums where this artist has a track credit (tracks.artist_id) but isn't
   // the album's primary artist and isn't already covered by an artist_albums
@@ -236,12 +281,23 @@ artists.get('/:id', async (c) => {
   const memberOfRows = await db
     .selectFrom('artist_relations')
     .innerJoin('artists as ga', 'ga.id', 'artist_relations.artist_id')
-    .select(['ga.id', 'ga.name'])
+    .select(['ga.id', 'ga.name', 'ga.image_path'])
     .where('artist_relations.related_artist_id', '=', id)
     .where('artist_relations.kind', '=', 'member')
     .orderBy('ga.name', 'asc')
     .execute()
-  const member_of = memberOfRows.map(r => ({ id: r.id, name: r.name }))
+
+  // Each group's own discography, shown as a section on the member's page
+  // (one-directional — a group's own page doesn't pull in its members'
+  // other work). Groups with no approved-track albums are omitted rather
+  // than shown as an empty section.
+  const groupDiscographies = await Promise.all(
+    memberOfRows.map((g) => fetchArtistDiscography(c, g.id, g.name, g.image_path))
+  )
+  const group_albums = memberOfRows
+    .map((g, i) => ({ group: { id: g.id, name: g.name }, albums: groupDiscographies[i].albums }))
+    .filter((g) => g.albums.length > 0)
+  const singles = [...ownSingles, ...groupDiscographies.flatMap((d) => d.singles)]
 
   const similarRows = await db
     .selectFrom('artist_relations as ar')
@@ -278,7 +334,7 @@ artists.get('/:id', async (c) => {
 
   const summary = await getArtistSummary(artist.name, artist.wikipedia)
 
-  return c.json({ artist, summary: summary ?? {}, albums: filteredAlbums, singles, appears_on, related_artists, members, member_of, similar_artists })
+  return c.json({ artist, summary: summary ?? {}, albums: filteredAlbums, singles, appears_on, performances, related_artists, members, group_albums, similar_artists })
 })
 
 export default artists

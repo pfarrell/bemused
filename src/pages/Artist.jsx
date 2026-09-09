@@ -114,7 +114,7 @@ const Artist = () => {
     );
   }
 
-  const { artist, summary, albums, singles, appears_on, related_artists, members, member_of, similar_artists } = artistData;
+  const { artist, summary, albums, singles, appears_on, performances, related_artists, members, group_albums, similar_artists } = artistData;
 
   const handlePlaySingles = () => {
     if (singles?.length) {
@@ -198,23 +198,6 @@ const Artist = () => {
             heading="About this artist"
             summary={summary}
           />
-
-          {member_of && member_of.length > 0 && (
-            <p style={{ fontSize: '0.95rem', margin: '0.5rem 0 0 0', color: 'var(--color-text-muted)' }}>
-              Member of:{' '}
-              {member_of.map((g, i) => (
-                <span key={g.id}>
-                  {i > 0 && ' · '}
-                  <span
-                    style={{ color: '#3b82f6', cursor: 'pointer' }}
-                    onClick={() => navigate(`/artist/${g.id}`)}
-                  >
-                    {g.name}
-                  </span>
-                </span>
-              ))}
-            </p>
-          )}
 
           {members && members.length > 0 && (
             <p style={{ fontSize: '0.95rem', margin: '0.5rem 0 0 0', color: 'var(--color-text-muted)' }}>
@@ -337,6 +320,33 @@ const Artist = () => {
         </div>
       )}
 
+      {/* Group Discographies */}
+      {group_albums && group_albums.length > 0 && group_albums.map(({ group, albums: groupAlbums }) => (
+        <div className="artist-grid" key={`group-${group.id}`}>
+          <h2
+            style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '1.5rem 0 0.75rem 0', color: 'var(--color-text-primary)', cursor: 'pointer' }}
+            onClick={() => navigate(`/artist/${group.id}`)}
+          >
+            With {group.name}
+          </h2>
+          <CardGrid>
+            {groupAlbums.map((album) => {
+              const imageUrl = apiService.getImageUrl(album.image_path, 'album_small')
+              return (
+                <AlbumCard
+                  key={`group-${group.id}-${album.id}`}
+                  album={album}
+                  artist={album.artist}
+                  imageUrl={imageUrl}
+                  onClick={handleAlbumClick}
+                  hideArtist
+                />
+              )
+            })}
+          </CardGrid>
+        </div>
+      ))}
+
       {/* Singles */}
       {singles && singles.length > 0 && (
         <div style={{ marginTop: '2rem' }}>
@@ -384,6 +394,29 @@ const Artist = () => {
               return (
                 <AlbumCard
                   key={`appears-${album.id}`}
+                  album={album}
+                  artist={album.artist}
+                  imageUrl={imageUrl}
+                  onClick={handleAlbumClick}
+                />
+              )
+            })}
+          </CardGrid>
+        </div>
+      )}
+
+      {/* Performances */}
+      {performances && performances.length > 0 && (
+        <div className="artist-grid">
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '1.5rem 0 0.75rem 0', color: 'var(--color-text-primary)' }}>
+            Performances
+          </h2>
+          <CardGrid>
+            {performances.map((album) => {
+              const imageUrl = apiService.getImageUrl(album.image_path, 'album_small')
+              return (
+                <AlbumCard
+                  key={`performance-${album.id}`}
                   album={album}
                   artist={album.artist}
                   imageUrl={imageUrl}

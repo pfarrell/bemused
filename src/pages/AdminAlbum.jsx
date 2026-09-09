@@ -1110,6 +1110,8 @@ const AdminAlbum = () => {
                 <option value="collaborator">Collaborator</option>
                 <option value="compilation">Compilation</option>
                 <option value="guest">Guest</option>
+                <option value="composer">Composer</option>
+                <option value="performer">Performer</option>
               </select>
               <button
                 type="button"
