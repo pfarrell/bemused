@@ -1,5 +1,6 @@
 import { Kysely, sql } from 'kysely'
 import { db, Database } from '../db/database.js'
+import { SINGLES_ALBUM_TITLE } from '../constants/singles.js'
 
 export function createAlbumsService(db: Kysely<Database>) {
   return {
@@ -112,6 +113,64 @@ export function createAlbumsService(db: Kysely<Database>) {
         .where('collection_albums.album_id', '=', albumId)
         .orderBy('collections.name', 'asc')
         .execute()
+    },
+
+    async findAlbumStub(id: number) {
+      return db
+        .selectFrom('albums')
+        .select(['id', 'title', 'image_path'])
+        .where('id', '=', id)
+        .executeTakeFirst()
+    },
+
+    // Returns the album immediately before/after `albumId` within `collectionId`'s
+    // ordering, or undefined if `albumId` isn't actually a member of that
+    // collection (caller should fall back to findAdjacentInArtist in that case).
+    async findAdjacentInCollection(albumId: number, collectionId: number) {
+      const result = await sql<{ prev_id: number | null; next_id: number | null }>`
+        WITH ranked AS (
+          SELECT album_id,
+                 LAG(album_id) OVER (ORDER BY "order" ASC) AS prev_id,
+                 LEAD(album_id) OVER (ORDER BY "order" ASC) AS next_id
+          FROM collection_albums
+          WHERE collection_id = ${collectionId}
+        )
+        SELECT prev_id, next_id FROM ranked WHERE album_id = ${albumId}
+      `.execute(db)
+      return result.rows[0]
+    },
+
+    // Ranks by the same key as the Artist page's own album grid
+    // (server/src/routes/artists.ts) — has_release_year DESC, sort_year DESC,
+    // title ASC, i.e. newest release first. "prev"/"next" here mean release
+    // chronology (previous = older, next = newer), same convention as a
+    // Wikipedia infobox — which is the *opposite* direction from that grid's
+    // own newest-first listing, so this deliberately uses LEAD for prev_id
+    // and LAG for next_id, not the other way around.
+    async findAdjacentInArtist(albumId: number, artistId: number) {
+      const result = await sql<{ prev_id: number | null; next_id: number | null }>`
+        WITH albums_ordered AS (
+          SELECT DISTINCT albums.id,
+                 (albums.release_year IS NOT NULL AND albums.release_year != '' AND albums.release_year != '0') AS has_release_year,
+                 CASE WHEN albums.release_year IS NOT NULL AND albums.release_year != '' AND albums.release_year != '0' THEN albums.release_year END AS sort_year,
+                 albums.title
+          FROM albums
+          INNER JOIN tracks ON tracks.album_id = albums.id AND tracks.approved = true
+          WHERE albums.title != ${SINGLES_ALBUM_TITLE}
+            AND (albums.artist_id = ${artistId}
+             OR EXISTS (
+               SELECT 1 FROM artist_albums ca WHERE ca.album_id = albums.id AND ca.artist_id = ${artistId} AND ca.role = 'collaborator'
+             ))
+        ),
+        ranked AS (
+          SELECT id,
+                 LEAD(id) OVER (ORDER BY has_release_year DESC, sort_year DESC, title ASC) AS prev_id,
+                 LAG(id) OVER (ORDER BY has_release_year DESC, sort_year DESC, title ASC) AS next_id
+          FROM albums_ordered
+        )
+        SELECT prev_id, next_id FROM ranked WHERE id = ${albumId}
+      `.execute(db)
+      return result.rows[0] ?? { prev_id: null, next_id: null }
     },
   }
 }

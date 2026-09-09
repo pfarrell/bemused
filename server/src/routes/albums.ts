@@ -129,6 +129,29 @@ albums.get('/:id', async (c) => {
   return c.json({ album, artist, secondary_artists, compilation_artists, tracks, collections, notes, summary: summary ?? {} })
 })
 
+// GET /album/:id/adjacent?collection_id=N — previous/next album for prev/next
+// navigation. Within collection_id's ordering when given and the album is
+// actually a member of it; otherwise falls back to the artist's discography
+// ordering (same as the Artist page's album grid).
+albums.get('/:id/adjacent', async (c) => {
+  const id = parseInt(c.req.param('id'))
+  const collectionIdParam = c.req.query('collection_id')
+  const collectionId = collectionIdParam ? parseInt(collectionIdParam) : null
+
+  const album = await albumsService.findAlbumById(id)
+  if (!album) return c.json({ error: 'Not found' }, 404)
+
+  const adjacent = (collectionId ? await albumsService.findAdjacentInCollection(id, collectionId) : undefined)
+    ?? await albumsService.findAdjacentInArtist(id, album.artist_id)
+
+  const [prev, next] = await Promise.all([
+    adjacent.prev_id ? albumsService.findAlbumStub(adjacent.prev_id) : undefined,
+    adjacent.next_id ? albumsService.findAlbumStub(adjacent.next_id) : undefined,
+  ])
+
+  return c.json({ prev: prev ?? null, next: next ?? null })
+})
+
 // POST /album/:id/notes — requires a connected Recall account; creates a new journal-style note
 albums.post('/:id/notes', async (c) => {
   const user = c.get('user')

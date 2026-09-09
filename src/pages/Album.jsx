@@ -1,7 +1,7 @@
 // src/pages/Album.jsx
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { usePlayerStore } from '../stores/playerStore';
 import { useAuthStore } from '../stores/authStore';
@@ -21,6 +21,8 @@ import { shareLink } from '../utils/shareLink';
 const Album = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const collectionId = location.state?.collectionId ?? null;
   const addTracks = usePlayerStore((s) => s.addTracks);
   const clearPlaylist = usePlayerStore((s) => s.clearPlaylist);
   const currentTrack = usePlayerStore((s) => s.currentTrack);
@@ -32,6 +34,7 @@ const Album = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [showAlbumModal, setShowAlbumModal] = useState(false);
   const [showCollectionModal, setShowCollectionModal] = useState(false);
+  const [adjacentAlbums, setAdjacentAlbums] = useState({ prev: null, next: null });
   const isFavorite = useFavoritesStore((s) => s.isFavorite('album', parseInt(id)));
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
   const ctxMenu = useContextMenu({ shouldIgnore: (e) => !isAuthenticated || e.target.tagName === 'A' || !!e.target.closest('button') });
@@ -56,6 +59,23 @@ const Album = () => {
       fetchAlbumData();
     }
   }, [id, refreshKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiService.getAdjacentAlbums(id, collectionId)
+      .then((response) => {
+        if (!cancelled) setAdjacentAlbums(response.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching adjacent albums:', error);
+        if (!cancelled) setAdjacentAlbums({ prev: null, next: null });
+      });
+    return () => { cancelled = true; };
+  }, [id, collectionId]);
+
+  const goToAdjacentAlbum = (albumId) => {
+    navigate(`/album/${albumId}`, collectionId ? { state: { collectionId } } : undefined);
+  };
 
   useEffect(() => {
     // Lets the footer play button fall back to "Play Now" behavior when the playlist is
@@ -278,6 +298,25 @@ const Album = () => {
                 </span>
               ))}
             </p>
+          )}
+
+          {(adjacentAlbums.prev || adjacentAlbums.next) && (
+            <div className="album-header-adjacent-nav" style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', margin: '0 0 1rem 0', fontSize: '0.95rem' }}>
+              <div style={{ textAlign: 'left' }}>
+                {adjacentAlbums.prev && (
+                  <span style={{ cursor: 'pointer', color: 'var(--color-text-muted)' }} onClick={() => goToAdjacentAlbum(adjacentAlbums.prev.id)}>
+                    ‹ {adjacentAlbums.prev.title}
+                  </span>
+                )}
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                {adjacentAlbums.next && (
+                  <span style={{ cursor: 'pointer', color: 'var(--color-text-muted)' }} onClick={() => goToAdjacentAlbum(adjacentAlbums.next.id)}>
+                    {adjacentAlbums.next.title} ›
+                  </span>
+                )}
+              </div>
+            </div>
           )}
 
           <div className="album-header-about">

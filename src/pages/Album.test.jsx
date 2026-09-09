@@ -12,6 +12,7 @@ vi.mock('../components/AddToCollectionModal', () => ({ default: () => null }));
 vi.mock('../services/api', () => ({
   apiService: {
     getAlbum: vi.fn(),
+    getAdjacentAlbums: vi.fn(),
     getImageUrl: () => 'http://example.com/image.jpg',
     makeTrackSingle: vi.fn(),
   },
@@ -39,6 +40,7 @@ const renderAlbum = () =>
 
 beforeEach(() => {
   apiService.getAlbum.mockResolvedValue({ data: albumData });
+  apiService.getAdjacentAlbums.mockResolvedValue({ data: { prev: null, next: null } });
   useAuthStore.setState({ isAdmin: false, isAuthenticated: true });
   useFavoritesStore.setState({ isFavorite: () => false, toggleFavorite: vi.fn() });
 });

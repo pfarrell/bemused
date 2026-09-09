@@ -50,6 +50,7 @@ export const apiService = {
   // Albums
   getAlbum: (id) => api.get(`/album/${id}`), // Returns { artist, album, tracks }
   getRandomAlbums: (size = 30, tag = null) => api.get(`/albums/random?size=${size}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`),
+  getAdjacentAlbums: (id, collectionId = null) => api.get(`/album/${id}/adjacent${collectionId ? `?collection_id=${collectionId}` : ''}`), // Returns { prev, next }
 
   // Recall notes
   getRecallConnectUrl: () => `${getBaseURL()}/auth/recall/connect`,

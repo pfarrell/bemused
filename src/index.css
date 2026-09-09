@@ -1501,7 +1501,8 @@
   .album-header-title,
   .album-header-artist,
   .album-header-featuring,
-  .album-header-collections {
+  .album-header-collections,
+  .album-header-adjacent-nav {
     padding-left: 6rem;
   }
 

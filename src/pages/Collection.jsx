@@ -174,7 +174,7 @@ export default function Collection() {
                   album={item.data}
                   artist={item.data.artist}
                   imageUrl={apiService.getImageUrl(item.data.image_path, 'album_small')}
-                  onClick={() => navigate(`/album/${item.data.id}`)}
+                  onClick={() => navigate(`/album/${item.data.id}`, { state: { collectionId: collection.id } })}
                 />
               ) : (
                 <AlbumStubCard key={`stub-${item.data.id}`} stub={item.data} />
