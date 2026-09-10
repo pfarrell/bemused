@@ -298,7 +298,7 @@ const Artist = () => {
 
       {/* Albums Grid */}
       {albums && albums.length > 0 && (
-        <div className="artist-grid">
+        <div className="artist-grid" style={{ minHeight: 'auto' }}>
           <CardGrid>
             {albums.map((album, i) => {
               const imageUrl = apiService.getImageUrl(album.image_path, 'album_small')
@@ -322,9 +322,9 @@ const Artist = () => {
 
       {/* Group Discographies */}
       {group_albums && group_albums.length > 0 && group_albums.map(({ group, albums: groupAlbums }) => (
-        <div className="artist-grid" key={`group-${group.id}`}>
+        <div className="artist-grid" style={{ minHeight: 'auto' }} key={`group-${group.id}`}>
           <h2
-            style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '1.5rem 0 0.75rem 0', color: 'var(--color-text-primary)', cursor: 'pointer' }}
+            style={{ fontSize: '1.125rem', fontWeight: 'bold', margin: '0.75rem 0 0.75rem 0', color: 'var(--color-text-primary)', cursor: 'pointer' }}
             onClick={() => navigate(`/artist/${group.id}`)}
           >
             With {group.name}
@@ -349,9 +349,9 @@ const Artist = () => {
 
       {/* Singles */}
       {singles && singles.length > 0 && (
-        <div style={{ marginTop: '2rem' }}>
+        <div style={{ marginTop: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0, color: 'var(--color-text-primary)' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', margin: 0, color: 'var(--color-text-primary)' }}>
               Singles
             </h2>
             <button
@@ -384,8 +384,8 @@ const Artist = () => {
 
       {/* Appears On */}
       {appears_on && appears_on.length > 0 && (
-        <div className="artist-grid">
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '1.5rem 0 0.75rem 0', color: 'var(--color-text-primary)' }}>
+        <div className="artist-grid" style={{ minHeight: 'auto' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', margin: '0.75rem 0 0.75rem 0', color: 'var(--color-text-primary)' }}>
             Appears On
           </h2>
           <CardGrid>
@@ -407,8 +407,8 @@ const Artist = () => {
 
       {/* Performances */}
       {performances && performances.length > 0 && (
-        <div className="artist-grid">
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '1.5rem 0 0.75rem 0', color: 'var(--color-text-primary)' }}>
+        <div className="artist-grid" style={{ minHeight: 'auto' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', margin: '0.75rem 0 0.75rem 0', color: 'var(--color-text-primary)' }}>
             Performances
           </h2>
           <CardGrid>
