@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie'
 import type { Variables } from '../types.js'
 import { authService } from '../services/authService.js'
-import { requireAdmin } from '../middleware/auth.js'
+import { signupLogService } from '../services/signupLogService.js'
 import { isLanHost } from '../db/streamUrl.js'
 import { recallAuthUrl, signRecallState, verifyRecallState, encryptRecallToken } from '../services/recallService.js'
 import { notesService } from '../services/notesService.js'
@@ -190,12 +190,24 @@ auth.get('/google/callback', async (c) => {
       break
     }
     case 'signup': {
-      // Self-service signup no longer exists — the site requires a login an
-      // admin created for you. An unrecognized Google identity can't silently
-      // provision a new account; the account must exist first, then Google
-      // gets linked from the Account page (the 'link' case below).
-      clearGoogleOAuthCookies(c, domain)
-      return c.redirect(`${spaBase}/login?error=google_no_account`)
+      // users.email has no uniqueness constraint, so without this check a Google
+      // signup for an email that already belongs to a password account would
+      // silently create an unmergeable duplicate.
+      const existingByEmail = await authService.findUserByEmail(profile.email)
+      if (existingByEmail) {
+        clearGoogleOAuthCookies(c, domain)
+        return c.redirect(`${spaBase}/login?error=google_email_in_use`)
+      }
+      const created = await authService.createUserFromGoogle({ email: profile.email })
+      if (!created) {
+        clearGoogleOAuthCookies(c, domain)
+        return c.redirect(`${spaBase}/login?error=google_failed`)
+      }
+      await createIdentity({ provider: 'google', providerUserId: profile.sub, userId: created.id, email: profile.email })
+      console.log(`[signup] new account created via Google: ${created.username} (${profile.email})`)
+      await signupLogService.record({ username: created.username, email: profile.email, method: 'google' })
+      loggedInUser = created
+      break
     }
     case 'link': {
       await createIdentity({ provider: 'google', providerUserId: profile.sub, userId: decision.userId, email: profile.email })
@@ -248,10 +260,8 @@ auth.get('/google/callback', async (c) => {
   return c.redirect(`${redirectOrigin}${redirectPath}`)
 })
 
-// POST /auth/signup - Admin-only: create a new user account for someone else.
-// Self-service signup no longer exists (site requires login), so this never
-// logs the caller in as the created user — no cookie is set here.
-auth.post('/signup', requireAdmin, async (c) => {
+// POST /auth/signup - Public: create a new account and log the caller in.
+auth.post('/signup', async (c) => {
   try {
     const body = await c.req.json()
     const { username, password, email } = body
@@ -290,7 +300,18 @@ auth.post('/signup', requireAdmin, async (c) => {
       return c.json({ error: 'Failed to create user' }, 500)
     }
 
-    // Return user data (without password) — the admin's own session is untouched
+    console.log(`[signup] new account created via password: ${user.username}${email ? ` (${email})` : ''}`)
+    await signupLogService.record({ username: user.username, email: email || null, method: 'password' })
+
+    const token = generateToken(user.id, user.username, user.admin)
+    setCookie(c, 'auth', token, {
+      httpOnly: true,
+      sameSite: 'Lax',
+      maxAge: 86400 * 14,
+      path: '/',
+      ...cookieOptionsForRequest(c),
+    })
+
     return c.json({ user: await buildUserPayload(user) })
   } catch (error: any) {
     console.error('Signup error:', error)

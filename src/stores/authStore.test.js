@@ -119,6 +119,39 @@ describe('authStore — login', () => {
   });
 });
 
+describe('authStore — signup', () => {
+  test('sets isAuthenticated on success', async () => {
+    apiService.signup.mockResolvedValue({
+      data: { user: { id: 3, username: 'newuser', admin: false, default_tag: null } },
+    });
+
+    await useAuthStore.getState().signup('newuser', 'password');
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+  });
+
+  test('sets user from the response', async () => {
+    apiService.signup.mockResolvedValue({
+      data: { user: { id: 3, username: 'newuser', admin: false, default_tag: null } },
+    });
+
+    await useAuthStore.getState().signup('newuser', 'password');
+
+    expect(useAuthStore.getState().user).toEqual({ id: 3, username: 'newuser', admin: false, default_tag: null });
+  });
+
+  test('returns { success: false, error } on failure without changing auth state', async () => {
+    apiService.signup.mockRejectedValue({
+      response: { data: { error: 'Username already taken' } },
+    });
+
+    const result = await useAuthStore.getState().signup('newuser', 'password');
+
+    expect(result).toEqual({ success: false, error: 'Username already taken' });
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  });
+});
+
 describe('authStore — logout', () => {
   test('clears user', async () => {
     useAuthStore.setState({ user: { id: 1, username: 'pat' }, isAuthenticated: true, isAdmin: false });

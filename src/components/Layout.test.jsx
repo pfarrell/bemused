@@ -5,7 +5,14 @@ import { useAuthStore } from '../stores/authStore';
 import { useUnsavedChangesStore } from '../stores/unsavedChangesStore';
 
 vi.mock('./SearchBar', () => ({ default: () => null }));
-vi.mock('../services/api', () => ({ apiService: { getTags: vi.fn(() => Promise.resolve({ data: [] })) } }));
+vi.mock('../services/api', () => ({
+  apiService: {
+    getTags: vi.fn(() => Promise.resolve({ data: [] })),
+    getSignupUnseenCount: vi.fn(() => Promise.resolve({ data: { count: 0 } })),
+  },
+}));
+
+import { apiService } from '../services/api';
 
 const renderLayout = () =>
   render(
@@ -82,6 +89,23 @@ describe('Layout — logged-in hamburger menu', () => {
 describe('Layout — logged-in admin', () => {
   beforeEach(() => {
     useAuthStore.setState({ user: { id: 1, username: 'admin-pat', admin: true }, isAuthenticated: true, isAdmin: true });
+    apiService.getSignupUnseenCount.mockResolvedValue({ data: { count: 0 } });
+  });
+
+  test('shows an unseen-signup badge on the Admin link when opening the menu', async () => {
+    apiService.getSignupUnseenCount.mockResolvedValue({ data: { count: 2 } });
+    renderLayout();
+    const toggle = screen.getByText('admin-pat').closest('button');
+    fireEvent.click(toggle);
+    expect(await screen.findByText('2')).toBeInTheDocument();
+  });
+
+  test('shows no badge when there are no unseen signups', async () => {
+    renderLayout();
+    const toggle = screen.getByText('admin-pat').closest('button');
+    fireEvent.click(toggle);
+    await screen.findByText('Admin');
+    expect(screen.queryByText('0')).not.toBeInTheDocument();
   });
 
   test('shows a single Admin link, not Upload/New/Logs', () => {

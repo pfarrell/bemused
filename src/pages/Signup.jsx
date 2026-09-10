@@ -1,8 +1,10 @@
-// src/pages/Signup.jsx — admin-only tool for creating accounts for other people.
-// Self-service signup no longer exists: the site requires a login, so this
-// never logs the admin out of their own session.
+// src/pages/Signup.jsx
 import { useState } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { apiService } from '../services/api';
+import { isLanAccess } from '../utils/device';
+import { safeReturnTo } from '../utils/returnTo';
 
 const Signup = () => {
   const [username, setUsername] = useState('');
@@ -10,9 +12,14 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
-  const [createdUsername, setCreatedUsername] = useState(null);
 
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signup, loading } = useAuthStore();
+
+  // Hoisted to component scope (not just handleSubmit) so the "Continue with
+  // Google" link can forward the same validated value.
+  const returnTo = safeReturnTo(searchParams.get('return_to'));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,11 +43,11 @@ const Signup = () => {
     try {
       const result = await signup(username, password, email || null);
       if (result.success) {
-        setCreatedUsername(result.user.username);
-        setUsername('');
-        setPassword('');
-        setConfirmPassword('');
-        setEmail('');
+        if (returnTo) {
+          window.location.href = returnTo;
+        } else {
+          navigate('/');
+        }
       } else {
         setError(result.error || 'Signup failed');
       }
@@ -73,16 +80,10 @@ const Signup = () => {
     <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
       <div style={{ width: '100%', maxWidth: '400px' }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <p style={{ color: 'var(--color-text-faint)', marginTop: '0.5rem' }}>Create an account for someone else</p>
+          <p style={{ color: 'var(--color-text-faint)', marginTop: '0.5rem' }}>Create your account</p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {createdUsername && (
-            <div style={{ backgroundColor: '#14532d', border: '1px solid #166534', borderRadius: '6px', padding: '0.75rem 1rem', color: '#bbf7d0', fontSize: '0.875rem' }}>
-              Account created for "{createdUsername}".
-            </div>
-          )}
-
           {error && (
             <div style={{ backgroundColor: '#7f1d1d', border: '1px solid #991b1b', borderRadius: '6px', padding: '0.75rem 1rem', color: '#fca5a5', fontSize: '0.875rem' }}>
               {error}
@@ -153,9 +154,32 @@ const Signup = () => {
             disabled={loading}
             style={{ marginTop: '0.5rem', padding: '0.75rem', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '1rem', fontWeight: '500', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}
           >
-            {loading ? 'Creating account...' : 'Create account'}
+            {loading ? 'Creating account...' : 'Sign up'}
           </button>
         </form>
+
+        {!isLanAccess() && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '1rem 0' }}>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border-strong)' }} />
+              <span style={{ color: 'var(--color-text-faint)', fontSize: '0.75rem' }}>or</span>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border-strong)' }} />
+            </div>
+            <a
+              href={apiService.getGoogleStartUrl(returnTo)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', backgroundColor: 'var(--color-bg-surface)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border-strong)', borderRadius: '6px', fontSize: '1rem', fontWeight: '500', textDecoration: 'none' }}
+            >
+              Continue with Google
+            </a>
+          </>
+        )}
+
+        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+          <p style={{ color: 'var(--color-text-faint)', fontSize: '0.875rem' }}>
+            Already have an account?{' '}
+            <Link to="/login" style={{ color: '#3b82f6', textDecoration: 'none' }}>Sign in</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,15 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import Admin from './Admin';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useAuthStore } from '../stores/authStore';
+import { apiService } from '../services/api';
+
+vi.mock('../services/api', () => ({
+  apiService: {
+    getSignupUnseenCount: vi.fn(),
+  },
+}));
 
 const renderAdmin = () =>
   render(
@@ -13,6 +20,7 @@ const renderAdmin = () =>
         <Route path="/admin/new" element={<div>New page</div>} />
         <Route path="/admin/logs" element={<div>Logs page</div>} />
         <Route path="/admin/errors" element={<div>Errors page</div>} />
+        <Route path="/admin/signups" element={<div>Signups page</div>} />
       </Routes>
     </MemoryRouter>
   );
@@ -37,12 +45,36 @@ const renderProtectedAdmin = (authOverrides = {}) => {
 };
 
 describe('Admin', () => {
-  test('renders links to Upload, New, Logs, and Errors', () => {
+  beforeEach(() => {
+    apiService.getSignupUnseenCount.mockResolvedValue({ data: { count: 0 } });
+  });
+
+  test('renders links to Upload, New, Logs, Errors, and Signups', () => {
     renderAdmin();
     expect(screen.getByText('Upload')).toBeInTheDocument();
     expect(screen.getByText('New')).toBeInTheDocument();
     expect(screen.getByText('Logs')).toBeInTheDocument();
     expect(screen.getByText('Errors')).toBeInTheDocument();
+    expect(screen.getByText('Signups')).toBeInTheDocument();
+  });
+
+  test('clicking Signups navigates to /admin/signups', () => {
+    renderAdmin();
+    fireEvent.click(screen.getByText('Signups'));
+    expect(screen.getByText('Signups page')).toBeInTheDocument();
+  });
+
+  test('shows the unseen signup count as a badge on the Signups card', async () => {
+    apiService.getSignupUnseenCount.mockResolvedValue({ data: { count: 3 } });
+    renderAdmin();
+    expect(await screen.findByText('3')).toBeInTheDocument();
+  });
+
+  test('shows no badge when there are no unseen signups', async () => {
+    apiService.getSignupUnseenCount.mockResolvedValue({ data: { count: 0 } });
+    renderAdmin();
+    await waitFor(() => expect(apiService.getSignupUnseenCount).toHaveBeenCalled());
+    expect(screen.queryByText('0')).not.toBeInTheDocument();
   });
 
   test('clicking Upload navigates to /admin/upload', () => {

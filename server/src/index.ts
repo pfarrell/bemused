@@ -19,6 +19,7 @@ import admin from './routes/admin.js'
 import upload from './routes/upload.js'
 import auth from './routes/auth.js'
 import errors from './routes/errors.js'
+import signups from './routes/signups.js'
 import { errorLogService } from './services/errorLogService.js'
 import { authMiddleware, requireAdmin, requireAuth } from './middleware/auth.js'
 
@@ -112,6 +113,7 @@ adminApp.use('*', requireAdmin)
 adminApp.route('/', admin)
 adminApp.route('/upload', upload)
 adminApp.route('/errors', errors)
+adminApp.route('/signups', signups)
 app.route('/admin', adminApp)
 
 const port = parseInt(process.env.PORT ?? '3939')

@@ -30,6 +30,7 @@ import AdminUpload from './pages/AdminUpload';
 import AdminPlaylist from './pages/AdminPlaylist';
 import AdminLogs from './pages/AdminLogs';
 import AdminErrors from './pages/AdminErrors';
+import AdminSignups from './pages/AdminSignups';
 import AdminNew from './pages/AdminNew';
 import TagPage from './pages/TagPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -204,17 +205,13 @@ function App() {
           <Route path="/*" element={
             <Layout>
               <Routes>
-                {/* The only route reachable without a session — every other
-                    route below is nested under the ProtectedRoute wrapper. */}
+                {/* /login and /signup are reachable without a session — every
+                    other route below is nested under the ProtectedRoute wrapper. */}
                 <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
                 <Route path="/*" element={
                   <ProtectedRoute>
                     <Routes>
-                      <Route path="/signup" element={
-                        <ProtectedRoute requireAdmin>
-                          <Signup />
-                        </ProtectedRoute>
-                      } />
                       <Route path="/" element={<Home />} />
                       <Route path="/search" element={<Search />} />
                       <Route path="/artist/:id" element={<Artist />} />
@@ -261,6 +258,11 @@ function App() {
                       <Route path="/admin/errors" element={
                         <ProtectedRoute requireAdmin>
                           <AdminErrors />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/signups" element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminSignups />
                         </ProtectedRoute>
                       } />
                       <Route path="/admin/new" element={

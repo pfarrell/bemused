@@ -18,15 +18,24 @@ export const useAuthStore = create((set) => ({
     });
   },
 
-  // Admin-only: creates an account for someone else. Deliberately does not
-  // touch auth state — the caller stays logged in as themselves.
+  // Public self-service signup — logs the new user in, mirroring login().
   signup: async (username, password, email = null) => {
     set({ loading: true });
     try {
       const response = await apiService.signup(username, password, email);
       const { user } = response.data;
 
-      set({ loading: false });
+      if (user.default_tag) {
+        useTagFilterStore.getState().setTag(user.default_tag);
+      }
+      useFavoritesStore.getState().load();
+
+      set({
+        user,
+        isAuthenticated: true,
+        isAdmin: user.admin || false,
+        loading: false
+      });
 
       return { success: true, user };
     } catch (error) {

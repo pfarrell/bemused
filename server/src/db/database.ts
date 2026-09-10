@@ -305,6 +305,15 @@ interface ErrorLogTable {
   created_at: ColumnType<Date, never, never>
 }
 
+interface SignupLogTable {
+  id: Generated<number>
+  username: string
+  email: string | null
+  method: string
+  created_at: ColumnType<Date, never, never>
+  seen_at: ColumnType<Date, string | Date | null, string | Date | null> | null
+}
+
 export interface Database {
   artists: ArtistTable
   albums: AlbumTable
@@ -334,6 +343,7 @@ export interface Database {
   notes: NoteTable
   oauth_identities: OAuthIdentityTable
   error_log: ErrorLogTable
+  signup_log: SignupLogTable
 }
 
 // ---- DB instance ----

@@ -1,5 +1,7 @@
 // src/pages/Admin.jsx
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiService } from '../services/api';
 
 const cardStyle = {
   backgroundColor: 'var(--color-bg-surface)',
@@ -7,6 +9,7 @@ const cardStyle = {
   borderRadius: '6px',
   padding: '1.25rem',
   marginBottom: '1.5rem',
+  position: 'relative',
 };
 
 const buttonStyle = {
@@ -21,8 +24,32 @@ const buttonStyle = {
   cursor: 'pointer',
 };
 
+const badgeStyle = {
+  position: 'absolute',
+  top: '-0.5rem',
+  right: '-0.5rem',
+  backgroundColor: '#dc2626',
+  color: 'white',
+  borderRadius: '9999px',
+  minWidth: '1.5rem',
+  height: '1.5rem',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '0.75rem',
+  fontWeight: '600',
+  padding: '0 0.375rem',
+};
+
 const Admin = () => {
   const navigate = useNavigate();
+  const [unseenSignups, setUnseenSignups] = useState(0);
+
+  useEffect(() => {
+    apiService.getSignupUnseenCount()
+      .then((response) => setUnseenSignups(response.data.count))
+      .catch((err) => console.error('Failed to load signup count:', err));
+  }, []);
 
   return (
     <div style={{ maxWidth: '480px', margin: '0 auto', padding: '2rem 1rem' }}>
@@ -41,7 +68,8 @@ const Admin = () => {
         <button onClick={() => navigate('/admin/errors')} style={buttonStyle}>Errors</button>
       </div>
       <div style={cardStyle}>
-        <button onClick={() => navigate('/signup')} style={buttonStyle}>Create User</button>
+        {unseenSignups > 0 && <span style={badgeStyle}>{unseenSignups}</span>}
+        <button onClick={() => navigate('/admin/signups')} style={buttonStyle}>Signups</button>
       </div>
     </div>
   );

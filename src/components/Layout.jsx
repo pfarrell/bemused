@@ -1,6 +1,7 @@
 // src/components/Layout.jsx
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { apiService } from '../services/api';
 import { useAuthStore } from '../stores/authStore';
 import { useTagFilterStore } from '../stores/tagFilterStore';
 import { useHomeFeedStore } from '../stores/homeFeedStore';
@@ -18,6 +19,7 @@ const Layout = ({ children }) => {
   const { user, isAuthenticated, isAdmin } = useAuthStore();
   const { activeTag, clearTag } = useTagFilterStore();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [unseenSignups, setUnseenSignups] = useState(0);
   const dropdownRef = useRef(null);
   const mainContentRef = useRef(null);
   const [pullDistance, setPullDistance] = useState(0);
@@ -25,6 +27,15 @@ const Layout = ({ children }) => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
   const pullStartY = useRef(0);
+
+  // Fetch the unseen-signup badge count each time an admin opens the menu.
+  useEffect(() => {
+    if (showDropdown && isAdmin) {
+      apiService.getSignupUnseenCount()
+        .then((response) => setUnseenSignups(response.data.count))
+        .catch((err) => console.error('Failed to load signup count:', err));
+    }
+  }, [showDropdown, isAdmin]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -309,12 +320,32 @@ const Layout = ({ children }) => {
                             border: 'none',
                             color: 'inherit',
                             cursor: 'pointer',
-                            fontSize: '0.875rem'
+                            fontSize: '0.875rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
                           }}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = '#3a4853'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3a4853'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
                           Admin
+                          {unseenSignups > 0 && (
+                            <span style={{
+                              backgroundColor: '#dc2626',
+                              color: 'white',
+                              borderRadius: '9999px',
+                              minWidth: '1.25rem',
+                              height: '1.25rem',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              padding: '0 0.35rem'
+                            }}>
+                              {unseenSignups}
+                            </span>
+                          )}
                         </button>
                       )}
                     </div>

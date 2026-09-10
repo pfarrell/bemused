@@ -10,40 +10,70 @@ vi.mock('../stores/authStore', () => ({
 
 import { useAuthStore } from '../stores/authStore';
 
-const renderSignup = () =>
+const renderSignup = (initialEntries = ['/signup']) =>
   render(
-    <MemoryRouter initialEntries={['/signup']}>
+    <MemoryRouter initialEntries={initialEntries}>
       <Signup />
     </MemoryRouter>
   );
 
-const fillAndSubmit = async () => {
-  await userEvent.type(screen.getByLabelText('Username'), 'patuser');
-  await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
-  await userEvent.type(screen.getByLabelText('Confirm Password'), 'hunter22');
-  await userEvent.click(screen.getByRole('button', { name: /create account/i }));
-};
-
 describe('Signup', () => {
+  const originalLocation = window.location;
+
   beforeEach(() => {
     useAuthStore.mockReturnValue({ signup: vi.fn(), loading: false });
   });
 
-  test('does not render a Continue with Google link — this is an admin tool, not self-serve signup', () => {
-    renderSignup();
-    expect(screen.queryByText('Continue with Google')).not.toBeInTheDocument();
+  afterEach(() => {
+    window.location = originalLocation;
   });
 
-  test('shows a confirmation with the created username and clears the form, without navigating away', async () => {
-    const signup = vi.fn().mockResolvedValue({ success: true, user: { username: 'patuser' } });
-    useAuthStore.mockReturnValue({ signup, loading: false });
-
+  test('shows a Continue with Google link pointing at the OAuth start endpoint', () => {
     renderSignup();
-    await fillAndSubmit();
+    const link = screen.getByText('Continue with Google');
+    expect(link).toHaveAttribute('href', '/api/auth/google/start');
+  });
 
-    expect(await screen.findByText('Account created for "patuser".')).toBeInTheDocument();
-    expect(screen.getByLabelText('Username')).toHaveValue('');
-    expect(signup).toHaveBeenCalledWith('patuser', 'hunter22', null);
+  test('forwards a safe return_to onto the Google link', () => {
+    renderSignup(['/signup?return_to=%2Fovertone%2Fentity%2F123']);
+    const link = screen.getByText('Continue with Google');
+    expect(link).toHaveAttribute('href', '/api/auth/google/start?return_to=%2Fovertone%2Fentity%2F123');
+  });
+
+  test('does not forward an unsafe return_to onto the Google link', () => {
+    renderSignup(['/signup?return_to=%2F%2Fevil.example.com']);
+    const link = screen.getByText('Continue with Google');
+    expect(link).toHaveAttribute('href', '/api/auth/google/start');
+  });
+
+  test('navigates to return_to on successful signup when it is a safe relative path', async () => {
+    const signup = vi.fn().mockResolvedValue({ success: true });
+    useAuthStore.mockReturnValue({ signup, loading: false });
+    delete window.location;
+    window.location = { href: '' };
+
+    renderSignup(['/signup?return_to=%2Fovertone%2Fentity%2F123']);
+    await userEvent.type(screen.getByLabelText('Username'), 'patuser');
+    await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+    await userEvent.type(screen.getByLabelText('Confirm Password'), 'hunter22');
+    await userEvent.click(screen.getByRole('button', { name: /sign up/i }));
+
+    expect(window.location.href).toBe('/overtone/entity/123');
+  });
+
+  test('ignores an unsafe return_to and falls back to normal navigation', async () => {
+    const signup = vi.fn().mockResolvedValue({ success: true });
+    useAuthStore.mockReturnValue({ signup, loading: false });
+    delete window.location;
+    window.location = { href: '' };
+
+    renderSignup(['/signup?return_to=%2F%2Fevil.example.com']);
+    await userEvent.type(screen.getByLabelText('Username'), 'patuser');
+    await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+    await userEvent.type(screen.getByLabelText('Confirm Password'), 'hunter22');
+    await userEvent.click(screen.getByRole('button', { name: /sign up/i }));
+
+    expect(window.location.href).toBe('');
   });
 
   test('shows the error returned by the store on failure', async () => {
@@ -51,7 +81,10 @@ describe('Signup', () => {
     useAuthStore.mockReturnValue({ signup, loading: false });
 
     renderSignup();
-    await fillAndSubmit();
+    await userEvent.type(screen.getByLabelText('Username'), 'patuser');
+    await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+    await userEvent.type(screen.getByLabelText('Confirm Password'), 'hunter22');
+    await userEvent.click(screen.getByRole('button', { name: /sign up/i }));
 
     expect(await screen.findByText('Username already taken')).toBeInTheDocument();
   });

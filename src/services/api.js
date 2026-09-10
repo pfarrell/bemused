@@ -124,6 +124,9 @@ export const apiService = {
     api.get(`/admin/errors?page=${page}&limit=${limit}${source ? `&source=${encodeURIComponent(source)}` : ''}`),
   dismissError: (id) => api.delete(`/admin/errors/${id}`),
   clearErrors: () => api.delete('/admin/errors'),
+  getSignups: (page = 1, limit = 25) => api.get(`/admin/signups?page=${page}&limit=${limit}`),
+  getSignupUnseenCount: () => api.get('/admin/signups/unseen-count'),
+  markSignupsSeen: () => api.post('/admin/signups/seen'),
 
   // Upload
   uploadTracks: (formData) => api.post('/admin/upload', formData, {
