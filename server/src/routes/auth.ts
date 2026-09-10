@@ -2,10 +2,12 @@ import { Hono } from 'hono'
 import type { Context } from 'hono'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie'
 import type { Variables } from '../types.js'
 import { authService } from '../services/authService.js'
 import { signupLogService } from '../services/signupLogService.js'
+import { sendPasswordResetEmail } from '../services/emailService.js'
 import { isLanHost } from '../db/streamUrl.js'
 import { recallAuthUrl, signRecallState, verifyRecallState, encryptRecallToken } from '../services/recallService.js'
 import { notesService } from '../services/notesService.js'
@@ -516,6 +518,89 @@ auth.put('/change-password', async (c) => {
   const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS)
   await authService.setPassword(user.id, passwordHash)
   return c.json({ ok: true })
+})
+
+const RESET_TOKEN_TTL_MS = 3 * 24 * 60 * 60 * 1000
+const RESET_TOKEN_RATE_LIMIT = 3
+const RESET_TOKEN_RATE_WINDOW_MS = 60 * 60 * 1000
+
+function hashResetToken(rawToken: string): string {
+  return crypto.createHash('sha256').update(rawToken).digest('hex')
+}
+
+// POST /auth/forgot-password — public. Always returns the same generic
+// message regardless of whether the username exists, has an email, or is
+// rate-limited — this endpoint must never let a caller distinguish those
+// cases from the response (see spec: docs/superpowers/specs/2026-09-10-forgot-password-flow-design.md).
+auth.post('/forgot-password', async (c) => {
+  const GENERIC_RESPONSE = { message: 'If an account with that username has an email on file, a reset link has been sent.' }
+
+  try {
+    const body = await c.req.json()
+    const { username } = body
+    if (!username) return c.json(GENERIC_RESPONSE)
+
+    const user = await authService.findUserForLogin(username)
+    if (!user || !user.email) return c.json(GENERIC_RESPONSE)
+
+    const since = new Date(Date.now() - RESET_TOKEN_RATE_WINDOW_MS)
+    const recentCount = await authService.countRecentPasswordResetTokens(user.id, since)
+    if (recentCount >= RESET_TOKEN_RATE_LIMIT) return c.json(GENERIC_RESPONSE)
+
+    const rawToken = crypto.randomBytes(32).toString('base64url')
+    const tokenHash = hashResetToken(rawToken)
+    const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS)
+
+    await authService.deleteUnusedPasswordResetTokensForUser(user.id)
+    await authService.createPasswordResetToken(user.id, tokenHash, expiresAt)
+
+    const publicUrl = process.env.BEMUSED_PUBLIC_URL || 'http://localhost:5173'
+    const resetUrl = `${publicUrl}/reset-password/${rawToken}`
+    await sendPasswordResetEmail(user.email, resetUrl)
+
+    return c.json(GENERIC_RESPONSE)
+  } catch (error: any) {
+    console.error('Forgot-password error:', error)
+    return c.json(GENERIC_RESPONSE)
+  }
+})
+
+// GET /auth/reset-password/validate?token=... — public. Reveals only
+// whether the token is currently usable, never which account it belongs to.
+auth.get('/reset-password/validate', async (c) => {
+  const token = c.req.query('token')
+  if (!token) return c.json({ valid: false })
+
+  const found = await authService.findValidPasswordResetToken(hashResetToken(token))
+  return c.json({ valid: Boolean(found) })
+})
+
+// POST /auth/reset-password — public. { token, newPassword }
+auth.post('/reset-password', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { token, newPassword } = body
+
+    if (!token || !newPassword) {
+      return c.json({ error: 'Token and new password are required' }, 400)
+    }
+    if (newPassword.length < 6) {
+      return c.json({ error: 'New password must be at least 6 characters' }, 400)
+    }
+
+    const found = await authService.findValidPasswordResetToken(hashResetToken(token))
+    if (!found) {
+      return c.json({ error: 'This reset link is invalid or has expired' }, 400)
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS)
+    await authService.completePasswordReset(found.id, found.user_id, passwordHash)
+
+    return c.json({ ok: true })
+  } catch (error: any) {
+    console.error('Reset-password error:', error)
+    return c.json({ error: 'Failed to reset password' }, 500)
+  }
 })
 
 // DELETE /auth/google/disconnect — unlink Google; blocked if it would lock the user out
