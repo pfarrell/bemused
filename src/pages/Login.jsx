@@ -1,6 +1,6 @@
 // src/pages/Login.jsx
 import { useState } from 'react';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { apiService } from '../services/api';
 import { isLanAccess } from '../utils/device';
@@ -123,6 +123,12 @@ const Login = () => {
               placeholder="Enter your password"
               style={{ width: '100%', padding: '0.625rem 0.75rem', backgroundColor: 'var(--color-bg-surface)', border: '1px solid var(--color-border-strong)', borderRadius: '6px', color: 'var(--color-text-primary)', fontSize: '1rem', boxSizing: 'border-box' }}
             />
+          </div>
+
+          <div style={{ textAlign: 'right' }}>
+            <Link to="/forgot-password" style={{ color: '#3b82f6', fontSize: '0.875rem', textDecoration: 'none' }}>
+              Forgot password?
+            </Link>
           </div>
 
           <button

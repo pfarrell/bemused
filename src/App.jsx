@@ -23,6 +23,8 @@ import Collection from './pages/Collection';
 import AdminCollection from './pages/AdminCollection';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import AdminArtist from './pages/AdminArtist';
 import AdminAlbum from './pages/AdminAlbum';
 import AdminTrack from './pages/AdminTrack';
@@ -209,6 +211,8 @@ function App() {
                     other route below is nested under the ProtectedRoute wrapper. */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
                 <Route path="/*" element={
                   <ProtectedRoute>
                     <Routes>

@@ -42,6 +42,9 @@ export const apiService = {
   disconnectRecall: () => api.delete('/auth/recall/connect'),
   setPassword: (password) => api.put('/auth/set-password', { password }),
   changePassword: (currentPassword, newPassword) => api.put('/auth/change-password', { currentPassword, newPassword }),
+  forgotPassword: (username) => api.post('/auth/forgot-password', { username }),
+  validateResetToken: (token) => api.get(`/auth/reset-password/validate?token=${encodeURIComponent(token)}`),
+  resetPassword: (token, newPassword) => api.post('/auth/reset-password', { token, newPassword }),
 
   // Artists
   getRandomArtists: (size = 60, tag = null) => api.get(`/artists/random?size=${size}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`),
