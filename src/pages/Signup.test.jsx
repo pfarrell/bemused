@@ -10,74 +10,49 @@ vi.mock('../stores/authStore', () => ({
 
 import { useAuthStore } from '../stores/authStore';
 
-const renderSignup = (initialEntries = ['/signup']) =>
+const renderSignup = () =>
   render(
-    <MemoryRouter initialEntries={initialEntries}>
+    <MemoryRouter initialEntries={['/signup']}>
       <Signup />
     </MemoryRouter>
   );
 
-describe('Signup', () => {
-  const originalLocation = window.location;
+const fillAndSubmit = async () => {
+  await userEvent.type(screen.getByLabelText('Username'), 'patuser');
+  await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+  await userEvent.type(screen.getByLabelText('Confirm Password'), 'hunter22');
+  await userEvent.click(screen.getByRole('button', { name: /create account/i }));
+};
 
+describe('Signup', () => {
   beforeEach(() => {
-    // Default mock so tests that don't care about signup/loading (pre-existing
-    // test below) don't have to destructure an undefined return value.
     useAuthStore.mockReturnValue({ signup: vi.fn(), loading: false });
   });
 
-  afterEach(() => {
-    // Some tests below replace window.location with a stub to observe
-    // navigation; restore the real one so later tests aren't left with a
-    // half-fake location object.
-    window.location = originalLocation;
-  });
-
-  test('shows a Continue with Google link pointing at the OAuth start endpoint', () => {
+  test('does not render a Continue with Google link — this is an admin tool, not self-serve signup', () => {
     renderSignup();
-    const link = screen.getByText('Continue with Google');
-    expect(link).toHaveAttribute('href', '/api/auth/google/start');
+    expect(screen.queryByText('Continue with Google')).not.toBeInTheDocument();
   });
 
-  test('forwards a safe return_to onto the Google link', () => {
-    renderSignup(['/signup?return_to=%2Fovertone%2Fentity%2F123']);
-    const link = screen.getByText('Continue with Google');
-    expect(link).toHaveAttribute('href', '/api/auth/google/start?return_to=%2Fovertone%2Fentity%2F123');
-  });
-
-  test('does not forward an unsafe return_to onto the Google link', () => {
-    renderSignup(['/signup?return_to=%2F%2Fevil.example.com']);
-    const link = screen.getByText('Continue with Google');
-    expect(link).toHaveAttribute('href', '/api/auth/google/start');
-  });
-
-  test('navigates to return_to on successful signup when it is a safe relative path', async () => {
-    const signup = vi.fn().mockResolvedValue({ success: true });
+  test('shows a confirmation with the created username and clears the form, without navigating away', async () => {
+    const signup = vi.fn().mockResolvedValue({ success: true, user: { username: 'patuser' } });
     useAuthStore.mockReturnValue({ signup, loading: false });
-    delete window.location;
-    window.location = { href: '' };
 
-    renderSignup(['/signup?return_to=%2Fovertone%2Fentity%2F123']);
-    await userEvent.type(screen.getByLabelText('Username'), 'patuser');
-    await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
-    await userEvent.type(screen.getByLabelText('Confirm Password'), 'hunter22');
-    await userEvent.click(screen.getByRole('button', { name: /sign up/i }));
+    renderSignup();
+    await fillAndSubmit();
 
-    expect(window.location.href).toBe('/overtone/entity/123');
+    expect(await screen.findByText('Account created for "patuser".')).toBeInTheDocument();
+    expect(screen.getByLabelText('Username')).toHaveValue('');
+    expect(signup).toHaveBeenCalledWith('patuser', 'hunter22', null);
   });
 
-  test('ignores an unsafe return_to and falls back to normal navigation', async () => {
-    const signup = vi.fn().mockResolvedValue({ success: true });
+  test('shows the error returned by the store on failure', async () => {
+    const signup = vi.fn().mockResolvedValue({ success: false, error: 'Username already taken' });
     useAuthStore.mockReturnValue({ signup, loading: false });
-    delete window.location;
-    window.location = { href: '' };
 
-    renderSignup(['/signup?return_to=%2F%2Fevil.example.com']);
-    await userEvent.type(screen.getByLabelText('Username'), 'patuser');
-    await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
-    await userEvent.type(screen.getByLabelText('Confirm Password'), 'hunter22');
-    await userEvent.click(screen.getByRole('button', { name: /sign up/i }));
+    renderSignup();
+    await fillAndSubmit();
 
-    expect(window.location.href).toBe('');
+    expect(await screen.findByText('Username already taken')).toBeInTheDocument();
   });
 });

@@ -40,6 +40,9 @@ const Admin = () => {
       <div style={cardStyle}>
         <button onClick={() => navigate('/admin/errors')} style={buttonStyle}>Errors</button>
       </div>
+      <div style={cardStyle}>
+        <button onClick={() => navigate('/signup')} style={buttonStyle}>Create User</button>
+      </div>
     </div>
   );
 };

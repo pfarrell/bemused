@@ -20,7 +20,7 @@ import upload from './routes/upload.js'
 import auth from './routes/auth.js'
 import errors from './routes/errors.js'
 import { errorLogService } from './services/errorLogService.js'
-import { authMiddleware, requireAdmin } from './middleware/auth.js'
+import { authMiddleware, requireAdmin, requireAuth } from './middleware/auth.js'
 
 const app = new Hono<{ Variables: Variables }>()
 
@@ -63,38 +63,48 @@ app.onError((err, c) => {
 // Health check
 app.get('/health', (c) => c.json({ ok: true }))
 
-// Auth routes (public)
+// Auth routes (public — /login, /signup(admin-gated), /me, /google/* need to be
+// reachable without a session; the rest of this router self-checks c.get('user'))
 app.route('/auth', auth)
 
-// Public routes
-app.route('/artists', artists)
-app.route('/artist', artists)   // singular alias used by frontend (/artist/:id)
-app.route('/albums', albums)
-app.route('/album', albums)     // singular alias
-app.route('/track', tracks)
-app.route('/search', search)
-app.route('/stream', streams)
-app.route('/download', downloads)
-app.route('/log', logs)
-app.route('/playlist', playlists)
-app.route('/playlists', playlists)
-app.route('/collection', collections)
-app.route('/collections', collections)
-app.route('/favorites', favorites)
-app.route('/tags', tags)
+// Public: unfurl-only HTML for social link previews, no protected data.
 app.route('/share', share)
-app.route('/lookup', lookup)
-app.route('/top', playlists)
-app.route('/newborns', playlists)
-app.route('/surprise', playlists)
+
+// Everything else requires a logged-in session — the whole site is private
+// except the login page and the OG-preview route above.
+const protectedApp = new Hono()
+protectedApp.use('*', requireAuth)
+
+protectedApp.route('/artists', artists)
+protectedApp.route('/artist', artists)   // singular alias used by frontend (/artist/:id)
+protectedApp.route('/albums', albums)
+protectedApp.route('/album', albums)     // singular alias
+protectedApp.route('/track', tracks)
+protectedApp.route('/search', search)
+protectedApp.route('/stream', streams)
+protectedApp.route('/download', downloads)
+protectedApp.route('/log', logs)
+protectedApp.route('/playlist', playlists)
+protectedApp.route('/playlists', playlists)
+protectedApp.route('/collection', collections)
+protectedApp.route('/collections', collections)
+protectedApp.route('/favorites', favorites)
+protectedApp.route('/tags', tags)
+protectedApp.route('/lookup', lookup)
+protectedApp.route('/top', playlists)
+protectedApp.route('/newborns', playlists)
+protectedApp.route('/surprise', playlists)
 
 // Playlist/collection owners (not just site admins) can reach some routes under
 // the /admin/playlist and /admin/collection URL space (e.g. POST .../:id/image,
 // which AdminPlaylist.jsx/AdminCollection.jsx call to download a cover image).
-// These routers do their own requireAuth + canModify(owner-or-admin) checks per
-// route, so they're mounted here rather than under adminApp's blanket requireAdmin.
-app.route('/admin/playlist', playlists)
-app.route('/admin/collection', collections)
+// These routers do their own canModify(owner-or-admin) checks per route beyond
+// the login requirement, so they're mounted here rather than under adminApp's
+// blanket requireAdmin.
+protectedApp.route('/admin/playlist', playlists)
+protectedApp.route('/admin/collection', collections)
+
+app.route('/', protectedApp)
 
 // Admin routes (protected)
 const adminApp = new Hono()

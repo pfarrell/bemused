@@ -1,6 +1,6 @@
 // src/pages/Login.jsx
 import { useState } from 'react';
-import { useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { apiService } from '../services/api';
 import { isLanAccess } from '../utils/device';
@@ -12,6 +12,7 @@ const OAUTH_ERROR_MESSAGES = {
   google_failed: 'Something went wrong connecting to Google. Please try again.',
   google_email_unverified: "Your Google account's email isn't verified. Please verify it with Google and try again.",
   google_email_in_use: 'An account with this email already exists — sign in with your password, then connect Google from your Account page.',
+  google_no_account: 'No account found for this Google login. Ask an admin to create you an account, then connect Google from your Account page.',
   access_denied: 'Google sign-in was cancelled.',
 };
 
@@ -147,12 +148,6 @@ const Login = () => {
             </a>
           </>
         )}
-        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-          <p style={{ color: 'var(--color-text-faint)', fontSize: '0.875rem' }}>
-            Don't have an account?{' '}
-            <Link to="/signup" style={{ color: '#3b82f6', textDecoration: 'none' }}>Sign up</Link>
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -204,71 +204,71 @@ function App() {
           <Route path="/*" element={
             <Layout>
               <Routes>
+                {/* The only route reachable without a session — every other
+                    route below is nested under the ProtectedRoute wrapper. */}
                 <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/" element={<Home />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/artist/:id" element={<Artist />} />
-                <Route path="/album/:id" element={<Album />} />
-                <Route path="/library" element={<Library />} />
-                <Route path="/account" element={
+                <Route path="/*" element={
                   <ProtectedRoute>
-                    <Account />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin" element={
-                  <ProtectedRoute requireAdmin>
-                    <Admin />
-                  </ProtectedRoute>
-                } />
-                <Route path="/playlists" element={<Playlists />} />
-                <Route path="/playlist/:id" element={<Playlist />} />
-                <Route path="/collections" element={<Collections />} />
-                <Route path="/collection/:id" element={<Collection />} />
-                <Route path="/tags/:name" element={<TagPage />} />
-                <Route path="/admin/collection/:id" element={
-                  <ProtectedRoute>
-                    <AdminCollection />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/artist/:id" element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminArtist />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/album/:id" element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminAlbum />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/track/:id" element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminTrack />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/upload" element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminUpload />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/playlist/:id" element={
-                  <ProtectedRoute>
-                    <AdminPlaylist />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/logs" element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminLogs />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/errors" element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminErrors />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/new" element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminNew />
+                    <Routes>
+                      <Route path="/signup" element={
+                        <ProtectedRoute requireAdmin>
+                          <Signup />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/" element={<Home />} />
+                      <Route path="/search" element={<Search />} />
+                      <Route path="/artist/:id" element={<Artist />} />
+                      <Route path="/album/:id" element={<Album />} />
+                      <Route path="/library" element={<Library />} />
+                      <Route path="/account" element={<Account />} />
+                      <Route path="/admin" element={
+                        <ProtectedRoute requireAdmin>
+                          <Admin />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/playlists" element={<Playlists />} />
+                      <Route path="/playlist/:id" element={<Playlist />} />
+                      <Route path="/collections" element={<Collections />} />
+                      <Route path="/collection/:id" element={<Collection />} />
+                      <Route path="/tags/:name" element={<TagPage />} />
+                      <Route path="/admin/collection/:id" element={<AdminCollection />} />
+                      <Route path="/admin/artist/:id" element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminArtist />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/album/:id" element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminAlbum />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/track/:id" element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminTrack />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/upload" element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminUpload />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/playlist/:id" element={<AdminPlaylist />} />
+                      <Route path="/admin/logs" element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminLogs />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/errors" element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminErrors />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/new" element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminNew />
+                        </ProtectedRoute>
+                      } />
+                    </Routes>
                   </ProtectedRoute>
                 } />
               </Routes>

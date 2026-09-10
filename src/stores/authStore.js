@@ -18,20 +18,17 @@ export const useAuthStore = create((set) => ({
     });
   },
 
+  // Admin-only: creates an account for someone else. Deliberately does not
+  // touch auth state — the caller stays logged in as themselves.
   signup: async (username, password, email = null) => {
     set({ loading: true });
     try {
       const response = await apiService.signup(username, password, email);
       const { user } = response.data;
 
-      set({
-        user,
-        isAuthenticated: true,
-        isAdmin: user.admin || false,
-        loading: false
-      });
+      set({ loading: false });
 
-      return { success: true };
+      return { success: true, user };
     } catch (error) {
       set({ loading: false });
       return {
