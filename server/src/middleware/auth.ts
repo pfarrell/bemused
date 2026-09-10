@@ -41,9 +41,14 @@ export async function authMiddleware(c: AppContext, next: Next) {
   // belongs to a session that predates the reset and must stop working —
   // this is what makes "invalidate other sessions" happen without a
   // server-side token blocklist.
+  // Both sides are floored to whole seconds before comparing: iat is
+  // second-precision per the JWT spec, but password_changed_at is a
+  // millisecond-precision DB timestamp, so comparing them raw would falsely
+  // reject a token issued the very same second as the reset (e.g. an
+  // auto-login right after a reset, if one is ever added).
   const passwordChangedAfterToken =
     user?.password_changed_at != null &&
-    new Date(user.password_changed_at).getTime() > decoded.iat * 1000
+    Math.floor(new Date(user.password_changed_at).getTime() / 1000) > decoded.iat
 
   if (user && !passwordChangedAfterToken) {
     c.set('user', user)
