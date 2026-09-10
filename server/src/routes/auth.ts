@@ -556,7 +556,13 @@ auth.post('/forgot-password', async (c) => {
 
     const publicUrl = process.env.BEMUSED_PUBLIC_URL || 'http://localhost:5173'
     const resetUrl = `${publicUrl}/reset-password/${rawToken}`
-    await sendPasswordResetEmail(user.email, resetUrl)
+    // Fire-and-forget: sendPasswordResetEmail never throws (failures are
+    // logged internally via errorLogService), and awaiting a real Resend API
+    // call here would make responses for existing usernames measurably
+    // slower than for unknown ones — a timing side-channel that would defeat
+    // this endpoint's "never reveal account existence" guarantee even though
+    // the response body stays identical.
+    void sendPasswordResetEmail(user.email, resetUrl)
 
     return c.json(GENERIC_RESPONSE)
   } catch (error: any) {
