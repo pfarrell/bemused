@@ -106,6 +106,71 @@ export function createAuthService(db: Kysely<Database>) {
         .returningAll()
         .executeTakeFirst()
     },
+
+    async createPasswordResetToken(userId: number, tokenHash: string, expiresAt: Date) {
+      await db
+        .insertInto('password_reset_tokens')
+        .values({
+          user_id: userId,
+          token_hash: tokenHash,
+          expires_at: expiresAt,
+        })
+        .execute()
+    },
+
+    async deleteUnusedPasswordResetTokensForUser(userId: number) {
+      await db
+        .deleteFrom('password_reset_tokens')
+        .where('user_id', '=', userId)
+        .where('used_at', 'is', null)
+        .execute()
+    },
+
+    async countRecentPasswordResetTokens(userId: number, since: Date): Promise<number> {
+      const result = await db
+        .selectFrom('password_reset_tokens')
+        .select(db.fn.count('id').as('count'))
+        .where('user_id', '=', userId)
+        .where('created_at', '>=', since)
+        .executeTakeFirst()
+      return Number(result?.count ?? 0)
+    },
+
+    async findValidPasswordResetToken(tokenHash: string) {
+      return db
+        .selectFrom('password_reset_tokens')
+        .select(['id', 'user_id'])
+        .where('token_hash', '=', tokenHash)
+        .where('used_at', 'is', null)
+        .where('expires_at', '>', new Date())
+        .executeTakeFirst()
+    },
+
+    // Runs as one transaction: a partial failure here (e.g. crash between
+    // marking the token used and updating the password) must not leave the
+    // account in a state where the token is burned but the password
+    // unchanged, or vice versa.
+    async completePasswordReset(tokenId: number, userId: number, passwordHash: string) {
+      await db.transaction().execute(async (trx) => {
+        await trx
+          .updateTable('users')
+          .set({ password: passwordHash, password_changed_at: new Date(), updated_at: new Date().toISOString() })
+          .where('id', '=', userId)
+          .execute()
+
+        await trx
+          .updateTable('password_reset_tokens')
+          .set({ used_at: new Date() })
+          .where('id', '=', tokenId)
+          .execute()
+
+        await trx
+          .deleteFrom('password_reset_tokens')
+          .where('user_id', '=', userId)
+          .where('id', '!=', tokenId)
+          .execute()
+      })
+    },
   }
 }
 
