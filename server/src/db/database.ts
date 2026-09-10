@@ -141,8 +141,18 @@ interface UserTable {
   password: string | null
   admin: boolean
   default_tag: string | null
+  password_changed_at: ColumnType<Date, never, Date | string> | null
   created_at: ColumnType<Date, never, never>
   updated_at: ColumnType<Date, never, string | Date>
+}
+
+interface PasswordResetTokenTable {
+  id: Generated<number>
+  user_id: number
+  token_hash: string
+  expires_at: ColumnType<Date, Date | string, never>
+  used_at: ColumnType<Date, never, Date | string> | null
+  created_at: ColumnType<Date, never, never>
 }
 
 interface UserPlaylistTable {
@@ -325,6 +335,7 @@ export interface Database {
   favorites: FavoriteTable
   upload_queue: UploadQueueTable
   users: UserTable
+  password_reset_tokens: PasswordResetTokenTable
   user_playlists: UserPlaylistTable
   artist_albums: ArtistAlbumTable
   track_artists: TrackArtistTable
