@@ -551,7 +551,7 @@ auth.post('/forgot-password', async (c) => {
     const tokenHash = hashResetToken(rawToken)
     const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS)
 
-    await authService.deleteUnusedPasswordResetTokensForUser(user.id)
+    await authService.invalidateUnusedPasswordResetTokensForUser(user.id)
     await authService.createPasswordResetToken(user.id, tokenHash, expiresAt)
 
     const publicUrl = process.env.BEMUSED_PUBLIC_URL || 'http://localhost:5173'

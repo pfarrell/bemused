@@ -118,9 +118,10 @@ export function createAuthService(db: Kysely<Database>) {
         .execute()
     },
 
-    async deleteUnusedPasswordResetTokensForUser(userId: number) {
+    async invalidateUnusedPasswordResetTokensForUser(userId: number) {
       await db
-        .deleteFrom('password_reset_tokens')
+        .updateTable('password_reset_tokens')
+        .set({ used_at: new Date() })
         .where('user_id', '=', userId)
         .where('used_at', 'is', null)
         .execute()
