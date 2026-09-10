@@ -6,7 +6,7 @@ export function createAuthService(db: Kysely<Database>) {
     async findUserById(id: number) {
       return db
         .selectFrom('users')
-        .select(['id', 'username', 'email', 'admin', 'default_tag'])
+        .select(['id', 'username', 'email', 'admin', 'default_tag', 'password_changed_at'])
         .where('id', '=', id)
         .executeTakeFirst()
     },

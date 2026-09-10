@@ -10,6 +10,7 @@ interface JWTPayload {
   id: number
   username: string
   admin: boolean
+  iat: number
 }
 
 type AppContext = Context<{ Variables: Variables }>
@@ -35,7 +36,16 @@ export async function authMiddleware(c: AppContext, next: Next) {
   // DB errors propagate rather than silently clearing the user context
   const user = await authService.findUserById(decoded.id)
 
-  if (user) {
+  // A password reset sets password_changed_at; any JWT issued before that
+  // (decoded.iat is seconds since epoch, matching jsonwebtoken's own clock)
+  // belongs to a session that predates the reset and must stop working —
+  // this is what makes "invalidate other sessions" happen without a
+  // server-side token blocklist.
+  const passwordChangedAfterToken =
+    user?.password_changed_at != null &&
+    new Date(user.password_changed_at).getTime() > decoded.iat * 1000
+
+  if (user && !passwordChangedAfterToken) {
     c.set('user', user)
   }
 
