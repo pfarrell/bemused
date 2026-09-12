@@ -210,51 +210,57 @@ const TrackPage = () => {
           document.body
         )}
         <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0 0 0.5rem 0', color: 'var(--color-text-primary)' }}>
-            {track.title}
-          </h1>
-          <div style={{ fontSize: '1.25rem', fontWeight: 'normal', margin: '0 0 0.5rem 0', color: '#3b82f6', lineHeight: 1.6 }}>
-            {track.artist?.name && (
-              <div>
-                by{' '}
-                {track.artist.id ? (
-                  <span style={{ cursor: 'pointer' }} onClick={() => handleEntityClick(`/artist/${track.artist.id}`)}>
-                    {track.artist.name}
-                  </span>
-                ) : track.artist.name}
-              </div>
-            )}
-            {track.album?.title && (
-              <div>
-                from{' '}
-                {track.album.id ? (
-                  <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => handleEntityClick(`/album/${track.album.id}`)}>
-                    {track.album.title}
-                  </span>
-                ) : track.album.title}
-              </div>
-            )}
+          {/* Reuses Album.jsx's title-row classes (title-row/textblock/actions)
+              so this page picks up the same mobile layout for free: title +
+              artist + play button share one left-aligned row instead of the
+              button getting a separate centered row below everything. */}
+          <div className="album-header-title-row">
+            <div className="album-header-textblock">
+              <h1 className="album-header-title" style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0 0 0.5rem 0', color: 'var(--color-text-primary)' }}>
+                {track.title}
+              </h1>
+              {track.artist?.name && (
+                <h2 className="album-header-artist" style={{ fontSize: '1.5rem', fontWeight: 'normal', margin: '0 0 0.5rem 0' }}>
+                  <span style={{ color: 'var(--color-text-primary)' }}>by</span>{' '}
+                  {track.artist.id ? (
+                    <span style={{ cursor: 'pointer', color: '#3b82f6' }} onClick={() => handleEntityClick(`/artist/${track.artist.id}`)}>
+                      {track.artist.name}
+                    </span>
+                  ) : <span style={{ color: '#3b82f6' }}>{track.artist.name}</span>}
+                </h2>
+              )}
+            </div>
+            <div className="album-header-actions" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <PlayButton
+                size={48}
+                active={isPlaying}
+                onClick={handlePlayNow}
+                aria-label={isPlaying ? 'Now playing' : 'Play'}
+              />
+              {isAuthenticated && (
+                <button
+                  onClick={handleShare}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}
+                  aria-label="Share"
+                >
+                  📤
+                </button>
+              )}
+            </div>
           </div>
+          {track.album?.title && (
+            <p style={{ fontSize: '1rem', margin: '0 0 0.5rem 0', textAlign: 'left' }}>
+              <span style={{ color: 'var(--color-text-primary)' }}>from</span>{' '}
+              {track.album.id ? (
+                <span style={{ cursor: 'pointer', textDecoration: 'underline', color: '#3b82f6' }} onClick={() => handleEntityClick(`/album/${track.album.id}`)}>
+                  {track.album.title}
+                </span>
+              ) : <span style={{ color: '#3b82f6' }}>{track.album.title}</span>}
+            </p>
+          )}
           {track.duration ? (
-            <p style={{ color: 'var(--color-text-muted)', margin: '0 0 1rem 0' }}>{formatDuration(track.duration)}</p>
+            <p style={{ color: 'var(--color-text-muted)', margin: '0 0 1rem 0', textAlign: 'left' }}>{formatDuration(track.duration)}</p>
           ) : null}
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <PlayButton
-              size={48}
-              active={isPlaying}
-              onClick={handlePlayNow}
-              aria-label={isPlaying ? 'Now playing' : 'Play'}
-            />
-            {isAuthenticated && (
-              <button
-                onClick={handleShare}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}
-                aria-label="Share"
-              >
-                📤
-              </button>
-            )}
-          </div>
         </div>
       </div>
 

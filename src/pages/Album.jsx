@@ -244,14 +244,15 @@ const Album = () => {
                 {album.title}
               </h1>
 
-              <h2 className="album-header-artist" style={{ fontSize: '1.5rem', fontWeight: 'normal', margin: '0 0 0.5rem 0', color: '#3b82f6' }}>
-                <span style={{ cursor: 'pointer' }} onClick={() => navigate(`/artist/${artist.id}`)}>
+              <h2 className="album-header-artist" style={{ fontSize: '1.5rem', fontWeight: 'normal', margin: '0 0 0.5rem 0' }}>
+                <span style={{ color: 'var(--color-text-primary)' }}>by</span>{' '}
+                <span style={{ cursor: 'pointer', color: '#3b82f6' }} onClick={() => navigate(`/artist/${artist.id}`)}>
                   {artist.name}
                 </span>
                 {collaborators.map((c) => (
                   <span key={c.id}>
                     {', '}
-                    <span style={{ cursor: 'pointer' }} onClick={() => navigate(`/artist/${c.id}`)}>
+                    <span style={{ cursor: 'pointer', color: '#3b82f6' }} onClick={() => navigate(`/artist/${c.id}`)}>
                       {c.name}
                     </span>
                   </span>
