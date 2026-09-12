@@ -15,6 +15,7 @@ const PlaylistDrawer = ({ onSaveQueue }) => {
   const reorderPlaylist = usePlayerStore((s) => s.reorderPlaylist);
   const togglePlayPause = usePlayerStore((s) => s.togglePlayPause);
   const toggleDrawer = usePlayerStore((s) => s.toggleDrawer);
+  const closeDrawer = usePlayerStore((s) => s.closeDrawer);
   const clearPlaylist = usePlayerStore((s) => s.clearPlaylist);
   const recentlyAddedIndices = usePlayerStore((s) => s.recentlyAddedIndices);
   const clearRecentlyAdded = usePlayerStore((s) => s.clearRecentlyAdded);
@@ -52,6 +53,7 @@ const PlaylistDrawer = ({ onSaveQueue }) => {
     if (playlist.length === 0 || window.confirm('Clear the playlist? This will stop playback.')) {
       clearPlaylist();
     }
+    closeDrawer();
   };
 
   if (!drawerOpen) return null;

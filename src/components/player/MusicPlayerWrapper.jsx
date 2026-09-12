@@ -48,6 +48,7 @@ const MusicPlayerWrapper = ({ className = '' }) => {
   const playPrev = usePlayerStore((s) => s.playPrev);
   const cyclePlaybackMode = usePlayerStore((s) => s.cyclePlaybackMode);
   const toggleDrawer = usePlayerStore((s) => s.toggleDrawer);
+  const closeDrawer = usePlayerStore((s) => s.closeDrawer);
   const seek = usePlayerStore((s) => s.seek);
   const clearPlaylist = usePlayerStore((s) => s.clearPlaylist);
 
@@ -70,6 +71,7 @@ const MusicPlayerWrapper = ({ className = '' }) => {
     if (playlist.length === 0 || window.confirm('Clear the playlist? This will stop playback.')) {
       clearPlaylist();
     }
+    closeDrawer();
   };
 
   useEffect(() => {

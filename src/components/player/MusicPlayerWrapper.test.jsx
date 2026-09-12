@@ -174,6 +174,30 @@ test('declining the confirmation leaves the queue untouched', () => {
   window.confirm.mockRestore();
 });
 
+test('confirming Clear Playlist closes the drawer', () => {
+  usePlayerStore.setState({ playlist: [{ id: 1 }], clearPlaylist: vi.fn(), drawerOpen: true });
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  render(<MusicPlayerWrapper />);
+  fireEvent.contextMenu(screen.getByTitle('Toggle Playlist'));
+
+  fireEvent.click(screen.getByText('🗑 Clear Playlist'));
+
+  expect(usePlayerStore.getState().drawerOpen).toBe(false);
+  window.confirm.mockRestore();
+});
+
+test('declining Clear Playlist still closes the drawer', () => {
+  usePlayerStore.setState({ playlist: [{ id: 1 }], clearPlaylist: vi.fn(), drawerOpen: true });
+  vi.spyOn(window, 'confirm').mockReturnValue(false);
+  render(<MusicPlayerWrapper />);
+  fireEvent.contextMenu(screen.getByTitle('Toggle Playlist'));
+
+  fireEvent.click(screen.getByText('🗑 Clear Playlist'));
+
+  expect(usePlayerStore.getState().drawerOpen).toBe(false);
+  window.confirm.mockRestore();
+});
+
 test('clicking Save as Playlist opens the save modal and closes the menu', () => {
   usePlayerStore.setState({ playlist: [{ id: 1 }, { id: 2 }] });
   render(<MusicPlayerWrapper />);
