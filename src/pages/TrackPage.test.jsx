@@ -8,6 +8,8 @@ import { apiService } from '../services/api';
 import { shareLink } from '../utils/shareLink';
 
 vi.mock('../utils/shareLink', () => ({ shareLink: vi.fn() }));
+vi.mock('../components/AddToPlaylistModal', () => ({ default: () => null }));
+vi.mock('../components/TrackNotesModal', () => ({ default: () => null }));
 vi.mock('../services/api', () => ({
   apiService: {
     getTrack: vi.fn(),
@@ -207,5 +209,60 @@ describe('TrackPage — artist/album links', () => {
     const location = await screen.findByTestId('location-display');
     expect(location).toHaveTextContent('/login');
     expect(location.textContent).toContain(encodeURIComponent('/track/1'));
+  });
+});
+
+describe('TrackPage — header long-press menu', () => {
+  const openMenu = async () => {
+    await screen.findByText('Test Track');
+    fireEvent.contextMenu(screen.getByText('Test Track').closest('.media-page-header'));
+  };
+
+  beforeEach(() => {
+    apiService.getTrack.mockResolvedValue({ data: trackData });
+  });
+
+  test('shows Add to Playlist, Notes, Favorite, and Download when logged in', async () => {
+    renderTrackPage();
+    await openMenu();
+
+    expect(screen.getByText('📋 Add to Playlist')).toBeInTheDocument();
+    expect(screen.getByText('📝 Notes')).toBeInTheDocument();
+    expect(screen.getByText('☆ Add to Favorites')).toBeInTheDocument();
+    expect(screen.getByText('⬇ Download')).toBeInTheDocument();
+  });
+
+  test('does not open at all when logged out', async () => {
+    useAuthStore.setState({ isAdmin: false, isAuthenticated: false });
+    renderTrackPage();
+    await openMenu();
+
+    expect(screen.queryByTestId('track-page-header-menu-backdrop')).not.toBeInTheDocument();
+  });
+
+  test('Edit shows only for admins', async () => {
+    useAuthStore.setState({ isAdmin: true, isAuthenticated: true });
+    renderTrackPage();
+    await openMenu();
+
+    expect(screen.getByText('✎ Edit')).toBeInTheDocument();
+  });
+
+  test('Edit is absent for a non-admin', async () => {
+    renderTrackPage();
+    await openMenu();
+
+    expect(screen.queryByText('✎ Edit')).not.toBeInTheDocument();
+  });
+
+  test('clicking Favorite calls toggleFavorite with the track kind/id', async () => {
+    const toggleFavorite = vi.fn();
+    useFavoritesStore.setState({ isFavorite: () => false, toggleFavorite });
+    renderTrackPage();
+    await openMenu();
+
+    fireEvent.click(screen.getByText('☆ Add to Favorites'));
+
+    expect(toggleFavorite).toHaveBeenCalledWith('track', trackData.track.id, expect.objectContaining({ id: trackData.track.id, title: trackData.track.title }));
   });
 });

@@ -5,8 +5,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { usePlayerStore } from '../stores/playerStore';
 import { useAuthStore } from '../stores/authStore';
+import { useFavoritesStore } from '../stores/favoritesStore';
+import { useContextMenu } from '../hooks/useContextMenu';
+import { useIsMobile } from '../hooks/useIsMobile';
 import PlayButton from '../components/PlayButton';
 import Loading from '../components/Loading';
+import ContextMenu from '../components/ContextMenu';
+import AddToPlaylistModal from '../components/AddToPlaylistModal';
+import TrackNotesModal from '../components/TrackNotesModal';
 import { formatDuration } from '../utils/formatters';
 import { shareLink } from '../utils/shareLink';
 
@@ -20,15 +26,26 @@ const BASENAME = import.meta.env.DEV ? '' : '/pshare/app';
 const TrackPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAdmin, isAuthenticated } = useAuthStore();
   const clearPlaylist = usePlayerStore((s) => s.clearPlaylist);
   const addTrack = usePlayerStore((s) => s.addTrack);
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const setPageTracks = usePlayerStore((s) => s.setPageTracks);
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+  const downloadsEnabled = import.meta.env.VITE_ENABLE_DOWNLOADS !== 'false';
+  const isMobile = useIsMobile();
   const [track, setTrack] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [showNotesModal, setShowNotesModal] = useState(false);
+  const isFavorite = useFavoritesStore((s) => (track ? s.isFavorite('track', track.id) : false));
+  // Nothing in this menu applies to a logged-out visitor (Favorite/Add to
+  // Playlist/Notes/Download all need an account, Edit needs admin, which
+  // implies an account too) — suppress the long-press entirely rather than
+  // opening an empty menu, matching Playlist.jsx/Collection.jsx.
+  const ctxMenu = useContextMenu({ shouldIgnore: (e) => !isAuthenticated || e.target.tagName === 'A' || !!e.target.closest('button') });
 
   useEffect(() => {
     let cancelled = false;
@@ -81,6 +98,46 @@ const TrackPage = () => {
     }
   };
 
+  const handleEdit = (e) => {
+    e.stopPropagation();
+    ctxMenu.close();
+    navigate(`/admin/track/${id}`);
+  };
+
+  const handleAddToPlaylist = (e) => {
+    e.stopPropagation();
+    ctxMenu.close();
+    setShowPlaylistModal(true);
+  };
+
+  const handleShowNotes = (e) => {
+    e.stopPropagation();
+    ctxMenu.close();
+    setShowNotesModal(true);
+  };
+
+  const handleToggleFavorite = (e) => {
+    e.stopPropagation();
+    if (!track) return;
+    toggleFavorite('track', track.id, {
+      id: track.id,
+      title: track.title,
+      track_number: track.track_number,
+      duration: track.duration,
+      artist: track.artist,
+      album: track.album,
+      download_url: track.download_url,
+    });
+    ctxMenu.close();
+  };
+
+  const handleDownload = (e) => {
+    e.stopPropagation();
+    if (!track) return;
+    window.location.href = track.download_url;
+    ctxMenu.close();
+  };
+
   if (loading) {
     return <Loading message="Loading track" />;
   }
@@ -113,7 +170,7 @@ const TrackPage = () => {
 
   return (
     <div style={{ padding: '.5rem', maxWidth: '1400px', margin: '0 auto' }}>
-      <div className="media-page-header">
+      <div className="media-page-header" {...ctxMenu.triggerProps}>
         <div style={{ flexShrink: 0 }}>
           <img
             src={apiService.getImageUrl(track.image_path, 'album_page')}
@@ -200,6 +257,70 @@ const TrackPage = () => {
           </div>
         </div>
       </div>
+
+      <ContextMenu
+        open={ctxMenu.open}
+        position={ctxMenu.position}
+        openedViaTouch={ctxMenu.openedViaTouch}
+        onDismiss={ctxMenu.dismiss}
+        onSwallowTouch={ctxMenu.swallowTouch}
+        testId="track-page-header-menu-backdrop"
+      >
+        {isAdmin && (
+          <button
+            onClick={handleEdit}
+            onTouchEnd={(e) => { e.preventDefault(); handleEdit(e); }}
+          >
+            ✎ Edit
+          </button>
+        )}
+        {isAuthenticated && (
+          <button
+            onClick={handleAddToPlaylist}
+            onTouchEnd={(e) => { e.preventDefault(); handleAddToPlaylist(e); }}
+          >
+            📋 Add to Playlist
+          </button>
+        )}
+        {isAuthenticated && (
+          <button
+            onClick={handleShowNotes}
+            onTouchEnd={(e) => { e.preventDefault(); handleShowNotes(e); }}
+          >
+            📝 Notes
+          </button>
+        )}
+        {isAuthenticated && (
+          <button
+            onClick={handleToggleFavorite}
+            onTouchEnd={(e) => { e.preventDefault(); handleToggleFavorite(e); }}
+          >
+            {isFavorite ? '★ Remove from Favorites' : '☆ Add to Favorites'}
+          </button>
+        )}
+        {downloadsEnabled && isAuthenticated && track.download_url && !isMobile && (
+          <button
+            onClick={handleDownload}
+            onTouchEnd={(e) => { e.preventDefault(); handleDownload(e); }}
+          >
+            ⬇ Download
+          </button>
+        )}
+      </ContextMenu>
+
+      {showPlaylistModal && (
+        <AddToPlaylistModal
+          track={track}
+          onClose={() => setShowPlaylistModal(false)}
+        />
+      )}
+
+      {showNotesModal && (
+        <TrackNotesModal
+          track={track}
+          onClose={() => setShowNotesModal(false)}
+        />
+      )}
     </div>
   );
 };
