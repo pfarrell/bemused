@@ -50,6 +50,31 @@ async function loadEntity(type: ShareEntityType, id: number): Promise<ShareEntit
     return { type, id, title: artist.name, description: artist.name, imagePath: artist.image_path }
   }
 
+  if (type === 'track') {
+    const row = await db
+      .selectFrom('tracks')
+      .leftJoin('albums', 'albums.id', 'tracks.album_id')
+      .leftJoin('artists as album_artist', 'album_artist.id', 'albums.artist_id')
+      .leftJoin('artists as track_artist', 'track_artist.id', 'tracks.artist_id')
+      .select([
+        'tracks.title as title',
+        'albums.image_path as image_path',
+        'album_artist.name as album_artist_name',
+        'track_artist.name as track_artist_name',
+      ])
+      .where('tracks.id', '=', id)
+      .executeTakeFirst()
+    if (!row) return null
+    const artistName = row.track_artist_name ?? row.album_artist_name
+    return {
+      type,
+      id,
+      title: row.title,
+      description: artistName ? `${row.title} — ${artistName}` : row.title,
+      imagePath: row.image_path,
+    }
+  }
+
   const playlist = await db
     .selectFrom('playlists')
     .select(['name', 'image_path'])
@@ -61,7 +86,7 @@ async function loadEntity(type: ShareEntityType, id: number): Promise<ShareEntit
 
 share.get('/:type/:id', async (c) => {
   const type = c.req.param('type') as string
-  if (type !== 'album' && type !== 'artist' && type !== 'playlist') {
+  if (type !== 'album' && type !== 'artist' && type !== 'playlist' && type !== 'track') {
     return c.text('Not found', 400)
   }
 

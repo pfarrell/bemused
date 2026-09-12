@@ -1,4 +1,4 @@
-export type ShareEntityType = 'album' | 'artist' | 'playlist'
+export type ShareEntityType = 'album' | 'artist' | 'playlist' | 'track'
 
 export interface ShareEntity {
   type: ShareEntityType
