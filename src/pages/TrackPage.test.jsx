@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import TrackPage from './TrackPage';
 import { usePlayerStore } from '../stores/playerStore';
 import { useAuthStore } from '../stores/authStore';
@@ -29,11 +29,22 @@ const trackData = {
   },
 };
 
+// Renders the destination's pathname+search as plain text so a test can
+// assert exactly where navigate() landed, including query string content
+// (e.g. login's return_to), without needing the target page's real component.
+const LocationDisplay = () => {
+  const location = useLocation();
+  return <div data-testid="location-display">{location.pathname}{location.search}</div>;
+};
+
 const renderTrackPage = () =>
   render(
     <MemoryRouter initialEntries={['/track/1']}>
       <Routes>
         <Route path="/track/:id" element={<TrackPage />} />
+        <Route path="/artist/:id" element={<LocationDisplay />} />
+        <Route path="/album/:id" element={<LocationDisplay />} />
+        <Route path="/login" element={<LocationDisplay />} />
       </Routes>
     </MemoryRouter>
   );
@@ -58,13 +69,15 @@ test('shows a loading state before the track loads', () => {
   expect(screen.getByText('Loading track...')).toBeInTheDocument();
 });
 
-test('renders track title, artist, and album once loaded', async () => {
+test('renders track title, artist ("by"), and album ("from") once loaded', async () => {
   apiService.getTrack.mockResolvedValue({ data: trackData });
   renderTrackPage();
 
   await screen.findByText('Test Track');
 
+  expect(screen.getByText('by')).toBeInTheDocument();
   expect(screen.getByText('Test Artist')).toBeInTheDocument();
+  expect(screen.getByText('from')).toBeInTheDocument();
   expect(screen.getByText('Test Album')).toBeInTheDocument();
 });
 
@@ -100,14 +113,25 @@ test('the hero play button clears the playlist and plays this track', async () =
   expect(addTrack).toHaveBeenCalledWith(trackData.track);
 });
 
-test('the share button shares the track title and artist', async () => {
-  apiService.getTrack.mockResolvedValue({ data: trackData });
-  renderTrackPage();
-  await screen.findByText('Test Track');
+describe('TrackPage — Share button', () => {
+  test('shares the track title and artist (no em dash) when logged in', async () => {
+    apiService.getTrack.mockResolvedValue({ data: trackData });
+    renderTrackPage();
+    await screen.findByText('Test Track');
 
-  fireEvent.click(screen.getByRole('button', { name: 'Share' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Share' }));
 
-  expect(shareLink).toHaveBeenCalledWith({ title: 'Test Track', text: 'Test Track — Test Artist' });
+    expect(shareLink).toHaveBeenCalledWith({ title: 'Test Track', text: 'Test Track by Test Artist' });
+  });
+
+  test('does not render when logged out', async () => {
+    useAuthStore.setState({ isAdmin: false, isAuthenticated: false });
+    apiService.getTrack.mockResolvedValue({ data: trackData });
+    renderTrackPage();
+    await screen.findByText('Test Track');
+
+    expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument();
+  });
 });
 
 describe('TrackPage — cover art zoom modal', () => {
@@ -138,17 +162,50 @@ describe('TrackPage — cover art zoom modal', () => {
   });
 });
 
-test('hides account-gated row actions when logged out', async () => {
-  useAuthStore.setState({ isAdmin: false, isAuthenticated: false });
-  apiService.getTrack.mockResolvedValue({ data: trackData });
-  renderTrackPage();
-  await screen.findByText('Test Track');
+describe('TrackPage — artist/album links', () => {
+  test('logged in: clicking the artist name navigates to the artist page', async () => {
+    apiService.getTrack.mockResolvedValue({ data: trackData });
+    renderTrackPage();
+    await screen.findByText('Test Track');
 
-  // Query the row directly rather than by text: the header above also
-  // contains "Test Track" (as the <h1>), so a text-based lookup here would
-  // match two elements. There's exactly one .track-item on this page.
-  fireEvent.contextMenu(document.querySelector('.track-item'));
+    fireEvent.click(screen.getByText('Test Artist'));
 
-  expect(screen.queryByText('📋 Add to Playlist')).not.toBeInTheDocument();
-  expect(screen.queryByText(/Favorites/)).not.toBeInTheDocument();
+    expect(await screen.findByTestId('location-display')).toHaveTextContent('/artist/5');
+  });
+
+  test('logged in: clicking the album title navigates to the album page', async () => {
+    apiService.getTrack.mockResolvedValue({ data: trackData });
+    renderTrackPage();
+    await screen.findByText('Test Track');
+
+    fireEvent.click(screen.getByText('Test Album'));
+
+    expect(await screen.findByTestId('location-display')).toHaveTextContent('/album/10');
+  });
+
+  test('logged out: clicking the artist name goes to login with return_to pointed back at this track', async () => {
+    useAuthStore.setState({ isAdmin: false, isAuthenticated: false });
+    apiService.getTrack.mockResolvedValue({ data: trackData });
+    renderTrackPage();
+    await screen.findByText('Test Track');
+
+    fireEvent.click(screen.getByText('Test Artist'));
+
+    const location = await screen.findByTestId('location-display');
+    expect(location).toHaveTextContent('/login');
+    expect(location.textContent).toContain(encodeURIComponent('/track/1'));
+  });
+
+  test('logged out: clicking the album title goes to login with return_to pointed back at this track', async () => {
+    useAuthStore.setState({ isAdmin: false, isAuthenticated: false });
+    apiService.getTrack.mockResolvedValue({ data: trackData });
+    renderTrackPage();
+    await screen.findByText('Test Track');
+
+    fireEvent.click(screen.getByText('Test Album'));
+
+    const location = await screen.findByTestId('location-display');
+    expect(location).toHaveTextContent('/login');
+    expect(location.textContent).toContain(encodeURIComponent('/track/1'));
+  });
 });

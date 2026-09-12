@@ -5,16 +5,22 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { usePlayerStore } from '../stores/playerStore';
 import { useAuthStore } from '../stores/authStore';
-import Track from '../components/Track';
 import PlayButton from '../components/PlayButton';
 import Loading from '../components/Loading';
 import { formatDuration } from '../utils/formatters';
 import { shareLink } from '../utils/shareLink';
 
+// Matches the basename App.jsx's <Router> uses — needed here because
+// login/signup's return_to is a raw browser redirect (window.location.href),
+// not a React Router navigate(), so it has to include the app's own path
+// prefix in production to land back on this page instead of 404ing at the
+// site root.
+const BASENAME = import.meta.env.DEV ? '' : '/pshare/app';
+
 const TrackPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAdmin } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const clearPlaylist = usePlayerStore((s) => s.clearPlaylist);
   const addTrack = usePlayerStore((s) => s.addTrack);
   const currentTrack = usePlayerStore((s) => s.currentTrack);
@@ -59,8 +65,20 @@ const TrackPage = () => {
     if (!track) return;
     shareLink({
       title: track.title,
-      text: track.artist?.name ? `${track.title} — ${track.artist.name}` : track.title,
+      text: track.artist?.name ? `${track.title} by ${track.artist.name}` : track.title,
     });
+  };
+
+  // A logged-out visitor can view and play the shared track itself (the
+  // whole point of sharing), but browsing onward into the catalog via the
+  // artist/album name is an account feature here — send them to log in or
+  // sign up instead, with return_to pointed back at this track.
+  const handleEntityClick = (path) => {
+    if (isAuthenticated) {
+      navigate(path);
+    } else {
+      navigate(`/login?return_to=${encodeURIComponent(`${BASENAME}/track/${id}`)}`);
+    }
   };
 
   if (loading) {
@@ -138,56 +156,49 @@ const TrackPage = () => {
           <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0 0 0.5rem 0', color: 'var(--color-text-primary)' }}>
             {track.title}
           </h1>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'normal', margin: '0 0 0.5rem 0', color: '#3b82f6' }}>
-            {track.artist?.id ? (
-              <span style={{ cursor: 'pointer' }} onClick={() => navigate(`/artist/${track.artist.id}`)}>
-                {track.artist.name}
-              </span>
-            ) : track.artist?.name}
-            {track.album?.id && (
-              <>
-                {' — '}
-                <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate(`/album/${track.album.id}`)}>
-                  {track.album.title}
-                </span>
-              </>
+          <div style={{ fontSize: '1.25rem', fontWeight: 'normal', margin: '0 0 0.5rem 0', color: '#3b82f6', lineHeight: 1.6 }}>
+            {track.artist?.name && (
+              <div>
+                by{' '}
+                {track.artist.id ? (
+                  <span style={{ cursor: 'pointer' }} onClick={() => handleEntityClick(`/artist/${track.artist.id}`)}>
+                    {track.artist.name}
+                  </span>
+                ) : track.artist.name}
+              </div>
             )}
-          </h2>
+            {track.album?.title && (
+              <div>
+                from{' '}
+                {track.album.id ? (
+                  <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => handleEntityClick(`/album/${track.album.id}`)}>
+                    {track.album.title}
+                  </span>
+                ) : track.album.title}
+              </div>
+            )}
+          </div>
           {track.duration ? (
             <p style={{ color: 'var(--color-text-muted)', margin: '0 0 1rem 0' }}>{formatDuration(track.duration)}</p>
           ) : null}
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            {/* aria-label is the plain 'Play' rather than `Play ${track.title}` —
-                the Track row rendered below already uses that exact label for
-                its own play button, and two buttons with the same accessible
-                name on one page are indistinguishable to assistive tech (and
-                to a testing-library query). */}
             <PlayButton
               size={48}
               active={isPlaying}
               onClick={handlePlayNow}
               aria-label={isPlaying ? 'Now playing' : 'Play'}
             />
-            <button
-              onClick={handleShare}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}
-              aria-label="Share"
-            >
-              📤
-            </button>
+            {isAuthenticated && (
+              <button
+                onClick={handleShare}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}
+                aria-label="Share"
+              >
+                📤
+              </button>
+            )}
           </div>
         </div>
-      </div>
-
-      <div style={{
-        backgroundColor: 'var(--color-bg-surface)',
-        borderRadius: '8px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-        overflowX: 'hidden',
-        overflowY: 'visible',
-        marginTop: '1rem',
-      }}>
-        <Track track={track} index={0} trackCount={1} isPlaying={isPlaying} showEdit={isAdmin} />
       </div>
     </div>
   );
