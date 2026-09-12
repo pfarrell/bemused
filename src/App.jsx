@@ -13,6 +13,7 @@ import Home from './pages/Home';
 import Search from './pages/Search';
 import Artist from './pages/Artist';
 import Album from './pages/Album';
+import TrackPage from './pages/TrackPage';
 import Library from './pages/Library';
 import Account from './pages/Account';
 import Admin from './pages/Admin';
@@ -213,13 +214,20 @@ function App() {
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
+                {/* Public: viewable/playable without an account so shared links
+                    work for a logged-out visitor. The backend routes behind
+                    these (server/src/index.ts) are public for the same reason;
+                    account-gated actions on these pages hide themselves via
+                    isAuthenticated/isAdmin checks already in each component. */}
+                <Route path="/artist/:id" element={<Artist />} />
+                <Route path="/album/:id" element={<Album />} />
+                <Route path="/playlist/:id" element={<Playlist />} />
+                <Route path="/track/:id" element={<TrackPage />} />
                 <Route path="/*" element={
                   <ProtectedRoute>
                     <Routes>
                       <Route path="/" element={<Home />} />
                       <Route path="/search" element={<Search />} />
-                      <Route path="/artist/:id" element={<Artist />} />
-                      <Route path="/album/:id" element={<Album />} />
                       <Route path="/library" element={<Library />} />
                       <Route path="/account" element={<Account />} />
                       <Route path="/admin" element={
@@ -228,7 +236,6 @@ function App() {
                         </ProtectedRoute>
                       } />
                       <Route path="/playlists" element={<Playlists />} />
-                      <Route path="/playlist/:id" element={<Playlist />} />
                       <Route path="/collections" element={<Collections />} />
                       <Route path="/collection/:id" element={<Collection />} />
                       <Route path="/tags/:name" element={<TagPage />} />
