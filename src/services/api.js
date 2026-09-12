@@ -55,6 +55,9 @@ export const apiService = {
   getRandomAlbums: (size = 30, tag = null) => api.get(`/albums/random?size=${size}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`),
   getAdjacentAlbums: (id, collectionId = null) => api.get(`/album/${id}/adjacent${collectionId ? `?collection_id=${collectionId}` : ''}`), // Returns { prev, next }
 
+  // Tracks
+  getTrack: (id) => api.get(`/track/${id}`), // Returns { track }
+
   // Recall notes
   getRecallConnectUrl: () => `${getBaseURL()}/auth/recall/connect`,
   addAlbumNote: (albumId, content) => api.post(`/album/${albumId}/notes`, { content }),
