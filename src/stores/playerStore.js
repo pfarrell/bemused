@@ -66,6 +66,13 @@ export const usePlayerStore = create((set, get) => ({
   pageTracks: [],
   setPageTracks: (tracks) => set({ pageTracks: tracks || [] }),
 
+  // Set when the currently playing album was queued from a collection's Album page,
+  // so usePlayerEngine can auto-advance into the collection's next album once the
+  // queue naturally runs out. Cleared by any generic queue mutation below so a stale
+  // collection binge doesn't silently resume after the user's queued something else.
+  collectionContext: null,
+  setCollectionContext: (collectionContext) => set({ collectionContext }),
+
   // Shuffle/repeat state
   playbackMode: 'off', // 'off' | 'shuffle' | 'repeat-all' | 'repeat-one'
   shuffleHistory: [],
@@ -236,7 +243,7 @@ export const usePlayerStore = create((set, get) => ({
     validateTrack(track);
     const { playlist, isPlaying } = get();
     const newPlaylist = [...playlist, track];
-    set({ playlist: newPlaylist });
+    set({ playlist: newPlaylist, collectionContext: null });
     if (flashActivity) {
       set({ recentlyAddedIndices: [newPlaylist.length - 1] });
       get().triggerActivityPulse();
@@ -267,7 +274,7 @@ export const usePlayerStore = create((set, get) => ({
       newPlaylist = [...playlist, ...tracks];
     }
 
-    set({ playlist: newPlaylist });
+    set({ playlist: newPlaylist, collectionContext: null });
     if (flashActivity) {
       const newIndices = tracks.map((_, i) => startIndex + i);
       set({ recentlyAddedIndices: newIndices });
@@ -298,6 +305,7 @@ export const usePlayerStore = create((set, get) => ({
       playlistFinished: false,
       currentTime: 0,
       duration: 0,
+      collectionContext: null,
     });
     if (audioElement) {
       audioElement.pause();
@@ -320,7 +328,7 @@ export const usePlayerStore = create((set, get) => ({
       newShuffleHistory = shuffleHistory.filter((i) => i !== index).map((i) => (i > index ? i - 1 : i));
     }
 
-    set({ playlist: newPlaylist, currentTrackIndex: newCurrentIndex, shuffleHistory: newShuffleHistory });
+    set({ playlist: newPlaylist, currentTrackIndex: newCurrentIndex, shuffleHistory: newShuffleHistory, collectionContext: null });
 
     if (newPlaylist.length === 0) {
       set({ currentTrackIndex: -1, currentTrack: null, isPlaying: false, currentTime: 0, duration: 0 });
@@ -344,7 +352,7 @@ export const usePlayerStore = create((set, get) => ({
     }
     newPlaylist.splice(insertIndex, 0, moved);
     const newCurrentIndex = currentTrackRef ? newPlaylist.indexOf(currentTrackRef) : -1;
-    set({ playlist: newPlaylist, currentTrackIndex: newCurrentIndex });
+    set({ playlist: newPlaylist, currentTrackIndex: newCurrentIndex, collectionContext: null });
     get().syncNextTrackIndex();
   },
 

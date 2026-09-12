@@ -10,6 +10,8 @@ vi.mock('../services/api', () => ({
     // the mock must return a promise like the real axios call does.
     log: vi.fn(() => Promise.resolve()),
     getImageUrl: vi.fn(() => 'http://example.com/art.jpg'),
+    getAdjacentAlbums: vi.fn(),
+    getAlbum: vi.fn(),
   },
 }));
 
@@ -24,7 +26,7 @@ beforeEach(() => {
   usePlayerStore.setState({
     audioElementA: null, audioElementB: null, activeSlot: 'a',
     currentTrack: null, currentTime: 0, duration: 0, isPlaying: false, isBuffering: false,
-    nextTrackIndex: -1, playlist: [],
+    nextTrackIndex: -1, playlist: [], playlistFinished: false, collectionContext: null,
   });
   // Default to a logged-in session for these tests — the log-gating
   // behavior itself (anonymous playback must not call apiService.log) is
@@ -228,4 +230,64 @@ test('a nextTrackIndex change while not yet within the prefetch window does not 
 
   act(() => usePlayerStore.setState({ nextTrackIndex: 2 }));
   expect(ensureStandbyLoaded).not.toHaveBeenCalled();
+});
+
+describe('collection auto-advance', () => {
+  test('does nothing when playlistFinished is true but there is no collectionContext', async () => {
+    const audioRefA = makeAudioRef();
+    const audioRefB = makeAudioRef();
+    renderHook(() => usePlayerEngine(audioRefA, audioRefB));
+
+    await act(async () => {
+      usePlayerStore.setState({ playlistFinished: true, collectionContext: null });
+    });
+
+    expect(apiService.getAdjacentAlbums).not.toHaveBeenCalled();
+  });
+
+  test('fetches and appends+jumps into the next collection album once the queue finishes', async () => {
+    apiService.getAdjacentAlbums.mockResolvedValue({ data: { next: { id: 11 } } });
+    apiService.getAlbum.mockResolvedValue({ data: { tracks: [{ id: 100, title: 'Next Track', url: '/stream/100' }] } });
+    const addTracks = vi.fn();
+    const setCollectionContext = vi.fn();
+    usePlayerStore.setState({ addTracks, setCollectionContext });
+
+    const audioRefA = makeAudioRef();
+    const audioRefB = makeAudioRef();
+    renderHook(() => usePlayerEngine(audioRefA, audioRefB));
+
+    await act(async () => {
+      usePlayerStore.setState({ playlistFinished: true, collectionContext: { collectionId: 7, albumId: 10 } });
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(apiService.getAdjacentAlbums).toHaveBeenCalledWith(10, 7);
+    expect(apiService.getAlbum).toHaveBeenCalledWith(11);
+    expect(addTracks).toHaveBeenCalledWith(
+      [{ id: 100, title: 'Next Track', url: '/stream/100' }],
+      false,
+      { playImmediately: true }
+    );
+    expect(setCollectionContext).toHaveBeenCalledWith({ collectionId: 7, albumId: 11 });
+  });
+
+  test('does not fetch track data or advance when the collection has no next album', async () => {
+    apiService.getAdjacentAlbums.mockResolvedValue({ data: { next: null } });
+    const addTracks = vi.fn();
+    usePlayerStore.setState({ addTracks });
+
+    const audioRefA = makeAudioRef();
+    const audioRefB = makeAudioRef();
+    renderHook(() => usePlayerEngine(audioRefA, audioRefB));
+
+    await act(async () => {
+      usePlayerStore.setState({ playlistFinished: true, collectionContext: { collectionId: 7, albumId: 10 } });
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(apiService.getAlbum).not.toHaveBeenCalled();
+    expect(addTracks).not.toHaveBeenCalled();
+  });
 });

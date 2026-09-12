@@ -4,42 +4,43 @@ import { vi, describe, test, expect } from 'vitest';
 import PlayActionsMenu from './PlayActionsMenu';
 
 describe('PlayActionsMenu', () => {
-  test('renders a Play Now button that calls onPlayNow', async () => {
-    const onPlayNow = vi.fn();
+  test('renders a Play button that calls onPlay', async () => {
+    const onPlay = vi.fn();
     const user = userEvent.setup();
-    render(<PlayActionsMenu onPlayNow={onPlayNow} onPlayNext={vi.fn()} onAddToQueue={vi.fn()} />);
+    render(<PlayActionsMenu onPlay={onPlay} onPlayNext={vi.fn()} onAddToQueue={vi.fn()} />);
 
-    await user.click(screen.getByRole('button', { name: 'Play Now' }));
+    await user.click(screen.getByRole('button', { name: 'Play' }));
 
-    expect(onPlayNow).toHaveBeenCalledTimes(1);
+    expect(onPlay).toHaveBeenCalledTimes(1);
   });
 
-  test('omits the Play Now button when onPlayNow is not provided', () => {
+  test('omits the Play button when onPlay is not provided', () => {
     render(<PlayActionsMenu onPlayNext={vi.fn()} onAddToQueue={vi.fn()} />);
-    expect(screen.queryByRole('button', { name: 'Play Now' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Play' })).not.toBeInTheDocument();
   });
 
-  test('renders Play Now alone (no toggle) when there is nothing to put in a menu', () => {
-    render(<PlayActionsMenu onPlayNow={vi.fn()} />);
-    expect(screen.getByRole('button', { name: 'Play Now' })).toBeInTheDocument();
+  test('renders Play alone (no toggle) when there is nothing to put in a menu', () => {
+    render(<PlayActionsMenu onPlay={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'More options' })).not.toBeInTheDocument();
   });
 
-  test('renders just the toggle (no Play Now) when onPlayNow is absent but menu items exist', () => {
+  test('renders just the toggle (no Play) when onPlay is absent but menu items exist', () => {
     render(<PlayActionsMenu overflowActions={[{ key: 'share', icon: '📤', label: 'Share', onClick: vi.fn() }]} />);
-    expect(screen.queryByRole('button', { name: 'Play Now' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Play' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'More options' })).toBeInTheDocument();
   });
 
-  test('renders nothing at all when there is no Play Now and no menu items', () => {
+  test('renders nothing at all when there is no Play and no menu items', () => {
     const { container } = render(<PlayActionsMenu />);
     expect(container.querySelector('.play-actions-bar')).toBeEmptyDOMElement();
   });
 
-  test('the toggle opens one combined menu with Play Next, Add to Queue, and overflow actions in that order', async () => {
+  test('the toggle opens one combined menu with Play Now, Play Next, Add to Queue, and overflow actions in that order', async () => {
     const user = userEvent.setup();
     render(
       <PlayActionsMenu
+        onPlay={vi.fn()}
         onPlayNow={vi.fn()}
         onPlayNext={vi.fn()}
         onAddToQueue={vi.fn()}
@@ -49,15 +50,36 @@ describe('PlayActionsMenu', () => {
 
     await user.click(screen.getByRole('button', { name: 'More options' }));
 
-    const dropdown = screen.getByRole('button', { name: '⏭ Play Next' }).closest('.track-dropdown');
+    const dropdown = screen.getByRole('button', { name: '▶ Play Now' }).closest('.track-dropdown');
     const labels = Array.from(dropdown.querySelectorAll('button')).map((b) => b.textContent);
-    expect(labels).toEqual(['⏭ Play Next', '➕ Add to Queue', '✎ Edit']);
+    expect(labels).toEqual(['▶ Play Now', '⏭ Play Next', '➕ Add to Queue', '✎ Edit']);
+  });
+
+  test('clicking Play Now in the menu calls onPlayNow and closes the menu', async () => {
+    const onPlayNow = vi.fn();
+    const user = userEvent.setup();
+    render(<PlayActionsMenu onPlay={vi.fn()} onPlayNow={onPlayNow} onPlayNext={vi.fn()} onAddToQueue={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: 'More options' }));
+    await user.click(screen.getByRole('button', { name: '▶ Play Now' }));
+
+    expect(onPlayNow).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: '▶ Play Now' })).not.toBeInTheDocument();
+  });
+
+  test('omits the Play Now menu item when onPlayNow is not provided', async () => {
+    const user = userEvent.setup();
+    render(<PlayActionsMenu onPlay={vi.fn()} onPlayNext={vi.fn()} onAddToQueue={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: 'More options' }));
+
+    expect(screen.queryByRole('button', { name: '▶ Play Now' })).not.toBeInTheDocument();
   });
 
   test('clicking Play Next in the menu calls onPlayNext and closes the menu', async () => {
     const onPlayNext = vi.fn();
     const user = userEvent.setup();
-    render(<PlayActionsMenu onPlayNow={vi.fn()} onPlayNext={onPlayNext} onAddToQueue={vi.fn()} />);
+    render(<PlayActionsMenu onPlay={vi.fn()} onPlayNext={onPlayNext} onAddToQueue={vi.fn()} />);
 
     await user.click(screen.getByRole('button', { name: 'More options' }));
     await user.click(screen.getByRole('button', { name: '⏭ Play Next' }));
@@ -69,7 +91,7 @@ describe('PlayActionsMenu', () => {
   test('clicking Add to Queue in the menu calls onAddToQueue and closes the menu', async () => {
     const onAddToQueue = vi.fn();
     const user = userEvent.setup();
-    render(<PlayActionsMenu onPlayNow={vi.fn()} onPlayNext={vi.fn()} onAddToQueue={onAddToQueue} />);
+    render(<PlayActionsMenu onPlay={vi.fn()} onPlayNext={vi.fn()} onAddToQueue={onAddToQueue} />);
 
     await user.click(screen.getByRole('button', { name: 'More options' }));
     await user.click(screen.getByRole('button', { name: '➕ Add to Queue' }));
@@ -84,7 +106,7 @@ describe('PlayActionsMenu', () => {
     const user = userEvent.setup();
     render(
       <PlayActionsMenu
-        onPlayNow={vi.fn()}
+        onPlay={vi.fn()}
         overflowActions={[
           { key: 'edit', icon: '✎', label: 'Edit', onClick: onEdit },
           { key: 'share', icon: '📤', label: 'Share', onClick: onShare },
@@ -106,7 +128,7 @@ describe('PlayActionsMenu', () => {
     const onPlayNext = vi.fn();
     const onAddToQueue = vi.fn();
     const user = userEvent.setup();
-    render(<PlayActionsMenu onPlayNow={vi.fn()} onPlayNext={onPlayNext} onAddToQueue={onAddToQueue} />);
+    render(<PlayActionsMenu onPlay={vi.fn()} onPlayNext={onPlayNext} onAddToQueue={onAddToQueue} />);
 
     await user.click(screen.getByRole('button', { name: 'More options' }));
     expect(screen.getByRole('button', { name: '⏭ Play Next' })).toBeInTheDocument();
@@ -119,16 +141,16 @@ describe('PlayActionsMenu', () => {
   });
 
   test('disabled disables both halves of the split button', () => {
-    render(<PlayActionsMenu onPlayNow={vi.fn()} onPlayNext={vi.fn()} disabled />);
+    render(<PlayActionsMenu onPlay={vi.fn()} onPlayNext={vi.fn()} disabled />);
 
-    expect(screen.getByRole('button', { name: 'Play Now' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Play' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'More options' })).toBeDisabled();
   });
 
   test('clamps dropdown menu to viewport bounds when toggle button is near right edge', async () => {
     const user = userEvent.setup();
     render(
-      <PlayActionsMenu onPlayNow={vi.fn()} onPlayNext={vi.fn()} onAddToQueue={vi.fn()} />
+      <PlayActionsMenu onPlay={vi.fn()} onPlayNext={vi.fn()} onAddToQueue={vi.fn()} />
     );
 
     // Save original values for restoration

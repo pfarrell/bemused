@@ -21,6 +21,7 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, hideArtist = false }) => 
   const viewMode = useViewModeStore((s) => s.mode);
   const navigate = useNavigate();
   const addTracks = usePlayerStore((s) => s.addTracks);
+  const setPlaylist = usePlayerStore((s) => s.setPlaylist);
   const { isAuthenticated } = useAuthStore();
   const isFavorite = useFavoritesStore((s) => s.isFavorite('album', album.id));
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
@@ -51,6 +52,10 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, hideArtist = false }) => 
 
   const handlePlayAll = () => withAlbumTracks((tracks) => {
     addTracks(tracks, false, { playImmediately: true });
+  });
+
+  const handlePlayNow = () => withAlbumTracks((tracks) => {
+    setPlaylist(tracks);
   });
 
   const handlePlayNext = () => withAlbumTracks((tracks) => {
@@ -103,6 +108,7 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, hideArtist = false }) => 
           play={{
             loading: playLoading,
             onPlay: handlePlayAll,
+            onPlayNow: handlePlayNow,
             onPlayNext: handlePlayNext,
             onAddToQueue: handleAddToQueue,
             label: `Play ${album.title}`,

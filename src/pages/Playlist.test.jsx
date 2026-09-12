@@ -37,6 +37,34 @@ beforeEach(() => {
 });
 
 describe('Playlist page', () => {
+  const withSourcePlaylist = playlistData.tracks.map((t) => ({
+    ...t,
+    source_playlist: { id: playlistData.playlist.id, name: playlistData.playlist.name },
+  }));
+
+  test('the default Play button appends and jumps, without clearing the existing queue', async () => {
+    const addTracks = vi.fn();
+    usePlayerStore.setState({ addTracks });
+    renderPlaylist();
+    await screen.findByText('Test Playlist');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }));
+
+    expect(addTracks).toHaveBeenCalledWith(withSourcePlaylist, false, { playImmediately: true });
+  });
+
+  test('the Play Now menu item replaces the queue outright', async () => {
+    const setPlaylist = vi.fn();
+    usePlayerStore.setState({ setPlaylist });
+    renderPlaylist();
+    await screen.findByText('Test Playlist');
+
+    fireEvent.click(screen.getByRole('button', { name: 'More options' }));
+    fireEvent.click(screen.getByText('▶ Play Now'));
+
+    expect(setPlaylist).toHaveBeenCalledWith(withSourcePlaylist);
+  });
+
   test('registers the playlist tracks as pageTracks once loaded, so the footer play button can fall back to them', async () => {
     renderPlaylist();
     await screen.findByText('Test Playlist');

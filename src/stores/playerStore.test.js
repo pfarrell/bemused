@@ -38,6 +38,7 @@ beforeEach(() => {
     recentlyAddedIndices: [],
     standbyUnlocked: false,
     pageTracks: [],
+    collectionContext: null,
   });
 });
 
@@ -725,5 +726,62 @@ describe('togglePlayPause with an empty playlist', () => {
     expect(state.currentTrackIndex).toBe(0);
     expect(audioElement.play).toHaveBeenCalled();
     expect(audioElement.load).not.toHaveBeenCalled(); // resumed in place, not reloaded via playTrackAtIndex
+  });
+});
+
+describe('collectionContext', () => {
+  test('setCollectionContext stores the collection/album pair', () => {
+    usePlayerStore.getState().setCollectionContext({ collectionId: 7, albumId: 42 });
+    expect(usePlayerStore.getState().collectionContext).toEqual({ collectionId: 7, albumId: 42 });
+  });
+
+  test('addTrack clears an existing collectionContext', () => {
+    usePlayerStore.setState({ collectionContext: { collectionId: 7, albumId: 42 } });
+    usePlayerStore.getState().addTrack(track(1));
+    expect(usePlayerStore.getState().collectionContext).toBeNull();
+  });
+
+  test('addTracks clears an existing collectionContext', () => {
+    usePlayerStore.setState({ collectionContext: { collectionId: 7, albumId: 42 } });
+    usePlayerStore.getState().addTracks([track(1), track(2)]);
+    expect(usePlayerStore.getState().collectionContext).toBeNull();
+  });
+
+  test('removeTrackFromPlaylist clears an existing collectionContext', () => {
+    usePlayerStore.setState({
+      playlist: [track(1), track(2)],
+      currentTrackIndex: 0,
+      collectionContext: { collectionId: 7, albumId: 42 },
+    });
+    usePlayerStore.getState().removeTrackFromPlaylist(1);
+    expect(usePlayerStore.getState().collectionContext).toBeNull();
+  });
+
+  test('reorderPlaylist clears an existing collectionContext', () => {
+    usePlayerStore.setState({
+      playlist: [track(1), track(2)],
+      currentTrackIndex: 0,
+      collectionContext: { collectionId: 7, albumId: 42 },
+    });
+    usePlayerStore.getState().reorderPlaylist(0, 1);
+    expect(usePlayerStore.getState().collectionContext).toBeNull();
+  });
+
+  test('clearPlaylist clears an existing collectionContext', () => {
+    usePlayerStore.setState({
+      playlist: [track(1)],
+      collectionContext: { collectionId: 7, albumId: 42 },
+    });
+    usePlayerStore.getState().clearPlaylist();
+    expect(usePlayerStore.getState().collectionContext).toBeNull();
+  });
+
+  test('setPlaylist (via clearPlaylist + addTracks) clears an existing collectionContext', () => {
+    usePlayerStore.setState({
+      playlist: [track(1)],
+      collectionContext: { collectionId: 7, albumId: 42 },
+    });
+    usePlayerStore.getState().setPlaylist([track(2), track(3)]);
+    expect(usePlayerStore.getState().collectionContext).toBeNull();
   });
 });

@@ -19,6 +19,7 @@ export default function Playlist() {
   const { id } = useParams();
   const navigate = useNavigate();
   const addTracks = usePlayerStore((s) => s.addTracks);
+  const setPlaylist = usePlayerStore((s) => s.setPlaylist);
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const setPageTracks = usePlayerStore((s) => s.setPageTracks);
   const { user, isAdmin, isAuthenticated } = useAuthStore();
@@ -71,6 +72,11 @@ export default function Playlist() {
   const handlePlayAll = () => {
     if (!playlistData?.tracks?.length) return;
     addTracks(playlistData.tracks, false, { playImmediately: true });
+  };
+
+  const handlePlayNow = () => {
+    if (!playlistData?.tracks?.length) return;
+    setPlaylist(playlistData.tracks);
   };
 
   const handlePlayNext = () => {
@@ -144,7 +150,8 @@ export default function Playlist() {
 
           {/* Action Buttons */}
           <PlayActionsMenu
-            onPlayNow={handlePlayAll}
+            onPlay={handlePlayAll}
+            onPlayNow={handlePlayNow}
             onPlayNext={handlePlayNext}
             onAddToQueue={handleAddToQueue}
             disabled={!tracks?.length}

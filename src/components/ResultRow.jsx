@@ -160,7 +160,7 @@ const ResultRow = ({
             className="track-dropdown"
             style={{ position: 'fixed', left: `${playMenuPos.x}px`, top: `${playMenuPos.y}px`, zIndex: 100 }}
           >
-            <button onClick={(e) => choosePlayAction(e, play.onPlay)}>▶ Play Now</button>
+            {play.onPlayNow && <button onClick={(e) => choosePlayAction(e, play.onPlayNow)}>▶ Play Now</button>}
             <button onClick={(e) => choosePlayAction(e, play.onPlayNext)}>⏭ Play Next</button>
             <button onClick={(e) => choosePlayAction(e, play.onAddToQueue)}>➕ Add to Queue</button>
           </div>

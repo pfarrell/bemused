@@ -28,26 +28,30 @@ const getMenuPosition = (toggleRef, menuWidth, menuHeight) => {
   return { top, left };
 };
 
-// Single compact action bar used on every screen size: a Play Now control
-// plus one dropdown menu holding every secondary action — Play Next / Add
-// to Queue first (when provided), then whatever page-specific
+// Single compact action bar used on every screen size: a Play control plus
+// one dropdown menu holding every secondary action — Play Now / Play Next /
+// Add to Queue first (whichever are provided), then whatever page-specific
 // overflowActions the caller passes in (Edit, Share, Add to Collection,
-// Add to Favorites, ...). When both a Play Now handler and menu items
-// exist, the two render as one fused "split button" (a gradient circle for
-// Play Now with a narrow "▾" tab attached to it) so they read as a single
-// control while keeping separate click targets — clicking the circle plays,
-// clicking the tab opens the menu.
-const PlayActionsMenu = ({ onPlayNow, onPlayNext, onAddToQueue, overflowActions = [], disabled = false }) => {
+// Add to Favorites, ...). Play (onPlay) appends to the end of the current
+// queue and jumps playback there — it never destroys what's already queued.
+// Play Now (onPlayNow) is the one destructive action: it replaces the queue
+// outright, which is why it lives in the menu rather than being the default
+// tap target. When both onPlay and menu items exist, the two render as one
+// fused "split button" (a gradient circle for Play with a narrow "▾" tab
+// attached to it) so they read as a single control while keeping separate
+// click targets — clicking the circle plays, clicking the tab opens the menu.
+const PlayActionsMenu = ({ onPlay, onPlayNow, onPlayNext, onAddToQueue, overflowActions = [], disabled = false }) => {
   const [showMenu, setShowMenu] = useState(false);
   const toggleRef = useRef(null);
 
   const menuItems = [
+    onPlayNow && { key: 'play-now', icon: '▶', label: 'Play Now', onClick: onPlayNow },
     onPlayNext && { key: 'play-next', icon: '⏭', label: 'Play Next', onClick: onPlayNext },
     onAddToQueue && { key: 'add-queue', icon: '➕', label: 'Add to Queue', onClick: onAddToQueue },
     ...overflowActions,
   ].filter(Boolean);
 
-  const hasPlayNow = !!onPlayNow;
+  const hasPlay = !!onPlay;
   const hasMenu = menuItems.length > 0;
 
   const handleMenuItem = (item) => {
@@ -75,14 +79,14 @@ const PlayActionsMenu = ({ onPlayNow, onPlayNext, onAddToQueue, overflowActions 
 
   return (
     <div className="play-actions-bar" style={{ display: 'flex', gap: '0.5rem' }}>
-      {hasPlayNow && hasMenu && (
+      {hasPlay && hasMenu && (
         <div className={`play-split${disabled ? ' play-split-disabled' : ''}`}>
           <button
-            onClick={onPlayNow}
+            onClick={onPlay}
             disabled={disabled}
             className="play-split-play"
-            aria-label="Play Now"
-            title="Play Now"
+            aria-label="Play"
+            title="Play"
           >
             <span className="play-now-circle-triangle" aria-hidden="true" />
           </button>
@@ -98,17 +102,17 @@ const PlayActionsMenu = ({ onPlayNow, onPlayNext, onAddToQueue, overflowActions 
         </div>
       )}
 
-      {hasPlayNow && !hasMenu && (
+      {hasPlay && !hasMenu && (
         <PlayButton
           size={56}
-          onClick={onPlayNow}
+          onClick={onPlay}
           disabled={disabled}
-          aria-label="Play Now"
-          title="Play Now"
+          aria-label="Play"
+          title="Play"
         />
       )}
 
-      {!hasPlayNow && hasMenu && (
+      {!hasPlay && hasMenu && (
         <button
           ref={toggleRef}
           className="play-oval-toggle"

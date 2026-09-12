@@ -77,6 +77,7 @@ describe('long-press / right-click play menu', () => {
   const playWithMenu = (overrides = {}) => ({
     loading: false,
     onPlay: vi.fn(),
+    onPlayNow: vi.fn(),
     onPlayNext: vi.fn(),
     onAddToQueue: vi.fn(),
     label: 'Play Test Title',
@@ -97,7 +98,7 @@ describe('long-press / right-click play menu', () => {
     fireEvent.touchStart(button, { touches: [{ clientX: 50, clientY: 50 }] });
     act(() => { vi.advanceTimersByTime(500); });
 
-    expect(screen.queryByText('▶ Play Now')).toBeNull();
+    expect(screen.queryByText('⏭ Play Next')).toBeNull();
     vi.useRealTimers();
   });
 
@@ -125,7 +126,17 @@ describe('long-press / right-click play menu', () => {
     expect(screen.getByText('▶ Play Now')).toBeInTheDocument();
   });
 
-  test('choosing "Play Now" from the menu calls onPlay and closes the menu, without also firing the row onClick', () => {
+  test('omits the Play Now item when onPlayNow is not provided, keeping Play Next/Add to Queue', () => {
+    const play = playWithMenu({ onPlayNow: undefined });
+    render(<ResultRow imageUrl="/x.jpg" title="Test Title" onClick={vi.fn()} play={play} />);
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Play Test Title' }), { clientX: 50, clientY: 50 });
+
+    expect(screen.queryByText('▶ Play Now')).toBeNull();
+    expect(screen.getByText('⏭ Play Next')).toBeInTheDocument();
+    expect(screen.getByText('➕ Add to Queue')).toBeInTheDocument();
+  });
+
+  test('choosing "Play Now" from the menu calls onPlayNow and closes the menu, without also firing the row onClick', () => {
     const onRowClick = vi.fn();
     const play = playWithMenu();
     render(<ResultRow imageUrl="/x.jpg" title="Test Title" onClick={onRowClick} play={play} />);
@@ -133,7 +144,8 @@ describe('long-press / right-click play menu', () => {
 
     fireEvent.click(screen.getByText('▶ Play Now'));
 
-    expect(play.onPlay).toHaveBeenCalledTimes(1);
+    expect(play.onPlayNow).toHaveBeenCalledTimes(1);
+    expect(play.onPlay).not.toHaveBeenCalled();
     expect(play.onPlayNext).not.toHaveBeenCalled();
     expect(play.onAddToQueue).not.toHaveBeenCalled();
     expect(onRowClick).not.toHaveBeenCalled();

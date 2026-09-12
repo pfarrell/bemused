@@ -190,6 +190,7 @@ describe('Track component', () => {
       addTrack: vi.fn(),
       addTracks: vi.fn(),
       clearPlaylist: vi.fn(),
+      setPlaylist: vi.fn(),
       playTrackAtIndex: vi.fn(),
     });
     return renderTrack();
@@ -209,12 +210,19 @@ describe('Track component', () => {
     expect(usePlayerStore.getState().addTracks).toHaveBeenCalledWith([mockTrack], true, { flashActivity: true });
   });
 
-  test('Play Now appends this track to the queue and plays it immediately', () => {
+  test('tapping the play button appends this track to the queue and plays it immediately', () => {
+    renderWithPlayer();
+    fireEvent.click(screen.getByRole('button', { name: 'Play Test Track' }));
+    expect(usePlayerStore.getState().addTrack).toHaveBeenCalledWith(mockTrack, { playImmediately: true });
+    expect(usePlayerStore.getState().addTracks).not.toHaveBeenCalled();
+  });
+
+  test('Play Now in the menu replaces the queue outright with just this track', () => {
     renderWithPlayer();
     fireEvent.contextMenu(screen.getByRole('button', { name: 'Play Test Track' }));
     fireEvent.click(screen.getByText('▶ Play Now'));
-    expect(usePlayerStore.getState().addTrack).toHaveBeenCalledWith(mockTrack, { playImmediately: true });
-    expect(usePlayerStore.getState().addTracks).not.toHaveBeenCalled();
+    expect(usePlayerStore.getState().setPlaylist).toHaveBeenCalledWith([mockTrack]);
+    expect(usePlayerStore.getState().addTrack).not.toHaveBeenCalled();
   });
 
   test('Add to Queue flashes the pressed button before the menu closes', () => {

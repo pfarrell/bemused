@@ -337,6 +337,23 @@ describe('mobile row layout', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
+  test('right-clicking play and choosing "Play Now" fetches the album and replaces the queue outright', async () => {
+    apiService.getAlbum.mockResolvedValue({
+      data: { tracks: [{ id: 1, title: 'Track One', url: 'http://x/1.mp3' }] },
+    });
+    const setPlaylist = vi.fn();
+    usePlayerStore.setState({ setPlaylist });
+
+    render(<AlbumCard album={album} artist={artist} onClick={vi.fn()} imageUrl="/img/sm/x.jpg" />);
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Play Test Album' }), { clientX: 10, clientY: 10 });
+
+    fireEvent.click(screen.getByText('▶ Play Now'));
+
+    await waitFor(() => expect(setPlaylist).toHaveBeenCalled());
+    expect(apiService.getAlbum).toHaveBeenCalledWith(7);
+    expect(setPlaylist).toHaveBeenCalledWith([{ id: 1, title: 'Track One', url: 'http://x/1.mp3' }]);
+  });
+
   test('right-clicking play and choosing "Play Next" fetches the album and inserts it next in the queue', async () => {
     apiService.getAlbum.mockResolvedValue({
       data: { tracks: [{ id: 1, title: 'Track One', url: 'http://x/1.mp3' }] },

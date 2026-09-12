@@ -39,6 +39,8 @@ export const usePlayerEngine = (audioRefA, audioRefB) => {
   const duration = usePlayerStore((s) => s.duration);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
   const nextTrackIndex = usePlayerStore((s) => s.nextTrackIndex);
+  const playlistFinished = usePlayerStore((s) => s.playlistFinished);
+  const collectionContext = usePlayerStore((s) => s.collectionContext);
   const titleOverride = useTabTitleStore((s) => s.override);
   const { isAuthenticated } = useAuthStore();
 
@@ -157,6 +159,32 @@ export const usePlayerEngine = (audioRefA, audioRefB) => {
       usePlayerStore.getState().ensureStandbyLoaded();
     }
   }, [nextTrackIndex]);
+
+  // When an album played from a collection (see Album.jsx's setCollectionContext)
+  // runs all the way out — nextTrackIndex resolved to -1, so playNext() gave up and
+  // set playlistFinished — pull in the collection's next album and keep playing,
+  // rather than just stopping. Lives here rather than in the store because it needs
+  // apiService, and this hook (mounted outside <Routes> in App.jsx) keeps running no
+  // matter which page is shown, so it survives navigating away mid-album.
+  useEffect(() => {
+    if (!playlistFinished || !collectionContext) return undefined;
+    let cancelled = false;
+    const { collectionId, albumId } = collectionContext;
+    apiService.getAdjacentAlbums(albumId, collectionId)
+      .then((response) => {
+        const next = response.data?.next;
+        if (!next || cancelled) return undefined;
+        return apiService.getAlbum(next.id).then((albumResponse) => {
+          if (cancelled) return;
+          const tracks = albumResponse.data?.tracks || [];
+          if (tracks.length === 0) return;
+          usePlayerStore.getState().addTracks(tracks, false, { playImmediately: true });
+          usePlayerStore.getState().setCollectionContext({ collectionId, albumId: next.id });
+        });
+      })
+      .catch((error) => console.error('Failed to auto-advance to next collection album:', error));
+    return () => { cancelled = true; };
+  }, [playlistFinished, collectionContext]);
 
   useEffect(() => {
     if (titleOverride) {
