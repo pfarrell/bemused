@@ -1733,6 +1733,14 @@
      (the footer is too narrow for it and only a clipped sliver would show) */
   .now-playing {
     max-width: 48px;
+    order: 2;
+  }
+
+  /* keep the playlist toggle/progress/transport controls first in the footer
+     so the playlist button doesn't shift when there's no current track (and
+     .now-playing renders nothing) */
+  .music-player-wrapper {
+    order: 1;
   }
 
   .now-playing .track-info {
