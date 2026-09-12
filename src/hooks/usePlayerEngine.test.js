@@ -1,11 +1,14 @@
 import { renderHook, act } from '@testing-library/react';
 import { usePlayerEngine } from './usePlayerEngine';
 import { usePlayerStore } from '../stores/playerStore';
+import { useAuthStore } from '../stores/authStore';
 import { apiService } from '../services/api';
 
 vi.mock('../services/api', () => ({
   apiService: {
-    log: vi.fn(),
+    // apiService.log(...) is chained with .catch() in usePlayerEngine, so
+    // the mock must return a promise like the real axios call does.
+    log: vi.fn(() => Promise.resolve()),
     getImageUrl: vi.fn(() => 'http://example.com/art.jpg'),
   },
 }));
@@ -23,6 +26,10 @@ beforeEach(() => {
     currentTrack: null, currentTime: 0, duration: 0, isPlaying: false, isBuffering: false,
     nextTrackIndex: -1, playlist: [],
   });
+  // Default to a logged-in session for these tests — the log-gating
+  // behavior itself (anonymous playback must not call apiService.log) is
+  // covered by its own dedicated test below.
+  useAuthStore.setState({ isAuthenticated: true });
   vi.clearAllMocks();
 });
 
@@ -137,6 +144,18 @@ test('timeupdate fires apiService.log once the 5-second mark is crossed, and onl
   audioRefA.current.currentTime = 7;
   audioRefA.current.dispatchEvent(new Event('timeupdate'));
   expect(apiService.log).toHaveBeenCalledTimes(1);
+});
+
+test('anonymous playback does not call apiService.log at the 5-second mark', () => {
+  useAuthStore.setState({ isAuthenticated: false });
+  const audioRefA = makeAudioRef();
+  const audioRefB = makeAudioRef();
+  usePlayerStore.setState({ currentTrack: { id: 42 } });
+  renderHook(() => usePlayerEngine(audioRefA, audioRefB));
+
+  audioRefA.current.currentTime = 6;
+  audioRefA.current.dispatchEvent(new Event('timeupdate'));
+  expect(apiService.log).not.toHaveBeenCalled();
 });
 
 test('a fresh play resets the 5-second mark so it fires again on the next track', () => {

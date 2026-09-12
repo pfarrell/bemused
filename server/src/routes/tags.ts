@@ -32,7 +32,7 @@ async function upsertTag(name: string): Promise<number> {
 }
 
 // GET /tags — list all tags alphabetically (for autocomplete)
-tags.get('/', async (c) => {
+tags.get('/', requireAuth, async (c) => {
   const rows = await db
     .selectFrom('tags')
     .select(['id', 'name'])
@@ -68,7 +68,7 @@ tags.get('/artist/:id', async (c) => {
 })
 
 // GET /tags/:name/content — all albums and artists with this tag (browse page)
-tags.get('/:name/content', async (c) => {
+tags.get('/:name/content', requireAuth, async (c) => {
   const tagName = slugifyTag(c.req.param('name'))
 
   const tag = await db

@@ -36,6 +36,7 @@ albums.get('/random', requireAuth, async (c) => {
 // GET /album/:id
 albums.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
+  if (!Number.isInteger(id)) return c.json({ error: 'Not found' }, 404)
 
   const album = await albumsService.findAlbumById(id)
 
@@ -96,7 +97,13 @@ albums.get('/:id', async (c) => {
     album.wikipedia
   )
 
-  const noteRows = await notesService.listNotesByTarget('album', id)
+  // Notes are personal Recall-linked journal content and must stay
+  // account-only even though this album page is now public — anonymous
+  // requests get no notes at all, and (just as important) never trigger
+  // the Recall API calls below, which run on other users' decrypted OAuth
+  // tokens. Mirrors the equivalent guard on GET /track/:id/notes.
+  const requestingUser = c.get('user')
+  const noteRows = requestingUser ? await notesService.listNotesByTarget('album', id) : []
   const authorTokens = new Map<number, string>()
   for (const row of noteRows) {
     if (!authorTokens.has(row.author_id)) {

@@ -151,6 +151,7 @@ artists.get('/random', requireAuth, async (c) => {
 // GET /artist/:id
 artists.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
+  if (!Number.isInteger(id)) return c.json({ error: 'Not found' }, 404)
 
   const artist = await db
     .selectFrom('artists')

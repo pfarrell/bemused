@@ -99,6 +99,11 @@ export default defineConfig({
       '**/.worktrees/**',
       '**/worktrees/**',
       '**/.claude/worktrees/**',
+      // The backend (server/) has its own test runner (node:test via tsx,
+      // see server/package.json's "test" script) — its *.test.ts files
+      // import node:test/node:assert, which vitest's browser-oriented
+      // bundler can't resolve, so they must never be picked up here.
+      '**/server/**',
     ],
   },
 })

@@ -13,6 +13,7 @@ const tracks = new Hono<{ Variables: Variables }>()
 // cover art, stream/download URLs. Powers the track share page.
 tracks.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
+  if (!Number.isInteger(id)) return c.json({ error: 'Track not found' }, 404)
   const [track] = await fetchTracksForIds([id], c)
   if (!track) return c.json({ error: 'Track not found' }, 404)
   return c.json({ track })
@@ -88,9 +89,7 @@ tracks.post('/:id/notes', async (c) => {
   try {
     item = await createRecallNote(token, {
       title: track.album_title ? `${track.title} — ${track.album_title}` : track.title,
-      // No dedicated track detail page exists in bemused — link back to the
-      // track's home album instead.
-      contentText: appendBacklink(content, track.album_id ? `/album/${track.album_id}` : '/'),
+      contentText: appendBacklink(content, `/track/${trackId}`),
       tags: ['bemused'],
     })
   } catch (err) {

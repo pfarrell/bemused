@@ -88,6 +88,7 @@ app.route('/top', playlists)
 app.route('/newborns', playlists)
 app.route('/surprise', playlists)
 app.route('/stream', streams)
+app.route('/tags', tags)
 
 // Everything else requires a logged-in session.
 const protectedApp = new Hono()
@@ -99,7 +100,6 @@ protectedApp.route('/log', logs)
 protectedApp.route('/collection', collections)
 protectedApp.route('/collections', collections)
 protectedApp.route('/favorites', favorites)
-protectedApp.route('/tags', tags)
 protectedApp.route('/lookup', lookup)
 
 // Playlist/collection owners (not just site admins) can reach some routes under
@@ -122,8 +122,11 @@ adminApp.route('/errors', errors)
 adminApp.route('/signups', signups)
 app.route('/admin', adminApp)
 
+export { app }
+
 const port = parseInt(process.env.PORT ?? '3939')
 
-console.log(`Bemused API server starting on port ${port}`)
-
-serve({ fetch: app.fetch, port })
+if (process.env.NODE_ENV !== 'test') {
+  console.log(`Bemused API server starting on port ${port}`)
+  serve({ fetch: app.fetch, port })
+}

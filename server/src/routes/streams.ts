@@ -33,6 +33,7 @@ function buildContentDisposition(artistName: string, title: string, fileType: st
 // GET /stream/:id  — stream an audio file with range request support
 streams.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
+  if (!Number.isInteger(id)) return c.json({ error: 'Track not found' }, 404)
 
   const track = await streamsService.findTrackPath(id)
 

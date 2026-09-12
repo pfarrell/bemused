@@ -59,6 +59,7 @@ export async function fetchTracksForIds(trackIds: number[], c: Context) {
 // GET /playlist/:id
 playlists.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
+  if (!Number.isInteger(id)) return c.json({ error: 'Not found' }, 404)
   const playlist = await db.selectFrom('playlists').selectAll().where('id', '=', id).executeTakeFirst()
   if (!playlist) return c.json({ error: 'Not found' }, 404)
 

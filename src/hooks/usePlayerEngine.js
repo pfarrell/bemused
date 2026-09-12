@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { usePlayerStore } from '../stores/playerStore';
 import { useTabTitleStore } from '../stores/tabTitleStore';
 import { apiService } from '../services/api';
+import { useAuthStore } from '../stores/authStore';
 
 const FALLBACK_ARTWORK = `${import.meta.env.BASE_URL}icons/icon-512.png`;
 const PREFETCH_THRESHOLD_SECONDS = 15;
@@ -39,6 +40,7 @@ export const usePlayerEngine = (audioRefA, audioRefB) => {
   const isPlaying = usePlayerStore((s) => s.isPlaying);
   const nextTrackIndex = usePlayerStore((s) => s.nextTrackIndex);
   const titleOverride = useTabTitleStore((s) => s.override);
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     const audioA = audioRefA.current;
@@ -58,7 +60,7 @@ export const usePlayerEngine = (audioRefA, audioRefB) => {
       if (audio.currentTime >= 5 && !fiveSecondMarkFired) {
         fiveSecondMarkFired = true;
         const track = usePlayerStore.getState().currentTrack;
-        if (track) apiService.log(track.id);
+        if (track && isAuthenticated) apiService.log(track.id).catch(() => {});
       }
       if (Number.isFinite(audio.duration) && audio.duration - audio.currentTime <= PREFETCH_THRESHOLD_SECONDS) {
         usePlayerStore.getState().ensureStandbyLoaded();
