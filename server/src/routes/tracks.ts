@@ -5,8 +5,18 @@ import { db } from '../db/database.js'
 import { notesService } from '../services/notesService.js'
 import { createRecallNote, getRecallItem, decryptRecallToken, appendBacklink, stripBacklink } from '../services/recallService.js'
 import { requireAuth } from '../middleware/auth.js'
+import { fetchTracksForIds } from './playlists.js'
 
 const tracks = new Hono<{ Variables: Variables }>()
+
+// GET /track/:id — public track detail: title, artist/album context,
+// cover art, stream/download URLs. Powers the track share page.
+tracks.get('/:id', async (c) => {
+  const id = parseInt(c.req.param('id'))
+  const [track] = await fetchTracksForIds([id], c)
+  if (!track) return c.json({ error: 'Track not found' }, 404)
+  return c.json({ track })
+})
 
 // GET /track/:id/notes — gated: Recall-linked journal notes are personal
 // content and shouldn't become world-readable just because the track
