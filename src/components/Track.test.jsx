@@ -151,12 +151,33 @@ describe('Track component', () => {
   });
 
   test('Notes menu item closes the dropdown when clicked', () => {
+    useAuthStore.setState({ isAuthenticated: true });
     renderTrack();
     fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
     expect(screen.getByText('📝 Notes')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('📝 Notes'));
     expect(screen.queryByText('▶ Play Now')).not.toBeInTheDocument();
+  });
+
+  describe('Track row — Notes menu item', () => {
+    test('shows the Notes button when logged in', () => {
+      useAuthStore.setState({ isAdmin: false, isAuthenticated: true });
+      renderTrack();
+
+      fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+
+      expect(screen.getByText('📝 Notes')).toBeInTheDocument();
+    });
+
+    test('hides the Notes button when logged out', () => {
+      useAuthStore.setState({ isAdmin: false, isAuthenticated: false });
+      renderTrack();
+
+      fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+
+      expect(screen.queryByText('📝 Notes')).not.toBeInTheDocument();
+    });
   });
 
   const renderWithPlayer = () => {

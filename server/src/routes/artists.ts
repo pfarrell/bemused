@@ -4,12 +4,14 @@ import { getArtistSummary } from '../services/wikipedia.js'
 import { streamBase } from '../db/streamUrl.js'
 import { sql } from 'kysely'
 import { countsService } from '../services/countsService.js'
+import { requireAuth } from '../middleware/auth.js'
+import type { Variables } from '../types.js'
 
 // Minimum similarity score to include in similar_artists response (0–1 scale).
 // Adjust this constant to tune how many similar artists appear on artist pages.
 const SIMILAR_ARTIST_MIN_SIMILARITY = 0.8
 
-const artists = new Hono()
+const artists = new Hono<{ Variables: Variables }>()
 
 // Fetches an artist's own discography exactly as their own artist page would:
 // albums they own outright plus albums where they're credited as a
@@ -98,8 +100,10 @@ async function fetchArtistDiscography(c: any, id: number, name: string, imagePat
   return { albums, singles }
 }
 
-// GET /artists/random?size=N&tag=slug
-artists.get('/random', async (c) => {
+// GET /artists/random?size=N&tag=slug — gated: this powers the logged-in
+// Home feed and must not become a public catalog-browsing endpoint just
+// because /artist/:id (below, in this same router) is public.
+artists.get('/random', requireAuth, async (c) => {
   const size = Math.min(parseInt(c.req.query('size') ?? '10'), 200)
   const tag = c.req.query('tag')
 

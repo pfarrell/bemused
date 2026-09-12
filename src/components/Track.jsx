@@ -348,13 +348,15 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
           </button>
         )}
 
-        <button
-          onClick={handleShowNotes}
-          onTouchStart={(e) => { e.stopPropagation(); }}
-          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleShowNotes(); }}
-        >
-          📝 Notes
-        </button>
+        {isAuthenticated && (
+          <button
+            onClick={handleShowNotes}
+            onTouchStart={(e) => { e.stopPropagation(); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleShowNotes(); }}
+          >
+            📝 Notes
+          </button>
+        )}
 
         {isAuthenticated && (
           <button

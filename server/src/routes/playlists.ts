@@ -73,8 +73,10 @@ playlists.get('/:id', async (c) => {
   return c.json({ playlist, tracks })
 })
 
-// GET /playlists
-playlists.get('/', async (c) => {
+// GET /playlists — gated: the full playlist list must not become
+// browsable without an account just because a single playlist (/:id,
+// below) is public.
+playlists.get('/', requireAuth, async (c) => {
   const rows = await db
     .selectFrom('playlists')
     .selectAll()
@@ -157,8 +159,9 @@ playlists.post('/', requireAuth, async (c) => {
   return c.json(result)
 })
 
-// GET /top  — top 20 most played tracks in the last 7 days
-playlists.get('/top', async (c) => {
+// GET /top  — top 20 most played tracks in the last 7 days — gated,
+// same reasoning as the playlist list above.
+playlists.get('/top', requireAuth, async (c) => {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
   const topRows = await db
@@ -180,8 +183,8 @@ playlists.get('/top', async (c) => {
   })
 })
 
-// GET /newborns?size=25  — most recently added tracks
-playlists.get('/newborns', async (c) => {
+// GET /newborns?size=25  — most recently added tracks — gated.
+playlists.get('/newborns', requireAuth, async (c) => {
   const size = parseInt(c.req.query('size') ?? '25')
 
   const recentTracks = await db
@@ -199,8 +202,8 @@ playlists.get('/newborns', async (c) => {
   })
 })
 
-// GET /surprise  — random 20-track playlist
-playlists.get('/surprise', async (c) => {
+// GET /surprise  — random 20-track playlist — gated.
+playlists.get('/surprise', requireAuth, async (c) => {
   const randomTracks = await sql<{ id: number }>`
     SELECT id FROM tracks WHERE approved = true ORDER BY random() LIMIT 20
   `.execute(db)

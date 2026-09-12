@@ -6,11 +6,13 @@ import { albumsService } from '../services/albumsService.js'
 import { countsService } from '../services/countsService.js'
 import { notesService } from '../services/notesService.js'
 import { createRecallNote, getRecallItem, decryptRecallToken, appendBacklink, stripBacklink } from '../services/recallService.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const albums = new Hono<{ Variables: Variables }>()
 
-// GET /albums/random?size=N&tag=slug
-albums.get('/random', async (c) => {
+// GET /albums/random?size=N&tag=slug — gated, same reasoning as
+// artists.ts's /random: powers the logged-in Home feed.
+albums.get('/random', requireAuth, async (c) => {
   const size = Math.min(parseInt(c.req.query('size') ?? '10'), 200)
   const tag = c.req.query('tag')
 
