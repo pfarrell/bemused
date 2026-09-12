@@ -246,3 +246,44 @@ test('a long-press starting on a track row does not open the background Save as 
   expect(screen.queryByText('💾 Save as Playlist')).not.toBeInTheDocument();
   vi.useRealTimers();
 });
+
+test('right-click on empty drawer background also offers Clear Playlist', () => {
+  renderDrawer();
+  fireEvent.contextMenu(document.querySelector('.music-player-playlist-container'));
+  expect(screen.getByText('🗑 Clear Playlist')).toBeInTheDocument();
+});
+
+test('Clear Playlist is not offered when the queue is empty', () => {
+  usePlayerStore.setState({ playlist: [] });
+  renderDrawer();
+  fireEvent.contextMenu(document.querySelector('.music-player-playlist-container'));
+  expect(screen.queryByText('🗑 Clear Playlist')).not.toBeInTheDocument();
+});
+
+test('clicking Clear Playlist calls clearPlaylist after the user confirms, and closes the menu', () => {
+  const clearPlaylist = vi.fn();
+  usePlayerStore.setState({ clearPlaylist });
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  renderDrawer();
+  fireEvent.contextMenu(document.querySelector('.music-player-playlist-container'));
+
+  fireEvent.click(screen.getByText('🗑 Clear Playlist'));
+
+  expect(window.confirm).toHaveBeenCalled();
+  expect(clearPlaylist).toHaveBeenCalled();
+  expect(screen.queryByText('🗑 Clear Playlist')).not.toBeInTheDocument();
+  window.confirm.mockRestore();
+});
+
+test('declining the confirmation leaves the queue untouched', () => {
+  const clearPlaylist = vi.fn();
+  usePlayerStore.setState({ clearPlaylist });
+  vi.spyOn(window, 'confirm').mockReturnValue(false);
+  renderDrawer();
+  fireEvent.contextMenu(document.querySelector('.music-player-playlist-container'));
+
+  fireEvent.click(screen.getByText('🗑 Clear Playlist'));
+
+  expect(clearPlaylist).not.toHaveBeenCalled();
+  window.confirm.mockRestore();
+});

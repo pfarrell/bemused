@@ -49,16 +49,27 @@ const MusicPlayerWrapper = ({ className = '' }) => {
   const cyclePlaybackMode = usePlayerStore((s) => s.cyclePlaybackMode);
   const toggleDrawer = usePlayerStore((s) => s.toggleDrawer);
   const seek = usePlayerStore((s) => s.seek);
+  const clearPlaylist = usePlayerStore((s) => s.clearPlaylist);
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [pulsing, setPulsing] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
-  const saveQueueCtx = useContextMenu({ shouldIgnore: () => playlist.length === 0 || !isAuthenticated });
+  // Clear Playlist doesn't touch the server, so unlike Save it's offered
+  // regardless of auth state — only an empty queue hides the whole menu.
+  const saveQueueCtx = useContextMenu({ shouldIgnore: () => playlist.length === 0 });
 
   const handleSaveQueue = (e) => {
     if (e) e.stopPropagation();
     saveQueueCtx.close();
     setSaveModalOpen(true);
+  };
+
+  const handleClearPlaylist = (e) => {
+    if (e) e.stopPropagation();
+    saveQueueCtx.close();
+    if (playlist.length === 0 || window.confirm('Clear the playlist? This will stop playback.')) {
+      clearPlaylist();
+    }
   };
 
   useEffect(() => {
@@ -140,12 +151,21 @@ const MusicPlayerWrapper = ({ className = '' }) => {
         onSwallowTouch={saveQueueCtx.swallowTouch}
         testId="save-queue-menu-backdrop"
       >
+        {isAuthenticated && (
+          <button
+            onClick={handleSaveQueue}
+            onTouchStart={(e) => { e.stopPropagation(); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleSaveQueue(); }}
+          >
+            💾 Save as Playlist
+          </button>
+        )}
         <button
-          onClick={handleSaveQueue}
+          onClick={handleClearPlaylist}
           onTouchStart={(e) => { e.stopPropagation(); }}
-          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleSaveQueue(); }}
+          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleClearPlaylist(); }}
         >
-          💾 Save as Playlist
+          🗑 Clear Playlist
         </button>
       </ContextMenu>
 

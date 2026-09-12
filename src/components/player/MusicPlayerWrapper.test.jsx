@@ -131,6 +131,49 @@ test('Save as Playlist is not offered when logged out, even with tracks in the q
   expect(screen.queryByText('💾 Save as Playlist')).not.toBeInTheDocument();
 });
 
+test('the menu does not open on right-click when the queue is empty', () => {
+  usePlayerStore.setState({ playlist: [] });
+  render(<MusicPlayerWrapper />);
+  fireEvent.contextMenu(screen.getByTitle('Toggle Playlist'));
+  expect(screen.queryByText('🗑 Clear Playlist')).not.toBeInTheDocument();
+});
+
+test('Clear Playlist is offered even when logged out, as long as the queue has tracks', () => {
+  useAuthStore.setState({ isAuthenticated: false });
+  usePlayerStore.setState({ playlist: [{ id: 1 }] });
+  render(<MusicPlayerWrapper />);
+  fireEvent.contextMenu(screen.getByTitle('Toggle Playlist'));
+  expect(screen.getByText('🗑 Clear Playlist')).toBeInTheDocument();
+});
+
+test('clicking Clear Playlist calls clearPlaylist after the user confirms', () => {
+  const clearPlaylist = vi.fn();
+  usePlayerStore.setState({ playlist: [{ id: 1 }, { id: 2 }], clearPlaylist });
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  render(<MusicPlayerWrapper />);
+  fireEvent.contextMenu(screen.getByTitle('Toggle Playlist'));
+
+  fireEvent.click(screen.getByText('🗑 Clear Playlist'));
+
+  expect(window.confirm).toHaveBeenCalled();
+  expect(clearPlaylist).toHaveBeenCalled();
+  expect(screen.queryByText('🗑 Clear Playlist')).not.toBeInTheDocument();
+  window.confirm.mockRestore();
+});
+
+test('declining the confirmation leaves the queue untouched', () => {
+  const clearPlaylist = vi.fn();
+  usePlayerStore.setState({ playlist: [{ id: 1 }], clearPlaylist });
+  vi.spyOn(window, 'confirm').mockReturnValue(false);
+  render(<MusicPlayerWrapper />);
+  fireEvent.contextMenu(screen.getByTitle('Toggle Playlist'));
+
+  fireEvent.click(screen.getByText('🗑 Clear Playlist'));
+
+  expect(clearPlaylist).not.toHaveBeenCalled();
+  window.confirm.mockRestore();
+});
+
 test('clicking Save as Playlist opens the save modal and closes the menu', () => {
   usePlayerStore.setState({ playlist: [{ id: 1 }, { id: 2 }] });
   render(<MusicPlayerWrapper />);
