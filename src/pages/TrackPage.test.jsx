@@ -115,27 +115,6 @@ test('the hero play button clears the playlist and plays this track', async () =
   expect(addTrack).toHaveBeenCalledWith(trackData.track);
 });
 
-describe('TrackPage — Share button', () => {
-  test('shares the track title and artist (no em dash) when logged in', async () => {
-    apiService.getTrack.mockResolvedValue({ data: trackData });
-    renderTrackPage();
-    await screen.findByText('Test Track');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Share' }));
-
-    expect(shareLink).toHaveBeenCalledWith({ title: 'Test Track', text: 'Test Track by Test Artist' });
-  });
-
-  test('does not render when logged out', async () => {
-    useAuthStore.setState({ isAdmin: false, isAuthenticated: false });
-    apiService.getTrack.mockResolvedValue({ data: trackData });
-    renderTrackPage();
-    await screen.findByText('Test Track');
-
-    expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument();
-  });
-});
-
 describe('TrackPage — cover art zoom modal', () => {
   test('clicking the cover art opens an enlarged view with the track title and artist', async () => {
     apiService.getTrack.mockResolvedValue({ data: trackData });
@@ -222,7 +201,7 @@ describe('TrackPage — header long-press menu', () => {
     apiService.getTrack.mockResolvedValue({ data: trackData });
   });
 
-  test('shows Add to Playlist, Notes, Favorite, and Download when logged in', async () => {
+  test('shows Add to Playlist, Notes, Favorite, Download, and Share when logged in', async () => {
     renderTrackPage();
     await openMenu();
 
@@ -230,6 +209,16 @@ describe('TrackPage — header long-press menu', () => {
     expect(screen.getByText('📝 Notes')).toBeInTheDocument();
     expect(screen.getByText('☆ Add to Favorites')).toBeInTheDocument();
     expect(screen.getByText('⬇ Download')).toBeInTheDocument();
+    expect(screen.getByText('📤 Share')).toBeInTheDocument();
+  });
+
+  test('Share shares the track title and artist (no em dash)', async () => {
+    renderTrackPage();
+    await openMenu();
+
+    fireEvent.click(screen.getByText('📤 Share'));
+
+    expect(shareLink).toHaveBeenCalledWith({ title: 'Test Track', text: 'Test Track by Test Artist' });
   });
 
   test('does not open at all when logged out', async () => {

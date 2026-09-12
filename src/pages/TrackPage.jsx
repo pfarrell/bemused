@@ -13,7 +13,6 @@ import Loading from '../components/Loading';
 import ContextMenu from '../components/ContextMenu';
 import AddToPlaylistModal from '../components/AddToPlaylistModal';
 import TrackNotesModal from '../components/TrackNotesModal';
-import { formatDuration } from '../utils/formatters';
 import { shareLink } from '../utils/shareLink';
 
 // Matches the basename App.jsx's <Router> uses — needed here because
@@ -237,30 +236,18 @@ const TrackPage = () => {
                 onClick={handlePlayNow}
                 aria-label={isPlaying ? 'Now playing' : 'Play'}
               />
-              {isAuthenticated && (
-                <button
-                  onClick={handleShare}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}
-                  aria-label="Share"
-                >
-                  📤
-                </button>
-              )}
             </div>
           </div>
           {track.album?.title && (
             <p style={{ fontSize: '1rem', margin: '0 0 0.5rem 0', textAlign: 'left' }}>
               <span style={{ color: 'var(--color-text-primary)' }}>from</span>{' '}
               {track.album.id ? (
-                <span style={{ cursor: 'pointer', textDecoration: 'underline', color: '#3b82f6' }} onClick={() => handleEntityClick(`/album/${track.album.id}`)}>
+                <span style={{ cursor: 'pointer', color: '#3b82f6' }} onClick={() => handleEntityClick(`/album/${track.album.id}`)}>
                   {track.album.title}
                 </span>
               ) : <span style={{ color: '#3b82f6' }}>{track.album.title}</span>}
             </p>
           )}
-          {track.duration ? (
-            <p style={{ color: 'var(--color-text-muted)', margin: '0 0 1rem 0', textAlign: 'left' }}>{formatDuration(track.duration)}</p>
-          ) : null}
         </div>
       </div>
 
@@ -310,6 +297,14 @@ const TrackPage = () => {
             onTouchEnd={(e) => { e.preventDefault(); handleDownload(e); }}
           >
             ⬇ Download
+          </button>
+        )}
+        {isAuthenticated && (
+          <button
+            onClick={(e) => { e.stopPropagation(); ctxMenu.close(); handleShare(); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); ctxMenu.close(); handleShare(); }}
+          >
+            📤 Share
           </button>
         )}
       </ContextMenu>
