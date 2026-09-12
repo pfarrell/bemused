@@ -314,13 +314,12 @@ describe('mobile row layout', () => {
     expect(screen.getByText('Album ·')).toBeInTheDocument();
   });
 
-  test('tapping play fetches the album, replaces the queue, and does not navigate', async () => {
+  test('tapping play fetches the album, appends it to the queue and plays it immediately, and does not navigate', async () => {
     apiService.getAlbum.mockResolvedValue({
       data: { tracks: [{ id: 1, title: 'Track One', url: 'http://x/1.mp3' }] },
     });
-    const clearPlaylist = vi.fn();
     const addTracks = vi.fn();
-    usePlayerStore.setState({ clearPlaylist, addTracks });
+    usePlayerStore.setState({ addTracks });
     const onClick = vi.fn();
 
     render(<AlbumCard album={album} artist={artist} onClick={onClick} imageUrl="/img/sm/x.jpg" />);
@@ -330,8 +329,11 @@ describe('mobile row layout', () => {
     await waitFor(() => expect(addTracks).toHaveBeenCalled());
 
     expect(apiService.getAlbum).toHaveBeenCalledWith(7);
-    expect(clearPlaylist).toHaveBeenCalled();
-    expect(addTracks).toHaveBeenCalledWith([{ id: 1, title: 'Track One', url: 'http://x/1.mp3' }]);
+    expect(addTracks).toHaveBeenCalledWith(
+      [{ id: 1, title: 'Track One', url: 'http://x/1.mp3' }],
+      false,
+      { playImmediately: true }
+    );
     expect(onClick).not.toHaveBeenCalled();
   });
 
@@ -430,20 +432,23 @@ describe('desktop list-mode row layout', () => {
     expect(document.querySelector('.artist-card')).toBeNull();
   });
 
-  test('tapping play fetches the album and replaces the queue, same as the mobile row', async () => {
+  test('tapping play fetches the album and appends it to the queue, same as the mobile row', async () => {
     apiService.getAlbum.mockResolvedValue({
       data: { tracks: [{ id: 1, title: 'Track One', url: 'http://x/1.mp3' }] },
     });
-    const clearPlaylist = vi.fn();
     const addTracks = vi.fn();
-    usePlayerStore.setState({ clearPlaylist, addTracks });
+    usePlayerStore.setState({ addTracks });
 
     render(<AlbumCard album={album} artist={artist} onClick={vi.fn()} imageUrl="/img/sm/x.jpg" />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Play Test Album' }));
 
     await waitFor(() => expect(addTracks).toHaveBeenCalled());
-    expect(clearPlaylist).toHaveBeenCalled();
+    expect(addTracks).toHaveBeenCalledWith(
+      [{ id: 1, title: 'Track One', url: 'http://x/1.mp3' }],
+      false,
+      { playImmediately: true }
+    );
   });
 });
 

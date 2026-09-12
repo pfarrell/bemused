@@ -93,6 +93,17 @@ describe('addTrack', () => {
     usePlayerStore.getState().addTrack(track(1), { flashActivity: true });
     expect(usePlayerStore.getState().activityPulseToken).toBe(1);
   });
+
+  test('playImmediately appends and jumps to the new track even while something else is playing', () => {
+    const audioElement = mockAudioElement();
+    setActiveAudio(audioElement, { playlist: [track(1)], currentTrackIndex: 0, isPlaying: true });
+    usePlayerStore.getState().addTrack(track(2), { playImmediately: true });
+    const state = usePlayerStore.getState();
+    expect(state.playlist.map((t) => t.id)).toEqual([1, 2]);
+    expect(state.currentTrackIndex).toBe(1);
+    expect(audioElement.src).toBe('/stream/2');
+    expect(audioElement.play).toHaveBeenCalled();
+  });
 });
 
 describe('addTracks', () => {
@@ -150,6 +161,33 @@ describe('addTracks', () => {
     });
     usePlayerStore.getState().addTracks([track(1), track(2), track(3)]);
     expect(usePlayerStore.getState().currentTrackIndex).toBe(0);
+  });
+
+  test('playImmediately appends the batch to the end of an existing, currently-playing queue and jumps to the first newly-added track', () => {
+    const audioElement = mockAudioElement();
+    setActiveAudio(audioElement, {
+      playlist: [track(1), track(2)],
+      currentTrackIndex: 0,
+      isPlaying: true,
+    });
+    usePlayerStore.getState().addTracks([track(3), track(4)], false, { playImmediately: true });
+    const state = usePlayerStore.getState();
+    expect(state.playlist.map((t) => t.id)).toEqual([1, 2, 3, 4]);
+    expect(state.currentTrackIndex).toBe(2);
+    expect(audioElement.src).toBe('/stream/3');
+  });
+
+  test('playImmediately ignores shuffle-idle-random-start and jumps deterministically to the first new track', () => {
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    setActiveAudio(mockAudioElement(), {
+      playlist: [],
+      currentTrackIndex: -1,
+      isPlaying: false,
+      playbackMode: 'shuffle',
+    });
+    usePlayerStore.getState().addTracks([track(1), track(2), track(3)], false, { playImmediately: true });
+    expect(usePlayerStore.getState().currentTrackIndex).toBe(0);
+    randomSpy.mockRestore();
   });
 });
 

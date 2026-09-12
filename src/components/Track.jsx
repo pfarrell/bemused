@@ -22,7 +22,6 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
   const playlist = usePlayerStore((s) => s.playlist);
   const addTrack = usePlayerStore((s) => s.addTrack);
   const addTracks = usePlayerStore((s) => s.addTracks);
-  const clearPlaylist = usePlayerStore((s) => s.clearPlaylist);
   const playTrackAtIndex = usePlayerStore((s) => s.playTrackAtIndex);
   const { isAuthenticated } = useAuthStore();
   const isFavorite = useFavoritesStore((s) => s.isFavorite('track', track.id));
@@ -48,8 +47,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
     if (existingIndex !== -1) {
       playTrackAtIndex(existingIndex);
     } else {
-      clearPlaylist();
-      addTrack(track);
+      addTrack(track, { playImmediately: true });
     }
   };
 
@@ -62,8 +60,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
     if (existingIndex !== -1) {
       playTrackAtIndex(existingIndex);
     } else {
-      clearPlaylist();
-      addTrack(track);
+      addTrack(track, { playImmediately: true });
     }
     setTimeout(() => playCtxMenu.close(), 0);
   };

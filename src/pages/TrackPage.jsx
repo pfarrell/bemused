@@ -26,7 +26,6 @@ const TrackPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAdmin, isAuthenticated } = useAuthStore();
-  const clearPlaylist = usePlayerStore((s) => s.clearPlaylist);
   const addTrack = usePlayerStore((s) => s.addTrack);
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const setPageTracks = usePlayerStore((s) => s.setPageTracks);
@@ -73,8 +72,7 @@ const TrackPage = () => {
 
   const handlePlayNow = () => {
     if (!track) return;
-    clearPlaylist();
-    addTrack(track);
+    addTrack(track, { playImmediately: true });
   };
 
   const handleShare = () => {

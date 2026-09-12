@@ -25,7 +25,6 @@ const Artist = () => {
   const navigate = useNavigate();
   const { isAdmin, isAuthenticated } = useAuthStore();
   const addTracks = usePlayerStore((s) => s.addTracks);
-  const clearPlaylist = usePlayerStore((s) => s.clearPlaylist);
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const [artistData, setArtistData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -122,8 +121,7 @@ const Artist = () => {
 
   const handlePlaySingles = () => {
     if (singles?.length) {
-      clearPlaylist();
-      addTracks(singles);
+      addTracks(singles, false, { playImmediately: true });
     }
   };
 

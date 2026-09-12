@@ -20,7 +20,6 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, hideArtist = false }) => 
   const isMobile = useIsMobile();
   const viewMode = useViewModeStore((s) => s.mode);
   const navigate = useNavigate();
-  const clearPlaylist = usePlayerStore((s) => s.clearPlaylist);
   const addTracks = usePlayerStore((s) => s.addTracks);
   const { isAuthenticated } = useAuthStore();
   const isFavorite = useFavoritesStore((s) => s.isFavorite('album', album.id));
@@ -51,8 +50,7 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, hideArtist = false }) => 
   };
 
   const handlePlayAll = () => withAlbumTracks((tracks) => {
-    clearPlaylist();
-    addTracks(tracks);
+    addTracks(tracks, false, { playImmediately: true });
   });
 
   const handlePlayNext = () => withAlbumTracks((tracks) => {

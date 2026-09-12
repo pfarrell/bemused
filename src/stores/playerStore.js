@@ -232,7 +232,7 @@ export const usePlayerStore = create((set, get) => ({
   triggerActivityPulse: () => set((state) => ({ activityPulseToken: state.activityPulseToken + 1 })),
 
   // Queue management
-  addTrack: (track, { flashActivity = false } = {}) => {
+  addTrack: (track, { flashActivity = false, playImmediately = false } = {}) => {
     validateTrack(track);
     const { playlist, isPlaying } = get();
     const newPlaylist = [...playlist, track];
@@ -241,13 +241,16 @@ export const usePlayerStore = create((set, get) => ({
       set({ recentlyAddedIndices: [newPlaylist.length - 1] });
       get().triggerActivityPulse();
     }
-    if (!isPlaying) {
+    if (playImmediately || !isPlaying) {
       get().playTrackAtIndex(newPlaylist.length - 1);
     }
     get().syncNextTrackIndex();
   },
 
-  addTracks: (tracks, playNext = false, { flashActivity = false } = {}) => {
+  // playImmediately jumps straight to the first newly-added track, bypassing the
+  // shuffle-idle-random-start below — a deliberate "play this now" action (e.g. an
+  // album's Play Now) always starts at the first track it just queued, not a random one.
+  addTracks: (tracks, playNext = false, { flashActivity = false, playImmediately = false } = {}) => {
     if (!Array.isArray(tracks)) {
       throw new Error('Tracks must be provided as an array');
     }
@@ -270,7 +273,9 @@ export const usePlayerStore = create((set, get) => ({
       set({ recentlyAddedIndices: newIndices });
       get().triggerActivityPulse();
     }
-    if (!isPlaying) {
+    if (playImmediately) {
+      get().playTrackAtIndex(startIndex);
+    } else if (!isPlaying) {
       if (playbackMode === 'shuffle' && newPlaylist.length > 1) {
         const randomIndex = Math.floor(Math.random() * newPlaylist.length);
         set({ shuffleHistory: [] });

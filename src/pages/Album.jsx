@@ -24,7 +24,6 @@ const Album = () => {
   const location = useLocation();
   const collectionId = location.state?.collectionId ?? null;
   const addTracks = usePlayerStore((s) => s.addTracks);
-  const clearPlaylist = usePlayerStore((s) => s.clearPlaylist);
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const setPageTracks = usePlayerStore((s) => s.setPageTracks);
   const { isAdmin, isAuthenticated } = useAuthStore();
@@ -94,8 +93,7 @@ const Album = () => {
 
   const handlePlayNow = () => {
     if (albumData?.tracks) {
-      clearPlaylist();
-      addTracks(albumData.tracks);
+      addTracks(albumData.tracks, false, { playImmediately: true });
     }
   };
 

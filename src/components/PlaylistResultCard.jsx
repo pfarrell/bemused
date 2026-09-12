@@ -20,7 +20,6 @@ const PlaylistResultCard = ({ playlist, onClick, imageUrl, previewAlbums }) => {
   const isMobile = useIsMobile();
   const viewMode = useViewModeStore((s) => s.mode);
   const [playLoading, setPlayLoading] = useState(false);
-  const clearPlaylist = usePlayerStore((s) => s.clearPlaylist);
   const addTracks = usePlayerStore((s) => s.addTracks);
   const { isAuthenticated } = useAuthStore();
   const isFavorite = useFavoritesStore((s) => s.isFavorite('playlist', playlist.id));
@@ -53,8 +52,7 @@ const PlaylistResultCard = ({ playlist, onClick, imageUrl, previewAlbums }) => {
   };
 
   const handlePlayAll = () => withPlaylistTracks((tracks) => {
-    clearPlaylist();
-    addTracks(tracks);
+    addTracks(tracks, false, { playImmediately: true });
   });
 
   const handlePlayNext = () => withPlaylistTracks((tracks) => {
