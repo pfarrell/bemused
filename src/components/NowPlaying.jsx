@@ -1,10 +1,13 @@
 // src/components/player/NowPlaying.jsx
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../stores/playerStore';
 import { apiService } from '../services/api';
+import ImageLightbox from './ImageLightbox';
 
 const NowPlaying = () => {
   const navigate = useNavigate();
+  const [showArtModal, setShowArtModal] = useState(false);
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const closeDrawer = usePlayerStore((s) => s.closeDrawer);
   const handleArtistClick = (track) => {
@@ -40,6 +43,8 @@ const NowPlaying = () => {
           src={albumArtUrl}
           alt={currentTrack.album?.title}
           className="now-playing-art"
+          onClick={() => setShowArtModal(true)}
+          style={{ cursor: 'zoom-in' }}
         />
       ) : (
         <svg
@@ -62,6 +67,15 @@ const NowPlaying = () => {
           {currentTrack.title}
         </div>
       </div>
+      {showArtModal && (
+        <ImageLightbox
+          imageUrl={apiService.getImageUrl(currentTrack.image_path, 'album_page')}
+          alt={currentTrack.album?.title}
+          title={currentTrack.album?.title}
+          subtitle={currentTrack.artist?.name}
+          onClose={() => setShowArtModal(false)}
+        />
+      )}
     </div>
   );
 };

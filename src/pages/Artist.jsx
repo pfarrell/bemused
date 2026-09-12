@@ -1,6 +1,6 @@
 // src/pages/Artist.jsx
 import { Fragment, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
+import ImageLightbox from '../components/ImageLightbox';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { getAlbumYear } from '../utils/formatters';
@@ -142,31 +142,13 @@ const Artist = () => {
             }}
           />
         </div>
-        {showArtistModal && createPortal(
-          <div
-            onClick={() => setShowArtistModal(false)}
-            style={{
-              position: 'fixed', inset: 0, zIndex: 1000,
-              backgroundColor: 'rgba(0,0,0,0.85)',
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              cursor: 'zoom-out', padding: '1rem',
-            }}
-          >
-            <img
-              src={apiService.getImageUrl(artist.image_path, 'artist_page')}
-              alt={artist.name}
-              style={{
-                maxWidth: '90vw', maxHeight: '80vh',
-                objectFit: 'contain', borderRadius: '4px',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-              }}
-            />
-            <div style={{ marginTop: '0.75rem', textAlign: 'center', color: 'white' }}>
-              <div style={{ fontWeight: '600', fontSize: '1rem' }}>{artist.name}</div>
-            </div>
-          </div>,
-          document.body
+        {showArtistModal && (
+          <ImageLightbox
+            imageUrl={apiService.getImageUrl(artist.image_path, 'artist_page')}
+            alt={artist.name}
+            title={artist.name}
+            onClose={() => setShowArtistModal(false)}
+          />
         )}
         
         {/* Artist Info */}

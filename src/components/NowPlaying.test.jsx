@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import NowPlaying from './NowPlaying';
 import { usePlayerStore } from '../stores/playerStore';
@@ -28,6 +28,22 @@ test('falls back to the music-notes icon when the track has no image_path', () =
   usePlayerStore.setState({ currentTrack: { ...track, image_path: null } });
   renderNP();
   expect(screen.queryByRole('img')).toBeNull();
+});
+
+test('clicking the album art opens a lightbox with the larger album_page image', () => {
+  renderNP();
+  fireEvent.click(screen.getByRole('img'));
+  const images = screen.getAllByAltText('Alb');
+  expect(images.length).toBe(2); // footer thumbnail + lightbox image
+  expect(images[1].src).toContain('a.jpg');
+});
+
+test('clicking the lightbox overlay closes it', () => {
+  renderNP();
+  fireEvent.click(screen.getByRole('img'));
+  const images = screen.getAllByAltText('Alb');
+  fireEvent.click(images[1].parentElement);
+  expect(screen.getAllByAltText('Alb').length).toBe(1);
 });
 
 test('the track title has a "go to playlist" tooltip when the current track has a source_playlist', () => {

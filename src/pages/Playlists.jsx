@@ -1,6 +1,6 @@
 // src/pages/Playlists.jsx
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
+import ImageLightbox from '../components/ImageLightbox';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import Loading from '../components/Loading';
@@ -144,31 +144,13 @@ export default function Playlists() {
         </div>
       )}
 
-      {zoomedPlaylist && createPortal(
-        <div
-          onClick={() => setZoomedPlaylist(null)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 1000,
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            cursor: 'zoom-out', padding: '1rem',
-          }}
-        >
-          <img
-            src={apiService.getImageUrl(zoomedPlaylist.image_path, 'album_page')}
-            alt={zoomedPlaylist.name}
-            style={{
-              maxWidth: '90vw', maxHeight: '80vh',
-              objectFit: 'contain', borderRadius: '4px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-            }}
-          />
-          <div style={{ marginTop: '0.75rem', textAlign: 'center', color: 'white' }}>
-            <div style={{ fontWeight: '600', fontSize: '1rem' }}>{zoomedPlaylist.name}</div>
-          </div>
-        </div>,
-        document.body
+      {zoomedPlaylist && (
+        <ImageLightbox
+          imageUrl={apiService.getImageUrl(zoomedPlaylist.image_path, 'album_page')}
+          alt={zoomedPlaylist.name}
+          title={zoomedPlaylist.name}
+          onClose={() => setZoomedPlaylist(null)}
+        />
       )}
     </div>
   );

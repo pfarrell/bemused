@@ -1,6 +1,6 @@
 // src/pages/Collection.jsx
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
+import ImageLightbox from '../components/ImageLightbox';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { useAuthStore } from '../stores/authStore';
@@ -150,31 +150,13 @@ export default function Collection() {
         )}
       </ContextMenu>
 
-      {showImageModal && collection.image_path && createPortal(
-        <div
-          onClick={() => setShowImageModal(false)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 1000,
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            cursor: 'zoom-out', padding: '1rem',
-          }}
-        >
-          <img
-            src={apiService.getImageUrl(collection.image_path, 'album_page')}
-            alt={collection.name}
-            style={{
-              maxWidth: '90vw', maxHeight: '80vh',
-              objectFit: 'contain', borderRadius: '4px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-            }}
-          />
-          <div style={{ marginTop: '0.75rem', textAlign: 'center', color: 'white' }}>
-            <div style={{ fontWeight: '600', fontSize: '1rem' }}>{collection.name}</div>
-          </div>
-        </div>,
-        document.body
+      {showImageModal && collection.image_path && (
+        <ImageLightbox
+          imageUrl={apiService.getImageUrl(collection.image_path, 'album_page')}
+          alt={collection.name}
+          title={collection.name}
+          onClose={() => setShowImageModal(false)}
+        />
       )}
 
       {/* Albums Grid */}

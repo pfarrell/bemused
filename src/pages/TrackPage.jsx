@@ -1,6 +1,6 @@
 // src/pages/TrackPage.jsx
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
+import ImageLightbox from '../components/ImageLightbox';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { usePlayerStore } from '../stores/playerStore';
@@ -177,34 +177,14 @@ const TrackPage = () => {
             style={{ cursor: 'zoom-in' }}
           />
         </div>
-        {showImageModal && createPortal(
-          <div
-            onClick={() => setShowImageModal(false)}
-            style={{
-              position: 'fixed', inset: 0, zIndex: 1000,
-              backgroundColor: 'rgba(0,0,0,0.85)',
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              cursor: 'zoom-out', padding: '1rem',
-            }}
-          >
-            <img
-              src={apiService.getImageUrl(track.image_path, 'album_page')}
-              alt={track.title}
-              style={{
-                maxWidth: '90vw', maxHeight: '80vh',
-                objectFit: 'contain', borderRadius: '4px',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-              }}
-            />
-            <div style={{ marginTop: '0.75rem', textAlign: 'center', color: 'white' }}>
-              <div style={{ fontWeight: '600', fontSize: '1rem' }}>{track.title}</div>
-              {track.artist?.name && (
-                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-faint)', marginTop: '0.25rem' }}>{track.artist.name}</div>
-              )}
-            </div>
-          </div>,
-          document.body
+        {showImageModal && (
+          <ImageLightbox
+            imageUrl={apiService.getImageUrl(track.image_path, 'album_page')}
+            alt={track.title}
+            title={track.title}
+            subtitle={track.artist?.name}
+            onClose={() => setShowImageModal(false)}
+          />
         )}
         <div style={{ flex: 1 }}>
           {/* Reuses Album.jsx's title-row classes (title-row/textblock/actions)

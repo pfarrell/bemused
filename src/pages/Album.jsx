@@ -1,6 +1,6 @@
 // src/pages/Album.jsx
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
+import ImageLightbox from '../components/ImageLightbox';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { usePlayerStore } from '../stores/playerStore';
@@ -225,32 +225,14 @@ const Album = () => {
             }}
           />
         </div>
-        {showAlbumModal && createPortal(
-          <div
-            onClick={() => setShowAlbumModal(false)}
-            style={{
-              position: 'fixed', inset: 0, zIndex: 1000,
-              backgroundColor: 'rgba(0,0,0,0.85)',
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              cursor: 'zoom-out', padding: '1rem',
-            }}
-          >
-            <img
-              src={apiService.getImageUrl(album.image_path, 'album_page')}
-              alt={`${album.title} by ${artist.name}`}
-              style={{
-                maxWidth: '90vw', maxHeight: '80vh',
-                objectFit: 'contain', borderRadius: '4px',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-              }}
-            />
-            <div style={{ marginTop: '0.75rem', textAlign: 'center', color: 'white' }}>
-              <div style={{ fontWeight: '600', fontSize: '1rem' }}>{album.title}</div>
-              <div style={{ fontSize: '0.875rem', color: 'var(--color-text-faint)', marginTop: '0.25rem' }}>{artist.name}</div>
-            </div>
-          </div>,
-          document.body
+        {showAlbumModal && (
+          <ImageLightbox
+            imageUrl={apiService.getImageUrl(album.image_path, 'album_page')}
+            alt={`${album.title} by ${artist.name}`}
+            title={album.title}
+            subtitle={artist.name}
+            onClose={() => setShowAlbumModal(false)}
+          />
         )}
         
         {/* Album Info */}
