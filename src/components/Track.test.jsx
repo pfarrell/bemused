@@ -6,6 +6,7 @@ import { usePlayerStore } from '../stores/playerStore';
 import { useAuthStore } from '../stores/authStore';
 import { useFavoritesStore } from '../stores/favoritesStore';
 import { apiService } from '../services/api';
+import { shareLink } from '../utils/shareLink';
 
 vi.mock('./AddToPlaylistModal', () => ({ default: () => null }));
 vi.mock('./TrackNotesModal', () => ({ default: () => null }));
@@ -13,6 +14,8 @@ vi.mock('./TrackNotesModal', () => ({ default: () => null }));
 vi.mock('../services/api', () => ({
   apiService: { makeTrackSingle: vi.fn() },
 }));
+
+vi.mock('../utils/shareLink', () => ({ shareLink: vi.fn() }));
 
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal();
@@ -53,6 +56,7 @@ beforeEach(() => {
   useAuthStore.setState({ isAuthenticated: false });
   useFavoritesStore.setState({ isFavorite: () => false, toggleFavorite: vi.fn() });
   useNavigate.mockReturnValue(vi.fn());
+  shareLink.mockClear();
 });
 
 describe('Track component', () => {
@@ -108,21 +112,21 @@ describe('Track component', () => {
   test('long-press menu stays open after finger release, closes on a later tap-away', () => {
     vi.useFakeTimers();
     renderTrack();
-    const row = screen.getByText(/Test Track/).closest('.track-item');
+    const playButton = screen.getByRole('button', { name: 'Play Test Track' });
 
-    // Long-press opens the menu (finger still down)
-    fireEvent.touchStart(row, { touches: [{ clientX: 50, clientY: 50 }] });
+    // Long-press on the play button opens the playback menu (finger still down)
+    fireEvent.touchStart(playButton, { touches: [{ clientX: 50, clientY: 50 }] });
     act(() => { vi.advanceTimersByTime(500); });
     expect(screen.getByText('▶ Play Now')).toBeInTheDocument();
 
     // Finger lifts, then the synthesized click lands on the backdrop — menu must persist
-    fireEvent.touchEnd(row);
-    fireEvent.click(screen.getByTestId('track-menu-backdrop'));
+    fireEvent.touchEnd(playButton);
+    fireEvent.click(screen.getByTestId('track-play-menu-backdrop'));
     expect(screen.getByText('▶ Play Now')).toBeInTheDocument();
 
     // After the release window, a deliberate tap on the backdrop closes it
     act(() => { vi.advanceTimersByTime(350); });
-    fireEvent.click(screen.getByTestId('track-menu-backdrop'));
+    fireEvent.click(screen.getByTestId('track-play-menu-backdrop'));
     expect(screen.queryByText('▶ Play Now')).not.toBeInTheDocument();
 
     vi.useRealTimers();
@@ -131,9 +135,9 @@ describe('Track component', () => {
   test('a stray click landing on a menu item right after a long-press open does not trigger it', () => {
     vi.useFakeTimers();
     renderWithPlayer();
-    const row = screen.getByText(/Test Track/).closest('.track-item');
+    const playButton = screen.getByRole('button', { name: 'Play Test Track' });
 
-    fireEvent.touchStart(row, { touches: [{ clientX: 50, clientY: 50 }] });
+    fireEvent.touchStart(playButton, { touches: [{ clientX: 50, clientY: 50 }] });
     act(() => { vi.advanceTimersByTime(500); });
     expect(screen.getByText('➕ Add to Queue')).toBeInTheDocument();
 
@@ -157,7 +161,7 @@ describe('Track component', () => {
     expect(screen.getByText('📝 Notes')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('📝 Notes'));
-    expect(screen.queryByText('▶ Play Now')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('track-menu-backdrop')).not.toBeInTheDocument();
   });
 
   describe('Track row — Notes menu item', () => {
@@ -193,21 +197,21 @@ describe('Track component', () => {
 
   test('Add to Queue flags activity for the player to pulse', () => {
     renderWithPlayer();
-    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Play Test Track' }));
     fireEvent.click(screen.getByText('➕ Add to Queue'));
     expect(usePlayerStore.getState().addTrack).toHaveBeenCalledWith(mockTrack, { flashActivity: true });
   });
 
   test('Play Next flags activity for the player to pulse', () => {
     renderWithPlayer();
-    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Play Test Track' }));
     fireEvent.click(screen.getByText('⏭ Play Next'));
     expect(usePlayerStore.getState().addTracks).toHaveBeenCalledWith([mockTrack], true, { flashActivity: true });
   });
 
   test('Play Now does not flag activity (footer change is the feedback)', () => {
     renderWithPlayer();
-    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Play Test Track' }));
     fireEvent.click(screen.getByText('▶ Play Now'));
     expect(usePlayerStore.getState().addTrack).toHaveBeenCalledWith(mockTrack);
     expect(usePlayerStore.getState().addTracks).not.toHaveBeenCalled();
@@ -215,7 +219,7 @@ describe('Track component', () => {
 
   test('Add to Queue flashes the pressed button before the menu closes', () => {
     renderWithPlayer();
-    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Play Test Track' }));
     const button = screen.getByText('➕ Add to Queue');
     fireEvent.click(button);
     expect(button).toHaveClass('menu-btn-pressed');
@@ -223,7 +227,7 @@ describe('Track component', () => {
 
   test('Play Next flashes the pressed button before the menu closes', () => {
     renderWithPlayer();
-    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Play Test Track' }));
     const button = screen.getByText('⏭ Play Next');
     fireEvent.click(button);
     expect(button).toHaveClass('menu-btn-pressed');
@@ -566,5 +570,69 @@ describe('Track component — Go to Album / Go to Artist menu items', () => {
     fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
     expect(screen.queryByText('🎤 Go to Artist')).not.toBeInTheDocument();
     expect(screen.getByText('💿 Go to Album')).toBeInTheDocument();
+  });
+});
+
+describe('Track component — Share menu item', () => {
+  test('renders regardless of auth state (sharing needs no account)', () => {
+    useAuthStore.setState({ isAuthenticated: false });
+    renderTrack();
+    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+    expect(screen.getByText('📤 Share')).toBeInTheDocument();
+  });
+
+  test('shares the track\'s own URL and title, not the current page', () => {
+    renderTrack();
+    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+
+    fireEvent.click(screen.getByText('📤 Share'));
+
+    expect(shareLink).toHaveBeenCalledWith({
+      title: 'Test Track',
+      text: 'Test Track — Test Artist',
+      url: expect.stringContaining('/track/1'),
+    });
+    expect(screen.queryByText('📤 Share')).not.toBeInTheDocument();
+  });
+
+  test('falls back to the title alone when the track has no artist name', () => {
+    renderTrack({ track: { ...mockTrack, artist: { id: null, name: undefined } } });
+    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+
+    fireEvent.click(screen.getByText('📤 Share'));
+
+    expect(shareLink).toHaveBeenCalledWith(expect.objectContaining({ title: 'Test Track', text: 'Test Track' }));
+  });
+});
+
+describe('Track component — split playback vs. row context menus', () => {
+  test('long-pressing the row (not the play button) opens the row menu, not the playback menu', () => {
+    vi.useFakeTimers();
+    renderTrack();
+    const row = screen.getByText(/Test Track/).closest('.track-item');
+
+    fireEvent.touchStart(row, { touches: [{ clientX: 50, clientY: 50 }] });
+    act(() => { vi.advanceTimersByTime(500); });
+
+    expect(screen.getByTestId('track-menu-backdrop')).toBeInTheDocument();
+    expect(screen.queryByTestId('track-play-menu-backdrop')).not.toBeInTheDocument();
+    expect(screen.queryByText('▶ Play Now')).not.toBeInTheDocument();
+
+    vi.useRealTimers();
+  });
+
+  test('long-pressing the play button opens the playback menu, not the row menu', () => {
+    vi.useFakeTimers();
+    renderTrack();
+    const playButton = screen.getByRole('button', { name: 'Play Test Track' });
+
+    fireEvent.touchStart(playButton, { touches: [{ clientX: 50, clientY: 50 }] });
+    act(() => { vi.advanceTimersByTime(500); });
+
+    expect(screen.getByTestId('track-play-menu-backdrop')).toBeInTheDocument();
+    expect(screen.queryByTestId('track-menu-backdrop')).not.toBeInTheDocument();
+    expect(screen.queryByText('💿 Go to Album')).not.toBeInTheDocument();
+
+    vi.useRealTimers();
   });
 });

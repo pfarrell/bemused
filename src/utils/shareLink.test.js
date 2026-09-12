@@ -38,6 +38,19 @@ describe('shareLink', () => {
     expect(toast.success).not.toHaveBeenCalled();
   });
 
+  test('uses an explicit url override instead of the current page location', async () => {
+    const shareMock = vi.fn().mockResolvedValue(undefined);
+    navigator.share = shareMock;
+
+    await shareLink({ title: 'Track Title', text: 'Track Title — Artist', url: 'https://patf.com/pshare/app/track/7' });
+
+    expect(shareMock).toHaveBeenCalledWith({
+      title: 'Track Title',
+      text: 'Track Title — Artist',
+      url: 'https://patf.com/pshare/app/track/7',
+    });
+  });
+
   test('swallows AbortError from navigator.share without any toast', async () => {
     const abortError = new Error('cancelled');
     abortError.name = 'AbortError';

@@ -13,6 +13,7 @@ import ContextMenu from './ContextMenu';
 import AddToPlaylistModal from './AddToPlaylistModal';
 import TrackNotesModal from './TrackNotesModal';
 import PlayButton from './PlayButton';
+import { shareLink } from '../utils/shareLink';
 
 const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = false, showMakeSingle = false, showEdit = false, onMadeSingle }) => {
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
@@ -29,7 +30,15 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
   const downloadsEnabled = import.meta.env.VITE_ENABLE_DOWNLOADS !== 'false';
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const ctxMenu = useContextMenu({ shouldIgnore: (e) => e.target.tagName === 'A' });
+  // Two independent menus so a mobile long-press doesn't dump every possible
+  // action into one long list (Play Now/Next/Queue plus everything else was
+  // 9-11 items deep). Long-pressing the play button itself opens playCtxMenu
+  // (playback controls only); long-pressing anywhere else on the row opens
+  // ctxMenu (everything else). shouldIgnore keeps the row's menu from also
+  // firing for a touch that started on the play button — mirrors ResultRow.jsx's
+  // hand-rolled version of this same split, reusing the shared hook instead.
+  const ctxMenu = useContextMenu({ shouldIgnore: (e) => e.target.tagName === 'A' || !!e.target.closest('.play-button') });
+  const playCtxMenu = useContextMenu();
 
   const onThisAlbum = useIsCurrentPage(track.album?.id ? `/album/${track.album.id}` : null);
   const onThisArtist = useIsCurrentPage(track.artist?.id ? `/artist/${track.artist.id}` : null);
@@ -56,7 +65,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
       clearPlaylist();
       addTrack(track);
     }
-    setTimeout(() => ctxMenu.close(), 0);
+    setTimeout(() => playCtxMenu.close(), 0);
   };
 
   const handlePlayNext = (e) => {
@@ -67,7 +76,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
     addTracks([track], true, { flashActivity: true }); // true = play next; store auto-starts playback if idle
     setPressedButton('next');
     setTimeout(() => {
-      ctxMenu.close();
+      playCtxMenu.close();
       setPressedButton(null);
     }, 220);
   };
@@ -80,7 +89,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
     addTrack(track, { flashActivity: true }); // store auto-starts playback if idle
     setPressedButton('queue');
     setTimeout(() => {
-      ctxMenu.close();
+      playCtxMenu.close();
       setPressedButton(null);
     }, 220);
   };
@@ -173,6 +182,23 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
     ctxMenu.close();
   };
 
+  const handleShare = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    // Build the track's own URL rather than sharing window.location.href —
+    // this row can render on an album/playlist/search page, and a share from
+    // there must still point at this specific track, not the page it's on.
+    const basename = import.meta.env.DEV ? '' : '/pshare/app';
+    shareLink({
+      title: track.title,
+      text: track.artist?.name ? `${track.title} — ${track.artist.name}` : track.title,
+      url: `${window.location.origin}${basename}/track/${track.id}`,
+    });
+    ctxMenu.close();
+  };
+
   return (
     <div
       className={`track-item ${isPlaying ? 'currently-playing' : ''}`}
@@ -205,6 +231,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
         active={isPlaying}
         onClick={handleTrackClick}
         aria-label={isPlaying ? 'Now playing' : `Play ${track.title}`}
+        {...playCtxMenu.triggerProps}
       >
         {isPlaying && <span className="play-button-note">♪</span>}
       </PlayButton>
@@ -265,12 +292,12 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
       </div>
 
       <ContextMenu
-        open={ctxMenu.open}
-        position={ctxMenu.position}
-        openedViaTouch={ctxMenu.openedViaTouch}
-        onDismiss={ctxMenu.dismiss}
-        onSwallowTouch={ctxMenu.swallowTouch}
-        testId="track-menu-backdrop"
+        open={playCtxMenu.open}
+        position={playCtxMenu.position}
+        openedViaTouch={playCtxMenu.openedViaTouch}
+        onDismiss={playCtxMenu.dismiss}
+        onSwallowTouch={playCtxMenu.swallowTouch}
+        testId="track-play-menu-backdrop"
       >
         <button
           onClick={handlePlayNow}
@@ -297,7 +324,16 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
         >
           ➕ Add to Queue
         </button>
+      </ContextMenu>
 
+      <ContextMenu
+        open={ctxMenu.open}
+        position={ctxMenu.position}
+        openedViaTouch={ctxMenu.openedViaTouch}
+        onDismiss={ctxMenu.dismiss}
+        onSwallowTouch={ctxMenu.swallowTouch}
+        testId="track-menu-backdrop"
+      >
         {track.album?.id && !onThisAlbum && (
           <button
             onClick={handleGoToAlbum}
@@ -377,6 +413,14 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
             ⬇ Download
           </button>
         )}
+
+        <button
+          onClick={handleShare}
+          onTouchStart={(e) => { e.stopPropagation(); }}
+          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleShare(); }}
+        >
+          📤 Share
+        </button>
       </ContextMenu>
 
       {showPlaylistModal && (
