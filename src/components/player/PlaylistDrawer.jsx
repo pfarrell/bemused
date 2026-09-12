@@ -23,6 +23,7 @@ const PlaylistDrawer = ({ onSaveQueue }) => {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const touchStartTimeRef = useRef(0);
   const touchStartPosRef = useRef({ x: 0, y: 0 });
+  const activeRowRef = useRef(null);
   // This component never unmounts (MusicPlayerWrapper always renders it; the
   // `if (!drawerOpen) return null` below is the only thing hiding it), so
   // "first open after an edit" has to be detected via the drawerOpen
@@ -35,6 +36,14 @@ const PlaylistDrawer = ({ onSaveQueue }) => {
     setFlashIndices(recentlyAddedIndices);
     if (recentlyAddedIndices.length > 0) clearRecentlyAdded();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to the drawerOpen transition, not every recentlyAddedIndices change
+  }, [drawerOpen]);
+
+  // Same transition-based approach as flashIndices above: this component
+  // never unmounts, so land on the current track every time the drawer
+  // opens, not just on first mount.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    activeRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [drawerOpen]);
 
   const bgCtx = useContextMenu({
@@ -118,6 +127,7 @@ const PlaylistDrawer = ({ onSaveQueue }) => {
                 track={track}
                 index={index}
                 isActive={index === currentTrackIndex}
+                rowRef={index === currentTrackIndex ? activeRowRef : undefined}
                 isFlashing={flashIndices.includes(index)}
                 isDragged={draggedIndex === index}
                 mobile={mobile}

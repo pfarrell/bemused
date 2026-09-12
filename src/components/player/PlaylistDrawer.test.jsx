@@ -5,12 +5,16 @@ import { usePlayerStore } from '../../stores/playerStore';
 
 vi.mock('../../services/api', () => ({ apiService: { getImageUrl: () => 'http://example.com/art.jpg' } }));
 
+// jsdom doesn't implement scrollIntoView at all.
+Element.prototype.scrollIntoView = vi.fn();
+
 const track = (id, overrides = {}) => ({ id, title: `Track ${id}`, url: `/stream/${id}`, duration: 125, artist: { name: 'Artist' }, ...overrides });
 
 const renderDrawer = (props = {}) =>
   render(<MemoryRouter><PlaylistDrawer onSaveQueue={vi.fn()} {...props} /></MemoryRouter>);
 
 beforeEach(() => {
+  Element.prototype.scrollIntoView.mockClear();
   usePlayerStore.setState({
     playlist: [track(1), track(2), track(3)],
     currentTrackIndex: 1,
@@ -35,6 +39,23 @@ test('renders every track in the playlist', () => {
   expect(screen.getByText(/Track 1/)).toBeInTheDocument();
   expect(screen.getByText(/Track 2/)).toBeInTheDocument();
   expect(screen.getByText(/Track 3/)).toBeInTheDocument();
+});
+
+test('scrolls the current track row into view when the drawer opens', () => {
+  usePlayerStore.setState({ drawerOpen: false });
+  renderDrawer();
+  expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+
+  act(() => usePlayerStore.setState({ drawerOpen: true }));
+  expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest' });
+});
+
+test('does not scroll on open when nothing is currently playing', () => {
+  usePlayerStore.setState({ drawerOpen: false, currentTrackIndex: -1 });
+  renderDrawer();
+
+  act(() => usePlayerStore.setState({ drawerOpen: true }));
+  expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
 });
 
 test('only flashes the track at the position recorded in recentlyAddedIndices at mount time', () => {

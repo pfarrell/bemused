@@ -31,6 +31,7 @@ const PlaylistDrawerRow = ({
   mobile,
   imageUrl,
   artSize,
+  rowRef,
   onDragStart,
   onDragOver,
   onDragEnd,
@@ -96,6 +97,7 @@ const PlaylistDrawerRow = ({
 
   return (
     <li
+      ref={rowRef}
       className={`track-item ${isActive ? 'active' : ''} ${isDragged ? 'dragging' : ''}`}
       draggable={!mobile}
       onDragStart={onDragStart}
