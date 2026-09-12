@@ -71,30 +71,36 @@ app.route('/auth', auth)
 // Public: unfurl-only HTML for social link previews, no protected data.
 app.route('/share', share)
 
-// Everything else requires a logged-in session — the whole site is private
-// except the login page and the OG-preview route above.
+// Public: single-entity detail pages — and the audio stream behind them —
+// are viewable/playable without an account, so a shared link works for a
+// logged-out recipient. Each router below inline-guards the specific
+// routes that must stay account-gated (list/random endpoints, writes,
+// notes reads) — see the comments in each route file (server/src/routes/
+// artists.ts, albums.ts, playlists.ts, tracks.ts).
+app.route('/artists', artists)
+app.route('/artist', artists)   // singular alias used by frontend (/artist/:id)
+app.route('/albums', albums)
+app.route('/album', albums)     // singular alias
+app.route('/track', tracks)
+app.route('/playlist', playlists)
+app.route('/playlists', playlists)
+app.route('/top', playlists)
+app.route('/newborns', playlists)
+app.route('/surprise', playlists)
+app.route('/stream', streams)
+
+// Everything else requires a logged-in session.
 const protectedApp = new Hono()
 protectedApp.use('*', requireAuth)
 
-protectedApp.route('/artists', artists)
-protectedApp.route('/artist', artists)   // singular alias used by frontend (/artist/:id)
-protectedApp.route('/albums', albums)
-protectedApp.route('/album', albums)     // singular alias
-protectedApp.route('/track', tracks)
 protectedApp.route('/search', search)
-protectedApp.route('/stream', streams)
 protectedApp.route('/download', downloads)
 protectedApp.route('/log', logs)
-protectedApp.route('/playlist', playlists)
-protectedApp.route('/playlists', playlists)
 protectedApp.route('/collection', collections)
 protectedApp.route('/collections', collections)
 protectedApp.route('/favorites', favorites)
 protectedApp.route('/tags', tags)
 protectedApp.route('/lookup', lookup)
-protectedApp.route('/top', playlists)
-protectedApp.route('/newborns', playlists)
-protectedApp.route('/surprise', playlists)
 
 // Playlist/collection owners (not just site admins) can reach some routes under
 // the /admin/playlist and /admin/collection URL space (e.g. POST .../:id/image,
