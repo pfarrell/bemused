@@ -39,6 +39,16 @@ describe('Login', () => {
     expect(link).toHaveAttribute('href', '/api/auth/google/start');
   });
 
+  test('shows a Sign up link pointing at /signup when there is no return_to', () => {
+    renderLogin();
+    expect(screen.getByText('Sign up')).toHaveAttribute('href', '/signup');
+  });
+
+  test('Sign up link forwards return_to so signup lands back where login would have', () => {
+    renderLogin(['/login?return_to=%2Fsearch']);
+    expect(screen.getByText('Sign up')).toHaveAttribute('href', '/signup?return_to=%2Fsearch');
+  });
+
   test('forwards a safe return_to onto the Google link', () => {
     renderLogin(['/login?return_to=%2Fovertone%2Fentity%2F123']);
     const link = screen.getByText('Continue with Google');

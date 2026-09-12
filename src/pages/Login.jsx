@@ -154,6 +154,18 @@ const Login = () => {
             </a>
           </>
         )}
+
+        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+          <p style={{ color: 'var(--color-text-faint)', fontSize: '0.875rem' }}>
+            Don't have an account?{' '}
+            <Link
+              to={returnTo ? `/signup?return_to=${encodeURIComponent(returnTo)}` : '/signup'}
+              style={{ color: '#3b82f6', textDecoration: 'none' }}
+            >
+              Sign up
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
