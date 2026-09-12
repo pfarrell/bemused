@@ -574,14 +574,22 @@ describe('Track component — Go to Album / Go to Artist menu items', () => {
 });
 
 describe('Track component — Share menu item', () => {
-  test('renders regardless of auth state (sharing needs no account)', () => {
+  test('does not render when logged out', () => {
     useAuthStore.setState({ isAuthenticated: false });
+    renderTrack();
+    fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
+    expect(screen.queryByText('📤 Share')).not.toBeInTheDocument();
+  });
+
+  test('renders when logged in', () => {
+    useAuthStore.setState({ isAuthenticated: true });
     renderTrack();
     fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
     expect(screen.getByText('📤 Share')).toBeInTheDocument();
   });
 
   test('shares the track\'s own URL and title, not the current page', () => {
+    useAuthStore.setState({ isAuthenticated: true });
     renderTrack();
     fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
 
@@ -596,6 +604,7 @@ describe('Track component — Share menu item', () => {
   });
 
   test('falls back to the title alone when the track has no artist name', () => {
+    useAuthStore.setState({ isAuthenticated: true });
     renderTrack({ track: { ...mockTrack, artist: { id: null, name: undefined } } });
     fireEvent.contextMenu(screen.getByText(/Test Track/).closest('.track-item'));
 

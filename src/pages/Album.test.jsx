@@ -274,7 +274,7 @@ describe('Album page — header context menu', () => {
     expect(screen.queryByText(/Favorites/)).not.toBeInTheDocument();
   });
 
-  test('does not open the menu backdrop at all when logged out (nothing in it would show)', async () => {
+  test('does not open the menu backdrop at all when logged out and there is no musicbrainz_id (nothing in it would show)', async () => {
     useAuthStore.setState({ isAdmin: false, isAuthenticated: false });
     renderAlbum();
     await screen.findByText('Test Album');
@@ -282,6 +282,22 @@ describe('Album page — header context menu', () => {
     fireEvent.contextMenu(screen.getByText('Test Album').closest('.media-page-header'));
 
     expect(screen.queryByTestId('album-header-menu-backdrop')).not.toBeInTheDocument();
+  });
+
+  test('still opens when logged out if the album has a musicbrainz_id (Overtone needs no account)', async () => {
+    useAuthStore.setState({ isAdmin: false, isAuthenticated: false });
+    apiService.getAlbum.mockResolvedValue({
+      data: { ...albumData, album: { ...albumData.album, musicbrainz_id: 'xyz-789' } },
+    });
+    renderAlbum();
+    await screen.findByText('Test Album');
+
+    fireEvent.contextMenu(screen.getByText('Test Album').closest('.media-page-header'));
+
+    expect(screen.getByTestId('album-header-menu-backdrop')).toBeInTheDocument();
+    expect(screen.getByText('🔍 Overtone')).toBeInTheDocument();
+    expect(screen.queryByText('▣ Add to Collection')).not.toBeInTheDocument();
+    expect(screen.queryByText('📤 Share')).not.toBeInTheDocument();
   });
 
   test('clicking Favorite calls toggleFavorite with the album kind/id', async () => {
@@ -294,6 +310,36 @@ describe('Album page — header context menu', () => {
     fireEvent.click(screen.getByText('☆ Add to Favorites'));
 
     expect(toggleFavorite).toHaveBeenCalledWith('album', albumData.album.id, expect.objectContaining({ id: albumData.album.id, title: albumData.album.title }));
+  });
+
+  test('Edit shows only for admins', async () => {
+    useAuthStore.setState({ isAdmin: true, isAuthenticated: true });
+    renderAlbum();
+    await screen.findByText('Test Album');
+
+    fireEvent.contextMenu(screen.getByText('Test Album').closest('.media-page-header'));
+
+    expect(screen.getByText('✎ Edit')).toBeInTheDocument();
+  });
+
+  test('Edit is absent for a non-admin', async () => {
+    useAuthStore.setState({ isAdmin: false, isAuthenticated: true });
+    renderAlbum();
+    await screen.findByText('Test Album');
+
+    fireEvent.contextMenu(screen.getByText('Test Album').closest('.media-page-header'));
+
+    expect(screen.queryByText('✎ Edit')).not.toBeInTheDocument();
+  });
+
+  test('Share shows only when authenticated', async () => {
+    useAuthStore.setState({ isAdmin: false, isAuthenticated: true });
+    renderAlbum();
+    await screen.findByText('Test Album');
+
+    fireEvent.contextMenu(screen.getByText('Test Album').closest('.media-page-header'));
+
+    expect(screen.getByText('📤 Share')).toBeInTheDocument();
   });
 });
 

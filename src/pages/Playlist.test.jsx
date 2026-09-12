@@ -208,4 +208,33 @@ describe('Playlist page — header context menu', () => {
 
     expect(toggleFavorite).toHaveBeenCalledWith('playlist', playlistData.playlist.id, expect.objectContaining({ id: playlistData.playlist.id, name: playlistData.playlist.name }));
   });
+
+  test('Edit shows for the playlist owner', async () => {
+    useAuthStore.setState({ isAdmin: false, user: { id: 1 }, isAuthenticated: true });
+    renderPlaylist();
+    await screen.findByText('Test Playlist');
+
+    fireEvent.contextMenu(screen.getByText('Test Playlist').closest('div'));
+
+    expect(screen.getByText('✎ Edit')).toBeInTheDocument();
+  });
+
+  test('Edit is absent for a non-owner, non-admin', async () => {
+    useAuthStore.setState({ isAdmin: false, user: { id: 999 }, isAuthenticated: true });
+    renderPlaylist();
+    await screen.findByText('Test Playlist');
+
+    fireEvent.contextMenu(screen.getByText('Test Playlist').closest('div'));
+
+    expect(screen.queryByText('✎ Edit')).not.toBeInTheDocument();
+  });
+
+  test('Share shows only when authenticated', async () => {
+    renderPlaylist();
+    await screen.findByText('Test Playlist');
+
+    fireEvent.contextMenu(screen.getByText('Test Playlist').closest('div'));
+
+    expect(screen.getByText('📤 Share')).toBeInTheDocument();
+  });
 });

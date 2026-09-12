@@ -414,13 +414,15 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
           </button>
         )}
 
-        <button
-          onClick={handleShare}
-          onTouchStart={(e) => { e.stopPropagation(); }}
-          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleShare(); }}
-        >
-          📤 Share
-        </button>
+        {isAuthenticated && (
+          <button
+            onClick={handleShare}
+            onTouchStart={(e) => { e.stopPropagation(); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleShare(); }}
+          >
+            📤 Share
+          </button>
+        )}
       </ContextMenu>
 
       {showPlaylistModal && (

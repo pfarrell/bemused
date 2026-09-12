@@ -36,8 +36,12 @@ const Artist = () => {
   const [showArtistModal, setShowArtistModal] = useState(false);
   const isFavorite = useFavoritesStore((s) => s.isFavorite('artist', parseInt(id)));
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
-  const ctxMenu = useContextMenu({ shouldIgnore: (e) => !isAuthenticated || e.target.tagName === 'A' || !!e.target.closest('button') });
   const { overflowAction: overtoneAction, modal: overtoneModal } = useOvertoneAction(artistData?.artist?.musicbrainz_id);
+  // Edit/Favorite/Share are all account-gated, so unless Overtone applies
+  // (musicbrainz_id present — no login needed for that one), a logged-out
+  // visitor's long-press would open an empty menu. Suppress it entirely in
+  // that case rather than popping up nothing.
+  const ctxMenu = useContextMenu({ shouldIgnore: (e) => (!isAuthenticated && !overtoneAction) || e.target.tagName === 'A' || !!e.target.closest('button') });
 
   const handleToggleFavorite = () => {
     if (!artistData?.artist) return;
@@ -187,7 +191,7 @@ const Artist = () => {
                     onClick: handleToggleFavorite,
                   },
                   overtoneAction,
-                  { key: 'share', icon: '📤', label: 'Share', onClick: () => shareLink({ title: artist.name, text: artist.name }) },
+                  isAuthenticated && { key: 'share', icon: '📤', label: 'Share', onClick: () => shareLink({ title: artist.name, text: artist.name }) },
                 ].filter(Boolean)}
               />
               {overtoneModal}
@@ -288,12 +292,38 @@ const Artist = () => {
         onSwallowTouch={ctxMenu.swallowTouch}
         testId="artist-header-menu-backdrop"
       >
-        <button
-          onClick={(e) => { e.stopPropagation(); handleToggleFavorite(); }}
-          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleFavorite(); }}
-        >
-          {isFavorite ? '★ Remove from Favorites' : '☆ Add to Favorites'}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={(e) => { e.stopPropagation(); ctxMenu.close(); navigate(`/admin/artist/${id}`); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); ctxMenu.close(); navigate(`/admin/artist/${id}`); }}
+          >
+            ✎ Edit
+          </button>
+        )}
+        {isAuthenticated && (
+          <button
+            onClick={(e) => { e.stopPropagation(); handleToggleFavorite(); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleFavorite(); }}
+          >
+            {isFavorite ? '★ Remove from Favorites' : '☆ Add to Favorites'}
+          </button>
+        )}
+        {overtoneAction && (
+          <button
+            onClick={(e) => { e.stopPropagation(); ctxMenu.close(); overtoneAction.onClick(); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); ctxMenu.close(); overtoneAction.onClick(); }}
+          >
+            {overtoneAction.icon} {overtoneAction.label}
+          </button>
+        )}
+        {isAuthenticated && (
+          <button
+            onClick={(e) => { e.stopPropagation(); ctxMenu.close(); shareLink({ title: artist.name, text: artist.name }); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); ctxMenu.close(); shareLink({ title: artist.name, text: artist.name }); }}
+          >
+            📤 Share
+          </button>
+        )}
       </ContextMenu>
 
       {/* Albums Grid */}

@@ -158,7 +158,7 @@ export default function Playlist() {
                 label: isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
                 onClick: handleToggleFavorite,
               },
-              { key: 'share', icon: '📤', label: 'Share', onClick: () => shareLink({ title: playlist.name, text: `${playlist.name} playlist` }) },
+              isAuthenticated && { key: 'share', icon: '📤', label: 'Share', onClick: () => shareLink({ title: playlist.name, text: `${playlist.name} playlist` }) },
             ].filter(Boolean)}
           />
         </div>
@@ -171,12 +171,30 @@ export default function Playlist() {
         onSwallowTouch={ctxMenu.swallowTouch}
         testId="playlist-header-menu-backdrop"
       >
-        <button
-          onClick={(e) => { e.stopPropagation(); handleToggleFavorite(); }}
-          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleFavorite(); }}
-        >
-          {isFavorite ? '★ Remove from Favorites' : '☆ Add to Favorites'}
-        </button>
+        {canEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); ctxMenu.close(); navigate(`/admin/playlist/${id}`); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); ctxMenu.close(); navigate(`/admin/playlist/${id}`); }}
+          >
+            ✎ Edit
+          </button>
+        )}
+        {isAuthenticated && (
+          <button
+            onClick={(e) => { e.stopPropagation(); handleToggleFavorite(); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleFavorite(); }}
+          >
+            {isFavorite ? '★ Remove from Favorites' : '☆ Add to Favorites'}
+          </button>
+        )}
+        {isAuthenticated && (
+          <button
+            onClick={(e) => { e.stopPropagation(); ctxMenu.close(); shareLink({ title: playlist.name, text: `${playlist.name} playlist` }); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); ctxMenu.close(); shareLink({ title: playlist.name, text: `${playlist.name} playlist` }); }}
+          >
+            📤 Share
+          </button>
+        )}
       </ContextMenu>
 
       {showImageModal && playlist.image_path && createPortal(

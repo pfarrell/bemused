@@ -37,8 +37,12 @@ const Album = () => {
   const [adjacentAlbums, setAdjacentAlbums] = useState({ prev: null, next: null });
   const isFavorite = useFavoritesStore((s) => s.isFavorite('album', parseInt(id)));
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
-  const ctxMenu = useContextMenu({ shouldIgnore: (e) => !isAuthenticated || e.target.tagName === 'A' || !!e.target.closest('button') });
   const { overflowAction: overtoneAction, modal: overtoneModal } = useOvertoneAction(albumData?.album?.musicbrainz_id, 'release');
+  // Edit/Add to Collection/Favorite/Share are all account-gated, so unless
+  // Overtone applies (musicbrainz_id present — no login needed for that one),
+  // a logged-out visitor's long-press would open an empty menu. Suppress it
+  // entirely in that case rather than popping up nothing.
+  const ctxMenu = useContextMenu({ shouldIgnore: (e) => (!isAuthenticated && !overtoneAction) || e.target.tagName === 'A' || !!e.target.closest('button') });
 
   useEffect(() => {
     const fetchAlbumData = async () => {
@@ -271,7 +275,7 @@ const Album = () => {
                     onClick: handleToggleFavorite,
                   },
                   overtoneAction,
-                  { key: 'share', icon: '📤', label: 'Share', onClick: () => shareLink({ title: album.title, text: `${album.title} by ${artist.name}` }) },
+                  isAuthenticated && { key: 'share', icon: '📤', label: 'Share', onClick: () => shareLink({ title: album.title, text: `${album.title} by ${artist.name}` }) },
                 ].filter(Boolean)}
               />
               {overtoneModal}
@@ -344,6 +348,14 @@ const Album = () => {
         onSwallowTouch={ctxMenu.swallowTouch}
         testId="album-header-menu-backdrop"
       >
+        {isAdmin && (
+          <button
+            onClick={(e) => { e.stopPropagation(); ctxMenu.close(); navigate(`/admin/album/${id}`); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); ctxMenu.close(); navigate(`/admin/album/${id}`); }}
+          >
+            ✎ Edit
+          </button>
+        )}
         {isAuthenticated && (
           <button
             onClick={(e) => { e.stopPropagation(); ctxMenu.close(); setShowCollectionModal(true); }}
@@ -358,6 +370,22 @@ const Album = () => {
             onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleFavorite(); }}
           >
             {isFavorite ? '★ Remove from Favorites' : '☆ Add to Favorites'}
+          </button>
+        )}
+        {overtoneAction && (
+          <button
+            onClick={(e) => { e.stopPropagation(); ctxMenu.close(); overtoneAction.onClick(); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); ctxMenu.close(); overtoneAction.onClick(); }}
+          >
+            {overtoneAction.icon} {overtoneAction.label}
+          </button>
+        )}
+        {isAuthenticated && (
+          <button
+            onClick={(e) => { e.stopPropagation(); ctxMenu.close(); shareLink({ title: album.title, text: `${album.title} by ${artist.name}` }); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); ctxMenu.close(); shareLink({ title: album.title, text: `${album.title} by ${artist.name}` }); }}
+          >
+            📤 Share
           </button>
         )}
       </ContextMenu>

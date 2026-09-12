@@ -104,6 +104,70 @@ describe('Collection page — Edit button access', () => {
   });
 });
 
+describe('Collection page — header context menu', () => {
+  beforeEach(() => {
+    apiService.getCollection.mockResolvedValue({
+      data: { collection: baseCollection, albums: [], notes: [], summary: null },
+    });
+  });
+
+  test('right-clicking the header shows Favorite when authenticated', async () => {
+    useAuthStore.setState({ isAdmin: false, isAuthenticated: true, user: null });
+    renderCollection();
+    await screen.findByText('Road Trip Mix');
+
+    fireEvent.contextMenu(screen.getByText('Road Trip Mix').closest('div'));
+
+    expect(screen.getByText('☆ Add to Favorites')).toBeInTheDocument();
+  });
+
+  test('shows nothing on right-click when logged out', async () => {
+    renderCollection();
+    await screen.findByText('Road Trip Mix');
+
+    fireEvent.contextMenu(screen.getByText('Road Trip Mix').closest('div'));
+
+    expect(screen.queryByText(/Favorites/)).not.toBeInTheDocument();
+    expect(screen.queryByText('📤 Share')).not.toBeInTheDocument();
+  });
+
+  test('Edit shows for the collection owner', async () => {
+    useAuthStore.setState({ isAdmin: false, user: { id: 7 }, isAuthenticated: true });
+    apiService.getCollection.mockResolvedValue({
+      data: { collection: { ...baseCollection, user_id: 7 }, albums: [], notes: [], summary: null },
+    });
+    renderCollection();
+    await screen.findByText('Road Trip Mix');
+
+    fireEvent.contextMenu(screen.getByText('Road Trip Mix').closest('div'));
+
+    expect(screen.getByText('✎ Edit')).toBeInTheDocument();
+  });
+
+  test('Edit is absent for a non-owner, non-admin', async () => {
+    useAuthStore.setState({ isAdmin: false, user: { id: 999 }, isAuthenticated: true });
+    apiService.getCollection.mockResolvedValue({
+      data: { collection: { ...baseCollection, user_id: 7 }, albums: [], notes: [], summary: null },
+    });
+    renderCollection();
+    await screen.findByText('Road Trip Mix');
+
+    fireEvent.contextMenu(screen.getByText('Road Trip Mix').closest('div'));
+
+    expect(screen.queryByText('✎ Edit')).not.toBeInTheDocument();
+  });
+
+  test('Share shows only when authenticated', async () => {
+    useAuthStore.setState({ isAdmin: false, isAuthenticated: true, user: null });
+    renderCollection();
+    await screen.findByText('Road Trip Mix');
+
+    fireEvent.contextMenu(screen.getByText('Road Trip Mix').closest('div'));
+
+    expect(screen.getByText('📤 Share')).toBeInTheDocument();
+  });
+});
+
 describe('Collection page — cover collage', () => {
   test('shows a 2x2 collage of the first 4 albums with covers when there is no custom image', async () => {
     apiService.getCollection.mockResolvedValue({

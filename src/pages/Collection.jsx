@@ -109,7 +109,7 @@ export default function Collection() {
                 label: isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
                 onClick: handleToggleFavorite,
               },
-              { key: 'share', icon: '📤', label: 'Share', onClick: () => shareLink({ title: collection.name, text: `${collection.name} collection` }) },
+              isAuthenticated && { key: 'share', icon: '📤', label: 'Share', onClick: () => shareLink({ title: collection.name, text: `${collection.name} collection` }) },
             ].filter(Boolean)}
           />
 
@@ -124,12 +124,30 @@ export default function Collection() {
         onSwallowTouch={ctxMenu.swallowTouch}
         testId="collection-header-menu-backdrop"
       >
-        <button
-          onClick={(e) => { e.stopPropagation(); handleToggleFavorite(); }}
-          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleFavorite(); }}
-        >
-          {isFavorite ? '★ Remove from Favorites' : '☆ Add to Favorites'}
-        </button>
+        {canEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); ctxMenu.close(); navigate(`/admin/collection/${id}`); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); ctxMenu.close(); navigate(`/admin/collection/${id}`); }}
+          >
+            ✎ Edit
+          </button>
+        )}
+        {isAuthenticated && (
+          <button
+            onClick={(e) => { e.stopPropagation(); handleToggleFavorite(); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleFavorite(); }}
+          >
+            {isFavorite ? '★ Remove from Favorites' : '☆ Add to Favorites'}
+          </button>
+        )}
+        {isAuthenticated && (
+          <button
+            onClick={(e) => { e.stopPropagation(); ctxMenu.close(); shareLink({ title: collection.name, text: `${collection.name} collection` }); }}
+            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); ctxMenu.close(); shareLink({ title: collection.name, text: `${collection.name} collection` }); }}
+          >
+            📤 Share
+          </button>
+        )}
       </ContextMenu>
 
       {showImageModal && collection.image_path && createPortal(

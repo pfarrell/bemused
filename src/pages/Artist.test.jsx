@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import Artist from './Artist';
@@ -259,5 +259,74 @@ describe('Artist page — Performances section', () => {
     await screen.findByText('Test Artist');
 
     expect(screen.queryByText('Performances')).not.toBeInTheDocument();
+  });
+});
+
+describe('Artist page — header context menu', () => {
+  beforeEach(() => {
+    apiService.getArtist.mockResolvedValue({ data: { ...artistData, albums: [] } });
+  });
+
+  test('right-clicking the header shows Favorite', async () => {
+    renderArtist();
+    await screen.findByText('Test Artist');
+
+    fireEvent.contextMenu(screen.getByText('Test Artist').closest('.media-page-header'));
+
+    expect(screen.getByText('☆ Add to Favorites')).toBeInTheDocument();
+  });
+
+  test('does not open the menu backdrop at all when logged out and there is no musicbrainz_id (nothing in it would show)', async () => {
+    useAuthStore.setState({ isAdmin: false, isAuthenticated: false });
+    renderArtist();
+    await screen.findByText('Test Artist');
+
+    fireEvent.contextMenu(screen.getByText('Test Artist').closest('.media-page-header'));
+
+    expect(screen.queryByTestId('artist-header-menu-backdrop')).not.toBeInTheDocument();
+  });
+
+  test('still opens when logged out if the artist has a musicbrainz_id (Overtone needs no account)', async () => {
+    useAuthStore.setState({ isAdmin: false, isAuthenticated: false });
+    apiService.getArtist.mockResolvedValue({
+      data: { ...artistData, artist: { ...artistData.artist, musicbrainz_id: 'abc-123' }, albums: [] },
+    });
+    renderArtist();
+    await screen.findByText('Test Artist');
+
+    fireEvent.contextMenu(screen.getByText('Test Artist').closest('.media-page-header'));
+
+    expect(screen.getByTestId('artist-header-menu-backdrop')).toBeInTheDocument();
+    expect(screen.getByText('🔍 Overtone')).toBeInTheDocument();
+    expect(screen.queryByText(/Favorites/)).not.toBeInTheDocument();
+    expect(screen.queryByText('📤 Share')).not.toBeInTheDocument();
+  });
+
+  test('Edit shows only for admins', async () => {
+    useAuthStore.setState({ isAdmin: true, isAuthenticated: true });
+    renderArtist();
+    await screen.findByText('Test Artist');
+
+    fireEvent.contextMenu(screen.getByText('Test Artist').closest('.media-page-header'));
+
+    expect(screen.getByText('✎ Edit')).toBeInTheDocument();
+  });
+
+  test('Edit is absent for a non-admin', async () => {
+    renderArtist();
+    await screen.findByText('Test Artist');
+
+    fireEvent.contextMenu(screen.getByText('Test Artist').closest('.media-page-header'));
+
+    expect(screen.queryByText('✎ Edit')).not.toBeInTheDocument();
+  });
+
+  test('Share shows only when authenticated', async () => {
+    renderArtist();
+    await screen.findByText('Test Artist');
+
+    fireEvent.contextMenu(screen.getByText('Test Artist').closest('.media-page-header'));
+
+    expect(screen.getByText('📤 Share')).toBeInTheDocument();
   });
 });
