@@ -110,6 +110,34 @@ test('the share button shares the track title and artist', async () => {
   expect(shareLink).toHaveBeenCalledWith({ title: 'Test Track', text: 'Test Track — Test Artist' });
 });
 
+describe('TrackPage — cover art zoom modal', () => {
+  test('clicking the cover art opens an enlarged view with the track title and artist', async () => {
+    apiService.getTrack.mockResolvedValue({ data: trackData });
+    renderTrackPage();
+    await screen.findByText('Test Track');
+
+    fireEvent.click(screen.getByAltText('Test Track'));
+
+    // Two images now: the header thumbnail and the enlarged modal copy.
+    expect(screen.getAllByAltText('Test Track')).toHaveLength(2);
+    expect(screen.getByText('Test Artist', { selector: 'div' })).toBeInTheDocument();
+  });
+
+  test('clicking the enlarged view closes it', async () => {
+    apiService.getTrack.mockResolvedValue({ data: trackData });
+    renderTrackPage();
+    await screen.findByText('Test Track');
+
+    fireEvent.click(screen.getByAltText('Test Track'));
+    expect(screen.getAllByAltText('Test Track')).toHaveLength(2);
+
+    const enlarged = screen.getAllByAltText('Test Track')[1];
+    fireEvent.click(enlarged.closest('div'));
+
+    expect(screen.getAllByAltText('Test Track')).toHaveLength(1);
+  });
+});
+
 test('hides account-gated row actions when logged out', async () => {
   useAuthStore.setState({ isAdmin: false, isAuthenticated: false });
   apiService.getTrack.mockResolvedValue({ data: trackData });
