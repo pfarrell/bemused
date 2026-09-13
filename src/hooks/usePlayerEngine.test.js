@@ -12,6 +12,7 @@ vi.mock('../services/api', () => ({
     getImageUrl: vi.fn(() => 'http://example.com/art.jpg'),
     getAdjacentAlbums: vi.fn(),
     getAlbum: vi.fn(),
+    getRandomCollectionTracks: vi.fn(),
   },
 }));
 
@@ -27,6 +28,7 @@ beforeEach(() => {
     audioElementA: null, audioElementB: null, activeSlot: 'a',
     currentTrack: null, currentTime: 0, duration: 0, isPlaying: false, isBuffering: false,
     nextTrackIndex: -1, playlist: [], playlistFinished: false, collectionContext: null,
+    playbackMode: 'off', currentTrackIndex: -1,
   });
   // Default to a logged-in session for these tests — the log-gating
   // behavior itself (anonymous playback must not call apiService.log) is
@@ -289,5 +291,115 @@ describe('collection auto-advance', () => {
 
     expect(apiService.getAlbum).not.toHaveBeenCalled();
     expect(addTracks).not.toHaveBeenCalled();
+  });
+});
+
+describe('collection shuffle top-up', () => {
+  test('does nothing when playbackMode is not shuffle-collection', async () => {
+    const audioRefA = makeAudioRef();
+    const audioRefB = makeAudioRef();
+    renderHook(() => usePlayerEngine(audioRefA, audioRefB));
+
+    await act(async () => {
+      usePlayerStore.setState({
+        playbackMode: 'shuffle',
+        collectionContext: { collectionId: 7, albumId: 10 },
+        playlist: [{ id: 1, title: 'T1', url: '/stream/1' }],
+        currentTrackIndex: 0,
+      });
+    });
+
+    expect(apiService.getRandomCollectionTracks).not.toHaveBeenCalled();
+  });
+
+  test('does nothing without an active collectionContext', async () => {
+    const audioRefA = makeAudioRef();
+    const audioRefB = makeAudioRef();
+    renderHook(() => usePlayerEngine(audioRefA, audioRefB));
+
+    await act(async () => {
+      usePlayerStore.setState({
+        playbackMode: 'shuffle-collection',
+        collectionContext: null,
+        playlist: [{ id: 1, title: 'T1', url: '/stream/1' }],
+        currentTrackIndex: 0,
+      });
+    });
+
+    expect(apiService.getRandomCollectionTracks).not.toHaveBeenCalled();
+  });
+
+  test('does not fetch while more than 5 tracks remain queued', async () => {
+    const audioRefA = makeAudioRef();
+    const audioRefB = makeAudioRef();
+    renderHook(() => usePlayerEngine(audioRefA, audioRefB));
+    const playlist = Array.from({ length: 8 }, (_, i) => ({ id: i + 1, title: `T${i + 1}`, url: `/stream/${i + 1}` }));
+
+    await act(async () => {
+      usePlayerStore.setState({
+        playbackMode: 'shuffle-collection',
+        collectionContext: { collectionId: 7, albumId: 10 },
+        playlist,
+        currentTrackIndex: 0, // 7 tracks remain after this one
+      });
+    });
+
+    expect(apiService.getRandomCollectionTracks).not.toHaveBeenCalled();
+  });
+
+  test('fetches and appends another batch once 5 or fewer tracks remain queued', async () => {
+    apiService.getRandomCollectionTracks.mockResolvedValue({ data: { tracks: [{ id: 100, title: 'New', url: '/stream/100' }] } });
+    const playlist = Array.from({ length: 3 }, (_, i) => ({ id: i + 1, title: `T${i + 1}`, url: `/stream/${i + 1}` }));
+
+    const audioRefA = makeAudioRef();
+    const audioRefB = makeAudioRef();
+    renderHook(() => usePlayerEngine(audioRefA, audioRefB));
+
+    await act(async () => {
+      usePlayerStore.setState({
+        playbackMode: 'shuffle-collection',
+        collectionContext: { collectionId: 7, albumId: 10 },
+        playlist,
+        currentTrackIndex: 0, // 2 tracks remain after this one
+      });
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(apiService.getRandomCollectionTracks).toHaveBeenCalledWith(7, { limit: 25, excludeTrackIds: [1, 2, 3] });
+    expect(usePlayerStore.getState().playlist.map((t) => t.id)).toEqual([1, 2, 3, 100]);
+  });
+
+  test('does not fire a second fetch while one is already in flight', async () => {
+    let resolveFetch;
+    apiService.getRandomCollectionTracks.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
+    const playlist = [{ id: 1, title: 'T1', url: '/stream/1' }];
+
+    const audioRefA = makeAudioRef();
+    const audioRefB = makeAudioRef();
+    renderHook(() => usePlayerEngine(audioRefA, audioRefB));
+
+    await act(async () => {
+      usePlayerStore.setState({
+        playbackMode: 'shuffle-collection',
+        collectionContext: { collectionId: 7, albumId: 10 },
+        playlist,
+        currentTrackIndex: 0,
+      });
+      await Promise.resolve();
+    });
+    expect(apiService.getRandomCollectionTracks).toHaveBeenCalledTimes(1);
+
+    // Re-trigger the effect (new playlist reference, same remaining count) while the first fetch is still pending.
+    await act(async () => {
+      usePlayerStore.setState({ playlist: [...playlist] });
+      await Promise.resolve();
+    });
+    expect(apiService.getRandomCollectionTracks).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveFetch({ data: { tracks: [] } });
+      await Promise.resolve();
+    });
   });
 });

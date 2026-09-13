@@ -18,6 +18,7 @@ const PAUSE = '⏸';
 
 const PLAYBACK_MODE_DISPLAY = {
   off: { glyph: SHUFFLE, title: 'Shuffle: Off' },
+  'shuffle-collection': { glyph: SHUFFLE, title: 'Shuffle Collection' },
   shuffle: { glyph: SHUFFLE, title: 'Shuffle' },
   'repeat-all': { glyph: REPEAT_ALL, title: 'Repeat All' },
   'repeat-one': { glyph: REPEAT_ONE, title: 'Repeat One' },

@@ -1,5 +1,12 @@
 import { usePlayerStore } from './playerStore';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { apiService } from '../services/api';
+
+vi.mock('../services/api', () => ({
+  apiService: {
+    getRandomCollectionTracks: vi.fn(),
+  },
+}));
 
 const track = (id, overrides = {}) => ({ id, title: `Track ${id}`, url: `/stream/${id}`, duration: 180, artist: { name: 'A' }, ...overrides });
 
@@ -18,6 +25,7 @@ const setActiveAudio = (audioElement, overrides = {}) =>
   usePlayerStore.setState({ audioElementA: audioElement, audioElementB: mockAudioElement(), activeSlot: 'a', ...overrides });
 
 beforeEach(() => {
+  apiService.getRandomCollectionTracks.mockReset();
   usePlayerStore.setState({
     audioElementA: null,
     audioElementB: null,
@@ -294,6 +302,37 @@ describe('playNext / playback modes', () => {
       modes.push(usePlayerStore.getState().playbackMode);
     }
     expect(modes).toEqual(['shuffle', 'repeat-all', 'repeat-one', 'off']);
+  });
+
+  test('cyclePlaybackMode inserts shuffle-collection when collectionContext is set', () => {
+    apiService.getRandomCollectionTracks.mockResolvedValue({ data: { tracks: [] } });
+    usePlayerStore.setState({ playbackMode: 'off', collectionContext: { collectionId: 7, albumId: 42 } });
+    const modes = [];
+    for (let i = 0; i < 5; i++) {
+      usePlayerStore.getState().cyclePlaybackMode();
+      modes.push(usePlayerStore.getState().playbackMode);
+    }
+    expect(modes).toEqual(['shuffle-collection', 'shuffle', 'repeat-all', 'repeat-one', 'off']);
+  });
+
+  test('shuffle-collection: advances linearly through the queue', () => {
+    setActiveAudio(mockAudioElement(), {
+      playlist: [track(1), track(2)],
+      currentTrackIndex: 0,
+      nextTrackIndex: 1,
+      playbackMode: 'shuffle-collection',
+    });
+    usePlayerStore.getState().playNext();
+    expect(usePlayerStore.getState().currentTrackIndex).toBe(1);
+  });
+
+  test('shuffle-collection: marks playlistFinished and pauses once the queue runs out', () => {
+    const audioElement = mockAudioElement();
+    setActiveAudio(audioElement, { playlist: [track(1), track(2)], currentTrackIndex: 1, playbackMode: 'shuffle-collection' });
+    usePlayerStore.getState().playNext();
+    const state = usePlayerStore.getState();
+    expect(state.playlistFinished).toBe(true);
+    expect(audioElement.pause).toHaveBeenCalled();
   });
 
   test('entering shuffle mode does not interrupt the currently playing track', () => {
@@ -783,5 +822,66 @@ describe('collectionContext', () => {
     });
     usePlayerStore.getState().setPlaylist([track(2), track(3)]);
     expect(usePlayerStore.getState().collectionContext).toBeNull();
+  });
+});
+
+describe('enterCollectionShuffle', () => {
+  test('does nothing without an active collectionContext', async () => {
+    usePlayerStore.setState({ playlist: [track(1)], currentTrackIndex: 0, collectionContext: null });
+    await usePlayerStore.getState().enterCollectionShuffle();
+    expect(apiService.getRandomCollectionTracks).not.toHaveBeenCalled();
+    expect(usePlayerStore.getState().playlist).toEqual([track(1)]);
+  });
+
+  test('drops everything queued after the current track, keeps the current track, and appends a random batch', async () => {
+    apiService.getRandomCollectionTracks.mockResolvedValue({ data: { tracks: [track(10), track(11)] } });
+    usePlayerStore.setState({
+      playlist: [track(1), track(2), track(3)],
+      currentTrackIndex: 0,
+      playbackMode: 'shuffle-collection',
+      collectionContext: { collectionId: 7, albumId: 42 },
+    });
+    await usePlayerStore.getState().enterCollectionShuffle();
+    const state = usePlayerStore.getState();
+    expect(state.playlist.map((t) => t.id)).toEqual([1, 10, 11]);
+    expect(state.collectionContext).toEqual({ collectionId: 7, albumId: 42 });
+    expect(apiService.getRandomCollectionTracks).toHaveBeenCalledWith(7, { limit: 25, excludeTrackIds: [1] });
+  });
+
+  test('discards the fetched batch if playbackMode changed away from shuffle-collection while the fetch was in flight', async () => {
+    let resolveFetch;
+    apiService.getRandomCollectionTracks.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
+    usePlayerStore.setState({
+      playlist: [track(1)],
+      currentTrackIndex: 0,
+      playbackMode: 'shuffle-collection',
+      collectionContext: { collectionId: 7, albumId: 42 },
+    });
+    const pending = usePlayerStore.getState().enterCollectionShuffle();
+    usePlayerStore.setState({ playbackMode: 'off' });
+    resolveFetch({ data: { tracks: [track(10)] } });
+    await pending;
+    expect(usePlayerStore.getState().playlist.map((t) => t.id)).toEqual([1]);
+  });
+});
+
+describe('appendCollectionShuffleTracks', () => {
+  test('appends tracks to the playlist without touching collectionContext or currentTrackIndex', () => {
+    usePlayerStore.setState({
+      playlist: [track(1)],
+      currentTrackIndex: 0,
+      collectionContext: { collectionId: 7, albumId: 42 },
+    });
+    usePlayerStore.getState().appendCollectionShuffleTracks([track(2), track(3)]);
+    const state = usePlayerStore.getState();
+    expect(state.playlist.map((t) => t.id)).toEqual([1, 2, 3]);
+    expect(state.currentTrackIndex).toBe(0);
+    expect(state.collectionContext).toEqual({ collectionId: 7, albumId: 42 });
+  });
+
+  test('is a no-op for an empty batch', () => {
+    usePlayerStore.setState({ playlist: [track(1)] });
+    usePlayerStore.getState().appendCollectionShuffleTracks([]);
+    expect(usePlayerStore.getState().playlist).toEqual([track(1)]);
   });
 });

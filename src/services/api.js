@@ -159,6 +159,8 @@ export const apiService = {
   // Collections
   getCollections: () => api.get('/collections'),
   getCollection: (id) => api.get(`/collection/${id}`),
+  getRandomCollectionTracks: (collectionId, { limit = 25, excludeTrackIds = [] } = {}) =>
+    api.post(`/collection/${collectionId}/tracks/random`, { limit, excludeTrackIds }),
   createCollection: (name) => api.post('/collections', { name }),
   updateCollection: (id, data) => api.put(`/collection/${id}`, data),
   deleteCollection: (id) => api.delete(`/collection/${id}`),

@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { usePlayerStore } from '../stores/playerStore';
+import { useEffect, useRef } from 'react';
+import { usePlayerStore, COLLECTION_SHUFFLE_BATCH_SIZE, COLLECTION_SHUFFLE_TOPUP_REMAINING } from '../stores/playerStore';
 import { useTabTitleStore } from '../stores/tabTitleStore';
 import { apiService } from '../services/api';
 import { useAuthStore } from '../stores/authStore';
@@ -41,6 +41,9 @@ export const usePlayerEngine = (audioRefA, audioRefB) => {
   const nextTrackIndex = usePlayerStore((s) => s.nextTrackIndex);
   const playlistFinished = usePlayerStore((s) => s.playlistFinished);
   const collectionContext = usePlayerStore((s) => s.collectionContext);
+  const playbackMode = usePlayerStore((s) => s.playbackMode);
+  const playlist = usePlayerStore((s) => s.playlist);
+  const currentTrackIndex = usePlayerStore((s) => s.currentTrackIndex);
   const titleOverride = useTabTitleStore((s) => s.override);
   const { isAuthenticated } = useAuthStore();
 
@@ -185,6 +188,28 @@ export const usePlayerEngine = (audioRefA, audioRefB) => {
       .catch((error) => console.error('Failed to auto-advance to next collection album:', error));
     return () => { cancelled = true; };
   }, [playlistFinished, collectionContext]);
+
+  // Keeps Shuffle Collection's queue topped up: once only a few unplayed tracks remain, fetch
+  // another random batch from the same collection and append it, so playback never has to stop
+  // and wait on a fetch. Re-runs whenever the queue or current position changes, and naturally
+  // stops re-fetching once `remaining` grows past the threshold again after a batch lands.
+  const collectionShuffleFetchInFlight = useRef(false);
+  useEffect(() => {
+    if (playbackMode !== 'shuffle-collection' || !collectionContext) return;
+    if (collectionShuffleFetchInFlight.current) return;
+    const remaining = playlist.length - 1 - currentTrackIndex;
+    if (remaining > COLLECTION_SHUFFLE_TOPUP_REMAINING) return;
+    collectionShuffleFetchInFlight.current = true;
+    apiService.getRandomCollectionTracks(collectionContext.collectionId, {
+      limit: COLLECTION_SHUFFLE_BATCH_SIZE,
+      excludeTrackIds: playlist.map((t) => t.id),
+    })
+      .then((response) => {
+        usePlayerStore.getState().appendCollectionShuffleTracks(response.data?.tracks || []);
+      })
+      .catch((error) => console.error('Failed to top up collection shuffle queue:', error))
+      .finally(() => { collectionShuffleFetchInFlight.current = false; });
+  }, [playbackMode, collectionContext, playlist, currentTrackIndex]);
 
   useEffect(() => {
     if (titleOverride) {

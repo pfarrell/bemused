@@ -1,9 +1,11 @@
 import { Hono } from 'hono'
+import { sql } from 'kysely'
 import { db } from '../db/database.js'
 import type { Variables } from '../types.js'
 import { notesService } from '../services/notesService.js'
 import { createRecallNote, getRecallItem, decryptRecallToken, appendBacklink, stripBacklink } from '../services/recallService.js'
 import { getCollectionSummary } from '../services/wikipedia.js'
+import { streamBase } from '../db/streamUrl.js'
 import { requireAuth } from '../middleware/auth.js'
 import { canModify } from '../utils/ownership.js'
 import fs from 'fs'
@@ -133,6 +135,56 @@ collections.get('/:id', async (c) => {
   }))
 
   return c.json({ collection, albums: orderedAlbums, stubs, notes, summary: summary ?? {} })
+})
+
+// POST /collection/:id/tracks/random — powers Shuffle Collection playback mode. Returns a
+// random batch of tracks drawn from every album in the collection, shaped exactly like
+// GET /album/:id's track objects so the response can be queued directly by the player.
+// excludeTrackIds lets the frontend avoid re-drawing tracks it has already queued this
+// session; once a collection's remaining eligible tracks run out, this simply returns fewer
+// than `limit` (down to zero) rather than erroring.
+collections.post('/:id/tracks/random', async (c) => {
+  const collectionId = parseInt(c.req.param('id'))
+  if (!Number.isInteger(collectionId)) return c.json({ error: 'Not found' }, 404)
+
+  const collection = await db.selectFrom('collections').select('id').where('id', '=', collectionId).executeTakeFirst()
+  if (!collection) return c.json({ error: 'Not found' }, 404)
+
+  const body = await c.req.json().catch(() => ({} as any))
+  const limit = Math.min(Math.max(parseInt(body.limit) || 25, 1), 100)
+  const excludeTrackIds: number[] = Array.isArray(body.excludeTrackIds)
+    ? body.excludeTrackIds.filter((id: any) => Number.isInteger(id))
+    : []
+
+  const rows = await sql<any>`
+    SELECT t.id, t.title, t.track_number, t.duration_sec,
+           al.id as album_id, al.title as album_title, al.image_path as album_image_path,
+           ar.id as artist_id, ar.name as artist_name,
+           track_ar.id as track_artist_id, track_ar.name as track_artist_name
+    FROM collection_albums ca
+    INNER JOIN albums al ON al.id = ca.album_id
+    INNER JOIN artists ar ON ar.id = al.artist_id
+    INNER JOIN tracks t ON t.album_id = al.id AND t.approved = true
+    LEFT JOIN artists track_ar ON track_ar.id = t.artist_id
+    WHERE ca.collection_id = ${collectionId}
+      ${excludeTrackIds.length ? sql`AND t.id NOT IN (${sql.join(excludeTrackIds)})` : sql``}
+    ORDER BY random()
+    LIMIT ${limit}
+  `.execute(db)
+
+  const tracks = rows.rows.map((t: any) => ({
+    id: t.id,
+    title: t.title,
+    track_number: t.track_number,
+    duration: t.duration_sec,
+    album: { id: t.album_id, title: t.album_title, artist: { id: t.artist_id, name: t.artist_name } },
+    artist: { id: t.track_artist_id ?? t.artist_id, name: t.track_artist_name ?? t.artist_name },
+    image_path: t.album_image_path,
+    url: `${streamBase(c)}/stream/${t.id}`,
+    download_url: `${streamBase(c)}/download/${t.id}`,
+  }))
+
+  return c.json({ tracks })
 })
 
 // POST /collections

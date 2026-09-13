@@ -1,4 +1,11 @@
 import { create } from 'zustand';
+import { apiService } from '../services/api';
+
+// Shuffle Collection fetches tracks from the whole collection in batches rather than all at
+// once (collections can be large) — an initial batch on entry, then another whenever the
+// queue is down to this many unplayed tracks (see the top-up effect in usePlayerEngine).
+export const COLLECTION_SHUFFLE_BATCH_SIZE = 25;
+export const COLLECTION_SHUFFLE_TOPUP_REMAINING = 5;
 
 const validateTrack = (track) => {
   if (!track || !track.title || !track.url) {
@@ -13,6 +20,11 @@ const validateTrack = (track) => {
 const computeNextIndex = ({ playbackMode, shuffleHistory, playlist, currentTrackIndex }) => {
   if (playlist.length === 0) return -1;
   if (playbackMode === 'repeat-one') return currentTrackIndex;
+  // Tracks arrive pre-randomized from the server (see enterCollectionShuffle /
+  // appendCollectionShuffleTracks), so "next" is just the next queued slot.
+  if (playbackMode === 'shuffle-collection') {
+    return currentTrackIndex < playlist.length - 1 ? currentTrackIndex + 1 : -1;
+  }
   if (playbackMode === 'shuffle') {
     const remaining = playlist.map((_, i) => i).filter((i) => !shuffleHistory.includes(i));
     if (remaining.length === 0) return -1;
@@ -74,7 +86,7 @@ export const usePlayerStore = create((set, get) => ({
   setCollectionContext: (collectionContext) => set({ collectionContext }),
 
   // Shuffle/repeat state
-  playbackMode: 'off', // 'off' | 'shuffle' | 'repeat-all' | 'repeat-one'
+  playbackMode: 'off', // 'off' | 'shuffle' | 'shuffle-collection' | 'repeat-all' | 'repeat-one'
   shuffleHistory: [],
 
   // UI state
@@ -222,14 +234,54 @@ export const usePlayerStore = create((set, get) => ({
     get().playTrackAtIndex(prevIndex);
   },
 
+  // Shuffle Collection only ever appears as a cycle stop when playback started from a
+  // collection (collectionContext is set) — there's nothing for it to shuffle otherwise.
   cyclePlaybackMode: () => {
-    const order = ['off', 'shuffle', 'repeat-all', 'repeat-one'];
-    const { playbackMode, currentTrackIndex, shuffleHistory } = get();
+    const { playbackMode, currentTrackIndex, shuffleHistory, collectionContext } = get();
+    const order = collectionContext
+      ? ['off', 'shuffle-collection', 'shuffle', 'repeat-all', 'repeat-one']
+      : ['off', 'shuffle', 'repeat-all', 'repeat-one'];
     const next = order[(order.indexOf(playbackMode) + 1) % order.length];
     set({
       playbackMode: next,
       shuffleHistory: next === 'shuffle' && currentTrackIndex >= 0 ? [currentTrackIndex] : shuffleHistory,
     });
+    if (next === 'shuffle-collection') {
+      get().enterCollectionShuffle();
+    } else {
+      get().syncNextTrackIndex();
+    }
+  },
+
+  // Entered only via cyclePlaybackMode landing on 'shuffle-collection'. The currently playing
+  // track keeps playing uninterrupted (mirrors how toggling plain Shuffle on today reshuffles
+  // what's next without restarting playback) — everything queued after it is dropped and
+  // replaced with a fresh random batch from the whole collection. Unlike addTracks, this does
+  // NOT clear collectionContext, since the point is to keep shuffling within it.
+  enterCollectionShuffle: async () => {
+    const { playlist, currentTrackIndex, collectionContext } = get();
+    if (!collectionContext) return;
+    const truncated = currentTrackIndex >= 0 ? playlist.slice(0, currentTrackIndex + 1) : [];
+    set({ playlist: truncated });
+    get().syncNextTrackIndex();
+    try {
+      const response = await apiService.getRandomCollectionTracks(collectionContext.collectionId, {
+        limit: COLLECTION_SHUFFLE_BATCH_SIZE,
+        excludeTrackIds: truncated.map((t) => t.id),
+      });
+      if (get().playbackMode !== 'shuffle-collection') return;
+      get().appendCollectionShuffleTracks(response.data?.tracks || []);
+    } catch (error) {
+      console.error('Failed to load collection shuffle tracks:', error);
+    }
+  },
+
+  // Shared by enterCollectionShuffle (initial batch) and usePlayerEngine's top-up effect
+  // (subsequent batches, fetched as the queue runs low). Appends without touching
+  // collectionContext or currentTrackIndex.
+  appendCollectionShuffleTracks: (tracks) => {
+    if (!tracks || tracks.length === 0) return;
+    set({ playlist: [...get().playlist, ...tracks] });
     get().syncNextTrackIndex();
   },
 
