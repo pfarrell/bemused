@@ -14,7 +14,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useFavoritesStore } from '../stores/favoritesStore';
 import { formatCount, getAlbumYear } from '../utils/formatters';
 
-const AlbumCard = ({ album, artist, onClick, imageUrl, hideArtist = false }) => {
+const AlbumCard = ({ album, artist, onClick, imageUrl, hideArtist = false, collectionId = null }) => {
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [playLoading, setPlayLoading] = useState(false);
   const isMobile = useIsMobile();
@@ -22,6 +22,7 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, hideArtist = false }) => 
   const navigate = useNavigate();
   const addTracks = usePlayerStore((s) => s.addTracks);
   const setPlaylist = usePlayerStore((s) => s.setPlaylist);
+  const setCollectionContext = usePlayerStore((s) => s.setCollectionContext);
   const { isAuthenticated } = useAuthStore();
   const isFavorite = useFavoritesStore((s) => s.isFavorite('album', album.id));
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
@@ -50,20 +51,33 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, hideArtist = false }) => 
     }
   };
 
+  // Mirrors Album.jsx's tagCollectionContext(): when this card is played from
+  // a collection's grid, tag the queue so usePlayerEngine can auto-advance
+  // into the collection's next album once playback naturally runs out.
+  const tagCollectionContext = () => {
+    if (collectionId) {
+      setCollectionContext({ collectionId, albumId: album.id });
+    }
+  };
+
   const handlePlayAll = () => withAlbumTracks((tracks) => {
     addTracks(tracks, false, { playImmediately: true });
+    tagCollectionContext();
   });
 
   const handlePlayNow = () => withAlbumTracks((tracks) => {
     setPlaylist(tracks);
+    tagCollectionContext();
   });
 
   const handlePlayNext = () => withAlbumTracks((tracks) => {
     addTracks(tracks, true, { flashActivity: true });
+    tagCollectionContext();
   });
 
   const handleAddToQueue = () => withAlbumTracks((tracks) => {
     addTracks(tracks, false, { flashActivity: true });
+    tagCollectionContext();
   });
 
   const handleToggleFavorite = () => {
