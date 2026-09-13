@@ -1178,14 +1178,14 @@ const AdminArtist = () => {
       <div style={{
         marginTop: '3rem',
         padding: '1.5rem',
-        backgroundColor: '#fff3cd',
+        backgroundColor: 'var(--color-warning-bg)',
         borderRadius: '4px',
-        border: '1px solid #ffc107'
+        border: '1px solid var(--color-warning-border)'
       }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#856404' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: 'var(--color-warning-text)' }}>
           Merge With Another Artist
         </h3>
-        <p style={{ marginBottom: '1rem', color: '#856404', fontSize: '0.875rem' }}>
+        <p style={{ marginBottom: '1rem', color: 'var(--color-warning-text)', fontSize: '0.875rem' }}>
           Use this to fix duplicate or misspelled artists (e.g. from bad ID3 tags). One artist is always deleted; its albums, tracks, and credits move to the other.
         </p>
 
@@ -1208,7 +1208,7 @@ const AdminArtist = () => {
         </button>
 
         {suggestedDuplicates !== null && (
-          <div style={{ backgroundColor: 'var(--color-bg-surface)', border: '1px solid #ffc107', borderRadius: '6px', padding: '0.75rem', marginBottom: '1rem' }}>
+          <div style={{ backgroundColor: 'var(--color-bg-surface)', border: '1px solid var(--color-warning-border)', borderRadius: '6px', padding: '0.75rem', marginBottom: '1rem', color: 'var(--color-text-primary)' }}>
             {suggestedDuplicates.length === 0 ? (
               <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', margin: 0 }}>No matching duplicates found.</p>
             ) : (
@@ -1273,8 +1273,10 @@ const AdminArtist = () => {
                   boxSizing: 'border-box',
                   padding: '0.5rem',
                   fontSize: '1rem',
-                  border: '1px solid #ffc107',
+                  border: '1px solid var(--color-warning-border)',
                   borderRadius: '4px',
+                  backgroundColor: 'var(--color-bg-surface)',
+                  color: 'var(--color-text-primary)',
                 }}
               />
             </div>
@@ -1298,7 +1300,7 @@ const AdminArtist = () => {
         </form>
 
         {mergeResults.length > 0 && !selectedMergeTarget && (
-          <div style={{ marginBottom: '1rem', border: '1px solid #ffc107', borderRadius: '4px', backgroundColor: 'var(--color-bg-surface)', maxHeight: '200px', overflowY: 'auto' }}>
+          <div style={{ marginBottom: '1rem', border: '1px solid var(--color-warning-border)', borderRadius: '4px', backgroundColor: 'var(--color-bg-surface)', maxHeight: '200px', overflowY: 'auto', color: 'var(--color-text-primary)' }}>
             {mergeResults.map(artist => (
               <div
                 key={artist.id}
@@ -1311,7 +1313,7 @@ const AdminArtist = () => {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fefce8')}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-warning-bg-hover)')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-bg-surface)')}
               >
                 <span style={{ fontWeight: '500' }}>{artist.name}</span>
@@ -1343,7 +1345,7 @@ const AdminArtist = () => {
 
         {selectedMergeTarget && (
           <div style={{ marginBottom: '1rem' }}>
-            <p style={{ color: '#856404', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+            <p style={{ color: 'var(--color-warning-text)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
               Target: <strong>{selectedMergeTarget.name}</strong>
               <button
                 type="button"
@@ -1353,7 +1355,7 @@ const AdminArtist = () => {
                 ✕
               </button>
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '0.75rem', fontSize: '0.875rem', color: '#856404' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '0.75rem', fontSize: '0.875rem', color: 'var(--color-warning-text)' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
                 <input type="radio" checked={keepThisArtist} onChange={() => setKeepThisArtist(true)} />
                 Keep this artist ("{artistData.name}") — delete "{selectedMergeTarget.name}"

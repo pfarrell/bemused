@@ -906,8 +906,8 @@ const AdminAlbum = () => {
       )}
 
       {/* Transfer Section — Move to Artist or Merge into Album */}
-      <div style={{ marginTop: '3rem', padding: '1.5rem', backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffc107' }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#856404' }}>
+      <div style={{ marginTop: '3rem', padding: '1.5rem', backgroundColor: 'var(--color-warning-bg)', borderRadius: '4px', border: '1px solid var(--color-warning-border)' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: 'var(--color-warning-text)' }}>
           Transfer Album
         </h3>
 
@@ -915,14 +915,14 @@ const AdminAlbum = () => {
           <select
             value={transferMode}
             onChange={e => handleTransferModeChange(e.target.value)}
-            style={{ padding: '0.5rem', fontSize: '1rem', border: '1px solid #ffc107', borderRadius: '4px', backgroundColor: 'var(--color-bg-surface)', color: '#856404', cursor: 'pointer' }}
+            style={{ padding: '0.5rem', fontSize: '1rem', border: '1px solid var(--color-warning-border)', borderRadius: '4px', backgroundColor: 'var(--color-bg-surface)', color: 'var(--color-warning-text)', cursor: 'pointer' }}
           >
             <option value="move">Move to another artist</option>
             <option value="merge">Merge into another album</option>
           </select>
         </div>
 
-        <p style={{ marginBottom: '0.75rem', color: '#856404', fontSize: '0.875rem' }}>
+        <p style={{ marginBottom: '0.75rem', color: 'var(--color-warning-text)', fontSize: '0.875rem' }}>
           {transferMode === 'move'
             ? 'Moves this album and all its tracks to another artist.'
             : 'Moves all tracks into another album, then deletes this album. Use for consolidating multi-disc albums.'}
@@ -936,7 +936,7 @@ const AdminAlbum = () => {
                 value={transferQuery}
                 onChange={e => setTransferQuery(e.target.value)}
                 placeholder={transferMode === 'move' ? 'Search for artist...' : 'Search for destination album...'}
-                style={{ width: '100%', boxSizing: 'border-box', padding: '0.5rem', fontSize: '1rem', border: '1px solid #ffc107', borderRadius: '4px' }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '0.5rem', fontSize: '1rem', border: '1px solid var(--color-warning-border)', borderRadius: '4px', backgroundColor: 'var(--color-bg-surface)', color: 'var(--color-text-primary)' }}
               />
             </div>
             <button
@@ -950,7 +950,7 @@ const AdminAlbum = () => {
         </form>
 
         {transferResults.length > 0 && (
-          <div style={{ border: '1px solid #ffc107', borderRadius: '4px', marginBottom: '0.75rem', maxHeight: '200px', overflowY: 'auto' }}>
+          <div style={{ border: '1px solid var(--color-warning-border)', borderRadius: '4px', marginBottom: '0.75rem', maxHeight: '200px', overflowY: 'auto', backgroundColor: 'var(--color-bg-surface)', color: 'var(--color-text-primary)' }}>
             {transferResults.map(item => {
               const isCurrent = transferMode === 'move'
                 ? item.id === albumData?.album?.artist_id
@@ -959,15 +959,15 @@ const AdminAlbum = () => {
                 <div
                   key={item.id}
                   onClick={() => handleSelectTransferResult(item)}
-                  style={{ padding: '0.5rem 0.75rem', cursor: 'pointer', borderBottom: '1px solid #fde68a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef9c3'}
+                  style={{ padding: '0.5rem 0.75rem', cursor: 'pointer', borderBottom: '1px solid var(--color-warning-row-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--color-warning-bg-hover)'}
                   onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}
                 >
                   <span>
                     {item.name || item.title}
-                    {isCurrent && <span style={{ color: '#92400e', fontStyle: 'italic' }}> (current)</span>}
+                    {isCurrent && <span style={{ color: 'var(--color-warning-text-muted)', fontStyle: 'italic' }}> (current)</span>}
                   </span>
-                  <span style={{ fontSize: '0.8rem', color: '#92400e' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--color-warning-text-muted)' }}>
                     {transferMode === 'move'
                       ? `${item.album_count != null ? `${item.album_count} albums` : ''}`
                       : `${item.artist?.name}${item.track_count != null ? ` · ${item.track_count} tracks` : ''}`}
@@ -979,19 +979,19 @@ const AdminAlbum = () => {
         )}
 
         {transferMode === 'move' && selectedArtistName && (
-          <p style={{ marginBottom: '0.75rem', fontSize: '0.875rem', color: '#856404' }}>
+          <p style={{ marginBottom: '0.75rem', fontSize: '0.875rem', color: 'var(--color-warning-text)' }}>
             Selected: <strong>{selectedArtistName}</strong>
           </p>
         )}
 
         {transferMode === 'merge' && mergeDestAlbum && (
           <div style={{ marginBottom: '0.75rem' }}>
-            <p style={{ fontSize: '0.875rem', color: '#856404', marginBottom: '0.5rem' }}>
+            <p style={{ fontSize: '0.875rem', color: 'var(--color-warning-text)', marginBottom: '0.5rem' }}>
               Destination: <strong>{mergeDestAlbum.title}</strong>
               {mergeDestAlbum.artist?.name && <span> — {mergeDestAlbum.artist.name}</span>}
               {mergeDestAlbum.track_count != null && <span> ({mergeDestAlbum.track_count} tracks)</span>}
             </p>
-            <label style={{ display: 'block', fontSize: '0.875rem', color: '#856404', marginBottom: '0.25rem' }}>
+            <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--color-warning-text)', marginBottom: '0.25rem' }}>
               Track number offset (0 = no change):
             </label>
             <input
@@ -999,7 +999,7 @@ const AdminAlbum = () => {
               value={mergeOffset}
               onChange={e => setMergeOffset(e.target.value)}
               min="0"
-              style={{ width: '100px', padding: '0.4rem', fontSize: '1rem', border: '1px solid #ffc107', borderRadius: '4px' }}
+              style={{ width: '100px', padding: '0.4rem', fontSize: '1rem', border: '1px solid var(--color-warning-border)', borderRadius: '4px', backgroundColor: 'var(--color-bg-surface)', color: 'var(--color-text-primary)' }}
             />
           </div>
         )}
