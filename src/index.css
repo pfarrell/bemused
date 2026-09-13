@@ -1630,6 +1630,22 @@
      risks clipping the play button / hamburger icon. */
   :root { --mb: 2.75rem; }
 
+  /* Height of the mobile-only Now Playing bar (track art + title) that sits directly
+     above the transport controls — see .now-playing below. --footer-clearance is what
+     everything ABOVE the footer (main content, playlist drawer, iframe modal) actually
+     measures its bottom clearance against; it equals --mb normally, and grows by
+     --now-playing-h only while body.has-now-playing is set (NowPlaying.jsx toggles that
+     class, since the bar itself doesn't exist in the DOM at all when nothing's playing —
+     see NowPlaying.jsx). The footer's own height (below) is unaffected either way. */
+  :root {
+    --now-playing-h: 2.5rem;
+    --footer-clearance: var(--mb, 4.5em);
+  }
+
+  body.has-now-playing {
+    --footer-clearance: calc(var(--mb, 4.5em) + var(--now-playing-h, 0px));
+  }
+
   .app-header {
     padding: 0 1rem;
     padding-top: env(safe-area-inset-top, 0);
@@ -1649,12 +1665,12 @@
   /* Main content */
   .main-content {
     padding-top: calc(var(--mb, 4.5em) + env(safe-area-inset-top, 0)) !important;
-    padding-bottom: calc(var(--mb, 4.5em) + env(safe-area-inset-bottom, 0) + 2rem) !important;
+    padding-bottom: calc(var(--footer-clearance, var(--mb, 4.5em)) + env(safe-area-inset-bottom, 0) + 2rem) !important;
     min-height: calc(100vh - var(--mb, 4.5em) - env(safe-area-inset-top, 0)) !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    height: calc(100vh - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
-    height: calc(-webkit-fill-available - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
+    height: calc(100vh - var(--mb, 4.5em) - var(--footer-clearance, var(--mb, 4.5em)) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
+    height: calc(-webkit-fill-available - var(--mb, 4.5em) - var(--footer-clearance, var(--mb, 4.5em)) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
   }
 
   /* Compact result rows (replaces the square 2-column card grid on mobile) */
@@ -1741,22 +1757,36 @@
     padding: 0 1rem;
   }
   
-  /* now-playing on mobile: show only the album art, not the artist/track text
-     (the footer is too narrow for it and only a clipped sliver would show) */
+  /* now-playing on mobile: a standalone thin bar (art + title only, no artist)
+     fixed directly above the transport controls, rather than squeezed into
+     the same narrow row as before. Taken out of flow entirely (position:
+     fixed), so it no longer needs a flex `order` relative to
+     .music-player-wrapper. Only exists in the DOM at all when a track is
+     loaded (NowPlaying.jsx returns null otherwise) — see --footer-clearance
+     above for how everything above it accounts for the extra height. */
   .now-playing {
-    max-width: 48px;
-    order: 2;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--mb, 4.5em) + env(safe-area-inset-bottom, 0));
+    height: var(--now-playing-h);
+    max-width: none;
+    padding: 0 0.75rem;
+    padding-left: calc(0.75rem + env(safe-area-inset-left, 0));
+    padding-right: calc(0.75rem + env(safe-area-inset-right, 0));
+    background-color: #1a252f;
+    border-top: 1px solid #2c3e50;
+    box-sizing: border-box;
+    z-index: 1100;
   }
 
-  /* keep the playlist toggle/progress/transport controls first in the footer
-     so the playlist button doesn't shift when there's no current track (and
-     .now-playing renders nothing) */
-  .music-player-wrapper {
-    order: 1;
+  .now-playing-art {
+    width: 28px;
+    height: 28px;
   }
 
-  .now-playing .track-info {
-    display: none !important;
+  .now-playing .track-artist {
+    display: none;
   }
 
   .playlist-button {
@@ -1832,9 +1862,9 @@
     left: 0 !important;
     right: 0 !important;
     top: calc(var(--mb, 4.5em) + env(safe-area-inset-top, 0)) !important;
-    bottom: calc(var(--mb, 4.5em) + env(safe-area-inset-bottom, 0)) !important;
+    bottom: calc(var(--footer-clearance, var(--mb, 4.5em)) + env(safe-area-inset-bottom, 0)) !important;
     height: auto !important;
-    max-height: calc(100vh - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
+    max-height: calc(100vh - var(--mb, 4.5em) - var(--footer-clearance, var(--mb, 4.5em)) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
     box-shadow: none !important;
     z-index: 1001 !important;
     text-align: left !important;
@@ -1848,7 +1878,7 @@
      the desktop 4.5em fallback in this breakpoint. */
   .iframe-modal-backdrop {
     top: calc(var(--mb, 4.5em) + env(safe-area-inset-top, 0)) !important;
-    bottom: calc(var(--mb, 4.5em) + env(safe-area-inset-bottom, 0)) !important;
+    bottom: calc(var(--footer-clearance, var(--mb, 4.5em)) + env(safe-area-inset-bottom, 0)) !important;
     padding: 0.5rem !important;
   }
 
@@ -2280,8 +2310,8 @@
    case while looking fine in plain Safari. */
 @supports (-webkit-touch-callout: none) {
   .main-content {
-    height: calc(100vh - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
-    height: calc(-webkit-fill-available - 2 * var(--mb, 4.5em) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
+    height: calc(100vh - var(--mb, 4.5em) - var(--footer-clearance, var(--mb, 4.5em)) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
+    height: calc(-webkit-fill-available - var(--mb, 4.5em) - var(--footer-clearance, var(--mb, 4.5em)) - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
   }
 }
 

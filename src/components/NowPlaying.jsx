@@ -1,5 +1,5 @@
 // src/components/player/NowPlaying.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../stores/playerStore';
 import { apiService } from '../services/api';
@@ -10,6 +10,17 @@ const NowPlaying = () => {
   const [showArtModal, setShowArtModal] = useState(false);
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const closeDrawer = usePlayerStore((s) => s.closeDrawer);
+
+  // On mobile this component renders as a fixed bar above the transport controls
+  // (see .now-playing in index.css) rather than inline in the footer — CSS alone
+  // can't tell whether that bar exists in the DOM, so the page content's bottom
+  // clearance (--footer-clearance) is driven by this class instead. No-op on
+  // desktop, where .now-playing stays part of the normal footer flow.
+  useEffect(() => {
+    document.body.classList.toggle('has-now-playing', !!currentTrack);
+    return () => document.body.classList.remove('has-now-playing');
+  }, [currentTrack]);
+
   const handleArtistClick = (track) => {
     navigate(`/artist/${track.artist.id}`);
     closeDrawer();
@@ -24,7 +35,6 @@ const NowPlaying = () => {
     closeDrawer();
   };
 
-  // Don't show on mobile or when no track is playing
   if (!currentTrack) {
     return null;
   }

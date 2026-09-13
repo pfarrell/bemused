@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import NowPlaying from './NowPlaying';
 import { usePlayerStore } from '../stores/playerStore';
@@ -81,4 +81,25 @@ test('clicking the artist closes the queue drawer', () => {
   renderNP();
   screen.getByText('A').click();
   expect(closeDrawer).toHaveBeenCalled();
+});
+
+describe('has-now-playing body class', () => {
+  test('is added while a track is loaded', () => {
+    renderNP();
+    expect(document.body.classList.contains('has-now-playing')).toBe(true);
+  });
+
+  test('is removed once the track clears', () => {
+    renderNP();
+    expect(document.body.classList.contains('has-now-playing')).toBe(true);
+    act(() => usePlayerStore.setState({ currentTrack: null }));
+    expect(document.body.classList.contains('has-now-playing')).toBe(false);
+  });
+
+  test('is removed on unmount', () => {
+    const { unmount } = renderNP();
+    expect(document.body.classList.contains('has-now-playing')).toBe(true);
+    unmount();
+    expect(document.body.classList.contains('has-now-playing')).toBe(false);
+  });
 });
