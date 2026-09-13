@@ -1991,14 +1991,13 @@
   /* Prev/next album nav (order 4) was missed when this reorder scheme was
      built, so it defaulted to order 0 and floated above the title. First
      moved to just above the Wikipedia excerpt, then further down below it
-     per follow-up feedback — its own separator now divides it from the
-     Wikipedia text above, since the About box keeps its own. */
+     per follow-up feedback. No separator line against the Wikipedia text
+     above (removed per feedback) — just a small top gap. */
   .album-header-about { order: 5; }
   .album-header-adjacent-nav {
     order: 6;
     margin-top: 0.5rem !important;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--color-border);
+    margin-bottom: 0.85rem !important;
   }
   .album-header-description { order: 7; }
 
