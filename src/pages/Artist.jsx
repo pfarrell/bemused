@@ -438,7 +438,7 @@ const Artist = () => {
         </div>
       )}
 
-      <TagsSection entityType="artist" entityId={parseInt(id)} isLoggedIn={isAuthenticated} />
+      <TagsSection entityType="artist" entityId={parseInt(id)} isLoggedIn={isAdmin} />
     </div>
   );
 };

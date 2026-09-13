@@ -32,6 +32,7 @@ import AdminTrack from './pages/AdminTrack';
 import AdminUpload from './pages/AdminUpload';
 import AdminPlaylist from './pages/AdminPlaylist';
 import AdminLogs from './pages/AdminLogs';
+import AdminTags from './pages/AdminTags';
 import AdminErrors from './pages/AdminErrors';
 import AdminSignups from './pages/AdminSignups';
 import AdminNew from './pages/AdminNew';
@@ -264,6 +265,11 @@ function App() {
                       <Route path="/admin/logs" element={
                         <ProtectedRoute requireAdmin>
                           <AdminLogs />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/tags" element={
+                        <ProtectedRoute requireAdmin>
+                          <AdminTags />
                         </ProtectedRoute>
                       } />
                       <Route path="/admin/errors" element={

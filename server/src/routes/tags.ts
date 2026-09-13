@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { db } from '../db/database.js'
-import { requireAuth } from '../middleware/auth.js'
+import { requireAuth, requireAdmin } from '../middleware/auth.js'
 import type { Variables } from '../types.js'
 import { countsService } from '../services/countsService.js'
 
@@ -124,7 +124,7 @@ tags.get('/:name/content', requireAuth, async (c) => {
 })
 
 // POST /tags/album/:id — add tag to album
-tags.post('/album/:id', requireAuth, async (c) => {
+tags.post('/album/:id', requireAdmin, async (c) => {
   const albumId = parseInt(c.req.param('id'))
   const body = await c.req.json()
   if (!body.name) return c.json({ error: 'name required' }, 400)
@@ -154,7 +154,7 @@ tags.post('/album/:id', requireAuth, async (c) => {
 })
 
 // DELETE /tags/album/:id/:tagName — remove tag from album
-tags.delete('/album/:id/:tagName', requireAuth, async (c) => {
+tags.delete('/album/:id/:tagName', requireAdmin, async (c) => {
   const albumId = parseInt(c.req.param('id'))
   const tagName = slugifyTag(c.req.param('tagName'))
 
@@ -176,7 +176,7 @@ tags.delete('/album/:id/:tagName', requireAuth, async (c) => {
 })
 
 // POST /tags/artist/:id — add tag to artist
-tags.post('/artist/:id', requireAuth, async (c) => {
+tags.post('/artist/:id', requireAdmin, async (c) => {
   const artistId = parseInt(c.req.param('id'))
   const body = await c.req.json()
   if (!body.name) return c.json({ error: 'name required' }, 400)
@@ -206,7 +206,7 @@ tags.post('/artist/:id', requireAuth, async (c) => {
 })
 
 // DELETE /tags/artist/:id/:tagName — remove tag from artist
-tags.delete('/artist/:id/:tagName', requireAuth, async (c) => {
+tags.delete('/artist/:id/:tagName', requireAdmin, async (c) => {
   const artistId = parseInt(c.req.param('id'))
   const tagName = slugifyTag(c.req.param('tagName'))
 

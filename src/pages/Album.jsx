@@ -422,7 +422,7 @@ const Album = () => {
         ))}
       </div>
 
-      <TagsSection entityType="album" entityId={parseInt(id)} isLoggedIn={isAuthenticated} />
+      <TagsSection entityType="album" entityId={parseInt(id)} isLoggedIn={isAdmin} />
       <NotesSection entityType="album" entityId={parseInt(id)} notes={notes || []} isLoggedIn={isAuthenticated} onChange={reload} />
     </div>
   );
