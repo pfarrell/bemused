@@ -239,9 +239,7 @@ const Album = () => {
         <div className="album-info" style={{ flex: 1 }}>
           <div className="album-header-title-row">
             <div className="album-header-textblock">
-              <h1 className="album-header-title" style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0 0 0.5rem 0', color: 'var(--color-text-primary)', cursor: 'pointer' }}
-                onClick = {reload}
-              >
+              <h1 className="album-header-title" style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0 0 0.5rem 0', color: 'var(--color-text-primary)' }}>
                 {album.title}
               </h1>
 

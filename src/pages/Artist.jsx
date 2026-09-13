@@ -29,7 +29,6 @@ const Artist = () => {
   const [artistData, setArtistData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [showAllSimilar, setShowAllSimilar] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
   const [showArtistModal, setShowArtistModal] = useState(false);
@@ -76,16 +75,11 @@ const Artist = () => {
     if (id) {
       fetchArtistData();
     }
-  }, [id, refreshKey]);
+  }, [id]);
 
   const handleAlbumClick = (album) => {
     navigate(`/album/${album.id}`);
   };
-
-  const reload = () => {
-    setRefreshKey(refreshKey => refreshKey + 1)
-  }
-
 
   if (loading) {
     return (
@@ -154,9 +148,7 @@ const Artist = () => {
         {/* Artist Info */}
         <div style={{ flex: 1 }}>
           <div className="artist-header-title-row" style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem' }}>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: 0, color: 'var(--color-text-primary)', cursor: 'pointer' }}
-              onClick={ reload }
-            >
+            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: 0, color: 'var(--color-text-primary)' }}>
               {artist.name}
             </h1>
 
