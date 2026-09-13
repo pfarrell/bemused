@@ -50,6 +50,14 @@ describe('AdminTags', () => {
     expect(screen.getByText('#rock')).toBeInTheDocument();
   });
 
+  test('does not crash when a tag has a null name (malformed legacy data)', async () => {
+    apiService.getAdminTags.mockResolvedValue({
+      data: [...tags, { id: 3, name: null, artist_count: 50, album_count: 0 }],
+    });
+    render(<AdminTags />);
+    expect(await screen.findByText('#rock')).toBeInTheDocument();
+  });
+
   test('does not delete when confirmation is cancelled', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(false);
     render(<AdminTags />);

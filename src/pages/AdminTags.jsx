@@ -48,7 +48,7 @@ export default function AdminTags() {
   if (loading && !tags.length) return <Loading />;
   if (error) return <Retry message={error} onRetry={loadTags} />;
 
-  const filteredTags = tags.filter((t) => t.name.includes(filterText.trim().toLowerCase()));
+  const filteredTags = tags.filter((t) => (t.name ?? '').includes(filterText.trim().toLowerCase()));
 
   return (
     <div style={{ padding: '2rem', backgroundColor: 'var(--color-bg-surface-muted)', minHeight: '100%' }}>

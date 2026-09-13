@@ -72,7 +72,7 @@ const TagFilterControl = ({ allowSetDefault = false, onSelect, variant = 'dark' 
               setTagInput(e.target.value);
               if (allTagsCache) {
                 setTagSuggestions(
-                  allTagsCache.filter((t) => t.name.includes(e.target.value.toLowerCase())).slice(0, 6)
+                  allTagsCache.filter((t) => (t.name ?? '').includes(e.target.value.toLowerCase())).slice(0, 6)
                 );
               }
             }}

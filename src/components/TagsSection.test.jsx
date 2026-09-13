@@ -60,4 +60,16 @@ describe('TagsSection', () => {
     fireEvent.mouseDown(await screen.findByText('#rock'));
     await waitFor(() => expect(apiService.addTagToArtist).toHaveBeenCalledWith(1, 'rock'));
   });
+
+  test('does not crash when the tag list contains a null-named tag (malformed legacy data)', async () => {
+    apiService.getTags.mockResolvedValue({ data: [{ id: 1, name: 'rock' }, { id: 2, name: null }] });
+
+    render(<TagsSection entityType="artist" entityId={1} isLoggedIn={true} />);
+    const input = screen.getByPlaceholderText('add tag…');
+    fireEvent.focus(input);
+    await waitFor(() => expect(apiService.getTags).toHaveBeenCalled());
+    fireEvent.change(input, { target: { value: 'ro' } });
+
+    expect(await screen.findByText('#rock')).toBeInTheDocument();
+  });
 });

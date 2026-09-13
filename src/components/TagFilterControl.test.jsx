@@ -111,6 +111,15 @@ describe('TagFilterControl', () => {
     expect(screen.getByText('set default')).toHaveStyle({ color: 'rgb(107, 114, 128)' });
   });
 
+  test('does not crash when the tag list contains a null-named tag (malformed legacy data)', async () => {
+    apiService.getTags.mockResolvedValue({ data: [{ id: 1, name: 'jazz' }, { id: 2, name: null }] });
+    render(<TagFilterControl />);
+    const input = screen.getByPlaceholderText('filter by tag…');
+    await waitFor(() => expect(apiService.getTags).toHaveBeenCalled());
+    fireEvent.change(input, { target: { value: 'ja' } });
+    expect(await screen.findByText('#jazz')).toBeInTheDocument();
+  });
+
   test('caches the tag list across mounts, fetching only once', async () => {
     const { unmount } = render(<TagFilterControl />);
     await waitFor(() => expect(apiService.getTags).toHaveBeenCalledTimes(1));

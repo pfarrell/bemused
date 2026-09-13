@@ -51,7 +51,7 @@ const TagsSection = ({ entityType, entityId, isLoggedIn }) => {
 
   useEffect(() => {
     if (allTags && inputValue.trim()) {
-      setSuggestions(allTags.filter(t => t.name.includes(inputValue.toLowerCase())).slice(0, 8));
+      setSuggestions(allTags.filter(t => (t.name ?? '').includes(inputValue.toLowerCase())).slice(0, 8));
     } else {
       setSuggestions([]);
     }
