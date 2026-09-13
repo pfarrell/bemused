@@ -285,6 +285,28 @@ export const usePlayerStore = create((set, get) => ({
     get().syncNextTrackIndex();
   },
 
+  // Entered directly from a collection's "Shuffle All" button (Collection.jsx) rather than via
+  // cyclePlaybackMode — there's no current track to preserve, so this replaces whatever was
+  // playing outright and starts fresh. albumId is null (there's no single "current album" here);
+  // the collection auto-advance effect in usePlayerEngine is guarded against running while
+  // playbackMode is 'shuffle-collection', so it never tries to resolve an adjacent album for it.
+  startCollectionShuffle: async (collectionId) => {
+    get().clearPlaylist();
+    set({ collectionContext: { collectionId, albumId: null }, playbackMode: 'shuffle-collection' });
+    try {
+      const response = await apiService.getRandomCollectionTracks(collectionId, {
+        limit: COLLECTION_SHUFFLE_BATCH_SIZE,
+        excludeTrackIds: [],
+      });
+      const tracks = response.data?.tracks || [];
+      if (tracks.length === 0 || get().playbackMode !== 'shuffle-collection') return;
+      set({ playlist: tracks });
+      get().playTrackAtIndex(0);
+    } catch (error) {
+      console.error('Failed to start collection shuffle:', error);
+    }
+  },
+
   toggleDrawer: () => set((state) => ({ drawerOpen: !state.drawerOpen })),
   closeDrawer: () => set({ drawerOpen: false }),
 

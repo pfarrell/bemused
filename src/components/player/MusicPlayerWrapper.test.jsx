@@ -71,12 +71,13 @@ test('shuffle button shows the shuffle glyph and title when active', () => {
   expect(button.textContent).toBe('\u{1F500}');
 });
 
-test('shuffle button shows the shuffle-collection title when active', () => {
+test('shuffle button shows a distinct glyph and title for shuffle-collection', () => {
   usePlayerStore.setState({ playbackMode: 'shuffle-collection' });
   render(<MusicPlayerWrapper />);
   const button = screen.getByTitle('Shuffle Collection');
   expect(button).toHaveClass('active');
-  expect(button.textContent).toBe('\u{1F500}');
+  expect(button.textContent).toBe('\u{1F3B2}');
+  expect(button.textContent).not.toBe('\u{1F500}');
 });
 
 test('shuffle button shows the repeat-all glyph and title', () => {

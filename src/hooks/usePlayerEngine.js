@@ -169,8 +169,11 @@ export const usePlayerEngine = (audioRefA, audioRefB) => {
   // rather than just stopping. Lives here rather than in the store because it needs
   // apiService, and this hook (mounted outside <Routes> in App.jsx) keeps running no
   // matter which page is shown, so it survives navigating away mid-album.
+  // Skipped entirely while playbackMode is 'shuffle-collection': that mode's own top-up
+  // effect below already keeps the queue full, and its collectionContext may carry a null
+  // albumId (started via Collection.jsx's "Shuffle All", not from any single album).
   useEffect(() => {
-    if (!playlistFinished || !collectionContext) return undefined;
+    if (!playlistFinished || !collectionContext || playbackMode === 'shuffle-collection') return undefined;
     let cancelled = false;
     const { collectionId, albumId } = collectionContext;
     apiService.getAdjacentAlbums(albumId, collectionId)
@@ -187,7 +190,7 @@ export const usePlayerEngine = (audioRefA, audioRefB) => {
       })
       .catch((error) => console.error('Failed to auto-advance to next collection album:', error));
     return () => { cancelled = true; };
-  }, [playlistFinished, collectionContext]);
+  }, [playlistFinished, collectionContext, playbackMode]);
 
   // Keeps Shuffle Collection's queue topped up: once only a few unplayed tracks remain, fetch
   // another random batch from the same collection and append it, so playback never has to stop

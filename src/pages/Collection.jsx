@@ -16,6 +16,7 @@ import ContextMenu from '../components/ContextMenu';
 import CardGrid from '../components/CardGrid';
 import { useContextMenu } from '../hooks/useContextMenu';
 import { useFavoritesStore } from '../stores/favoritesStore';
+import { usePlayerStore } from '../stores/playerStore';
 import { shareLink } from '../utils/shareLink';
 
 export default function Collection() {
@@ -28,7 +29,18 @@ export default function Collection() {
   const [showImageModal, setShowImageModal] = useState(false);
   const isFavorite = useFavoritesStore((s) => s.isFavorite('collection', parseInt(id)));
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+  const startCollectionShuffle = usePlayerStore((s) => s.startCollectionShuffle);
+  const [shuffleLoading, setShuffleLoading] = useState(false);
   const ctxMenu = useContextMenu({ shouldIgnore: (e) => !isAuthenticated || e.target.tagName === 'A' || !!e.target.closest('button') });
+
+  const handleShuffleAll = async () => {
+    setShuffleLoading(true);
+    try {
+      await startCollectionShuffle(collectionData.collection.id);
+    } finally {
+      setShuffleLoading(false);
+    }
+  };
 
   const handleToggleFavorite = () => {
     if (!collectionData?.collection) return;
@@ -101,6 +113,8 @@ export default function Collection() {
           </p>
 
           <PlayActionsMenu
+            onPlay={albums?.length > 0 ? handleShuffleAll : undefined}
+            disabled={shuffleLoading}
             overflowActions={[
               canEdit && { key: 'edit', icon: '✎', label: 'Edit', onClick: () => navigate(`/admin/collection/${id}`) },
               isAuthenticated && {

@@ -274,6 +274,26 @@ describe('collection auto-advance', () => {
     expect(setCollectionContext).toHaveBeenCalledWith({ collectionId: 7, albumId: 11 });
   });
 
+  test('does not auto-advance while playbackMode is shuffle-collection (its own top-up effect handles this, and albumId may be null)', async () => {
+    const audioRefA = makeAudioRef();
+    const audioRefB = makeAudioRef();
+    renderHook(() => usePlayerEngine(audioRefA, audioRefB));
+
+    await act(async () => {
+      usePlayerStore.setState({
+        playlistFinished: true,
+        collectionContext: { collectionId: 7, albumId: null },
+        playbackMode: 'shuffle-collection',
+        // Enough tracks that the shuffle-collection top-up effect (a separate concern,
+        // covered by its own describe block) doesn't also fire here.
+        playlist: Array.from({ length: 10 }, (_, i) => ({ id: i + 1, title: `T${i + 1}`, url: `/stream/${i + 1}` })),
+        currentTrackIndex: 0,
+      });
+    });
+
+    expect(apiService.getAdjacentAlbums).not.toHaveBeenCalled();
+  });
+
   test('does not fetch track data or advance when the collection has no next album', async () => {
     apiService.getAdjacentAlbums.mockResolvedValue({ data: { next: null } });
     const addTracks = vi.fn();

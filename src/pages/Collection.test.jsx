@@ -1,9 +1,10 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import Collection from './Collection';
 import { apiService } from '../services/api';
 import { useAuthStore } from '../stores/authStore';
 import { useFavoritesStore } from '../stores/favoritesStore';
+import { usePlayerStore } from '../stores/playerStore';
 
 vi.mock('../components/NotesSection', () => ({ default: () => null }));
 vi.mock('../components/AlbumCard', () => ({ default: ({ album }) => <div>{album.title}</div> }));
@@ -29,6 +30,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   useAuthStore.setState({ isAdmin: false, isAuthenticated: false, user: null });
   useFavoritesStore.setState({ isFavorite: () => false, toggleFavorite: vi.fn() });
+  usePlayerStore.setState({ startCollectionShuffle: vi.fn().mockResolvedValue(undefined) });
 });
 
 describe('Collection page — wikipedia summary', () => {
@@ -73,6 +75,36 @@ describe('Collection page — stubs', () => {
     renderCollection();
     expect(await screen.findByText('Missing Album')).toBeInTheDocument();
     expect(screen.getByText('Missing Artist')).toBeInTheDocument();
+  });
+});
+
+describe('Collection page — Shuffle All', () => {
+  test('shows no Play button when the collection has no albums', async () => {
+    apiService.getCollection.mockResolvedValue({
+      data: { collection: baseCollection, albums: [], notes: [], summary: null },
+    });
+    renderCollection();
+    await screen.findByText('Road Trip Mix');
+    expect(screen.queryByRole('button', { name: 'Play' })).not.toBeInTheDocument();
+  });
+
+  test('shows a Play button that starts collection shuffle when the collection has albums', async () => {
+    apiService.getCollection.mockResolvedValue({
+      data: {
+        collection: baseCollection,
+        albums: [{ id: 1, title: 'A', image_path: 'a.jpg', order: 1, artist: { id: 1, name: 'Artist A' } }],
+        notes: [],
+        summary: null,
+      },
+    });
+    renderCollection();
+    await screen.findByText('A');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }));
+
+    await waitFor(() => {
+      expect(usePlayerStore.getState().startCollectionShuffle).toHaveBeenCalledWith(baseCollection.id);
+    });
   });
 });
 

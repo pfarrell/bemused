@@ -865,6 +865,42 @@ describe('enterCollectionShuffle', () => {
   });
 });
 
+describe('startCollectionShuffle', () => {
+  test('replaces the playlist, tags a null-albumId collectionContext, and starts playing track 0', async () => {
+    const audioElement = mockAudioElement();
+    setActiveAudio(audioElement, { playlist: [track(1)], currentTrackIndex: 0, isPlaying: true });
+    apiService.getRandomCollectionTracks.mockResolvedValue({ data: { tracks: [track(10), track(11)] } });
+
+    await usePlayerStore.getState().startCollectionShuffle(7);
+
+    const state = usePlayerStore.getState();
+    expect(state.playlist.map((t) => t.id)).toEqual([10, 11]);
+    expect(state.currentTrackIndex).toBe(0);
+    expect(state.currentTrack.id).toBe(10);
+    expect(state.playbackMode).toBe('shuffle-collection');
+    expect(state.collectionContext).toEqual({ collectionId: 7, albumId: null });
+    expect(apiService.getRandomCollectionTracks).toHaveBeenCalledWith(7, { limit: 25, excludeTrackIds: [] });
+  });
+
+  test('does nothing further when the collection has no tracks', async () => {
+    apiService.getRandomCollectionTracks.mockResolvedValue({ data: { tracks: [] } });
+    await usePlayerStore.getState().startCollectionShuffle(7);
+    const state = usePlayerStore.getState();
+    expect(state.playlist).toEqual([]);
+    expect(state.currentTrackIndex).toBe(-1);
+  });
+
+  test('discards the fetched batch if playbackMode changed away from shuffle-collection while the fetch was in flight', async () => {
+    let resolveFetch;
+    apiService.getRandomCollectionTracks.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
+    const pending = usePlayerStore.getState().startCollectionShuffle(7);
+    usePlayerStore.setState({ playbackMode: 'off' });
+    resolveFetch({ data: { tracks: [track(10)] } });
+    await pending;
+    expect(usePlayerStore.getState().playlist).toEqual([]);
+  });
+});
+
 describe('appendCollectionShuffleTracks', () => {
   test('appends tracks to the playlist without touching collectionContext or currentTrackIndex', () => {
     usePlayerStore.setState({
