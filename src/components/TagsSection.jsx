@@ -39,9 +39,6 @@ const TagsSection = ({ entityType, entityId, isLoggedIn }) => {
       try {
         const res = await apiService.getTags();
         setAllTags(res.data);
-        if (inputValue.trim()) {
-          setSuggestions(res.data.filter(t => t.name.includes(inputValue)).slice(0, 8));
-        }
       } catch (err) {
         console.error('Failed to load tag suggestions', err);
       }
@@ -49,14 +46,16 @@ const TagsSection = ({ entityType, entityId, isLoggedIn }) => {
   };
 
   const handleInputChange = (e) => {
-    const val = e.target.value;
-    setInputValue(val);
-    if (allTags && val.trim()) {
-      setSuggestions(allTags.filter(t => t.name.includes(val.toLowerCase())).slice(0, 8));
+    setInputValue(e.target.value);
+  };
+
+  useEffect(() => {
+    if (allTags && inputValue.trim()) {
+      setSuggestions(allTags.filter(t => t.name.includes(inputValue.toLowerCase())).slice(0, 8));
     } else {
       setSuggestions([]);
     }
-  };
+  }, [allTags, inputValue]);
 
   const handleAdd = async (name) => {
     const trimmed = name.trim();
