@@ -1989,22 +1989,18 @@
   .album-header-featuring { order: 3; }
   .album-header-collections { order: 3; }
   /* Prev/next album nav (order 4) was missed when this reorder scheme was
-     built, so it defaulted to order 0 and floated above the title —
-     moved below the featuring/collections lines here, with its own
-     separator standing in for the About box's (suppressed just below)
-     so there's exactly one line between the actions and the nav. */
+     built, so it defaulted to order 0 and floated above the title. First
+     moved to just above the Wikipedia excerpt, then further down below it
+     per follow-up feedback — its own separator now divides it from the
+     Wikipedia text above, since the About box keeps its own. */
+  .album-header-about { order: 5; }
   .album-header-adjacent-nav {
-    order: 4;
+    order: 6;
     margin-top: 0.5rem !important;
     padding-top: 0.75rem;
     border-top: 1px solid var(--color-border);
   }
-  .album-header-adjacent-nav + .album-header-about .about-section {
-    border-top: none;
-    padding-top: 0;
-  }
-  .album-header-about { order: 5; }
-  .album-header-description { order: 6; }
+  .album-header-description { order: 7; }
 
   /* Title + artist + play button share one row, Spotify-mobile style,
      instead of the button getting its own full-width row below. The text
