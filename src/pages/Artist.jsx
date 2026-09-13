@@ -34,6 +34,8 @@ const Artist = () => {
   const [showArtistModal, setShowArtistModal] = useState(false);
   const isFavorite = useFavoritesStore((s) => s.isFavorite('artist', parseInt(id)));
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+  const startScopeShuffle = usePlayerStore((s) => s.startScopeShuffle);
+  const [shuffleLoading, setShuffleLoading] = useState(false);
   const { overflowAction: overtoneAction, modal: overtoneModal } = useOvertoneAction(artistData?.artist?.musicbrainz_id);
   // Edit/Favorite/Share are all account-gated, so unless Overtone applies
   // (musicbrainz_id present — no login needed for that one), a logged-out
@@ -49,6 +51,15 @@ const Artist = () => {
       image_path: artistData.artist.image_path,
     });
     ctxMenu.close();
+  };
+
+  const handleShuffleArtist = async () => {
+    setShuffleLoading(true);
+    try {
+      await startScopeShuffle('artist', artistData.artist.id);
+    } finally {
+      setShuffleLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -154,6 +165,8 @@ const Artist = () => {
 
             <div className="artist-header-actions" style={{ display: 'flex', gap: '0.5rem' }}>
               <PlayActionsMenu
+                onPlay={(albums?.length > 0 || singles?.length > 0) ? handleShuffleArtist : undefined}
+                disabled={shuffleLoading}
                 overflowActions={[
                   isAdmin && { key: 'edit', icon: '✎', label: 'Edit', onClick: () => navigate(`/admin/artist/${id}`) },
                   isAuthenticated && {

@@ -15,7 +15,7 @@ vi.mock('./SavePlaylistModal', () => ({
 beforeEach(() => {
   usePlayerStore.setState({
     audioElementA: null, audioElementB: null, activeSlot: 'a', isPlaying: false, isBuffering: false, currentTime: 0, duration: 0,
-    playbackMode: 'off', drawerOpen: false, activityPulseToken: 0, playlist: [], currentTrackIndex: -1,
+    playbackMode: 'off', scopeContext: null, drawerOpen: false, activityPulseToken: 0, playlist: [], currentTrackIndex: -1,
   });
   useAuthStore.setState({ isAuthenticated: true });
 });
@@ -71,13 +71,21 @@ test('shuffle button shows the shuffle glyph and title when active', () => {
   expect(button.textContent).toBe('\u{1F500}');
 });
 
-test('shuffle button shows a distinct glyph and title for shuffle-collection', () => {
-  usePlayerStore.setState({ playbackMode: 'shuffle-collection' });
+test('shuffle button shows a distinct glyph and a "Shuffle Collection" title for shuffle-scope with a collection scopeContext', () => {
+  usePlayerStore.setState({ playbackMode: 'shuffle-scope', scopeContext: { type: 'collection', id: 7 } });
   render(<MusicPlayerWrapper />);
   const button = screen.getByTitle('Shuffle Collection');
   expect(button).toHaveClass('active');
   expect(button.textContent).toBe('\u{1F3B2}');
   expect(button.textContent).not.toBe('\u{1F500}');
+});
+
+test('shuffle button shows a "Shuffle Artist" title for shuffle-scope with an artist scopeContext', () => {
+  usePlayerStore.setState({ playbackMode: 'shuffle-scope', scopeContext: { type: 'artist', id: 3 } });
+  render(<MusicPlayerWrapper />);
+  const button = screen.getByTitle('Shuffle Artist');
+  expect(button).toHaveClass('active');
+  expect(button.textContent).toBe('\u{1F3B2}');
 });
 
 test('shuffle button shows the repeat-all glyph and title', () => {

@@ -12,9 +12,10 @@ const PREV = '⏪';
 const NEXT = '⏩';
 const SHUFFLE = '\u{1F500}';
 // Distinct from SHUFFLE on purpose — the title tooltip that's the only other differentiator
-// never shows on iOS Safari touch (no hover), so shuffle-collection needs its own glyph or it's
-// visually indistinguishable from plain shuffle on mobile.
-const SHUFFLE_COLLECTION = '\u{1F3B2}';
+// never shows on iOS Safari touch (no hover), so shuffle-scope needs its own glyph or it's
+// visually indistinguishable from plain shuffle on mobile. Shared across every scope type
+// (collection, artist, ...) — only the title text below names which one.
+const SHUFFLE_SCOPE = '\u{1F3B2}';
 const REPEAT_ALL = '\u{1F501}';
 const REPEAT_ONE = '\u{1F502}';
 const PLAY = '⏵';
@@ -22,10 +23,14 @@ const PAUSE = '⏸';
 
 const PLAYBACK_MODE_DISPLAY = {
   off: { glyph: SHUFFLE, title: 'Shuffle: Off' },
-  'shuffle-collection': { glyph: SHUFFLE_COLLECTION, title: 'Shuffle Collection' },
   shuffle: { glyph: SHUFFLE, title: 'Shuffle' },
   'repeat-all': { glyph: REPEAT_ALL, title: 'Repeat All' },
   'repeat-one': { glyph: REPEAT_ONE, title: 'Repeat One' },
+};
+
+const SCOPE_TYPE_LABEL = {
+  collection: 'Collection',
+  artist: 'Artist',
 };
 
 const formatTime = (seconds) => {
@@ -45,6 +50,7 @@ const MusicPlayerWrapper = ({ className = '' }) => {
   const currentTime = usePlayerStore((s) => s.currentTime);
   const duration = usePlayerStore((s) => s.duration);
   const playbackMode = usePlayerStore((s) => s.playbackMode);
+  const scopeContext = usePlayerStore((s) => s.scopeContext);
   const drawerOpen = usePlayerStore((s) => s.drawerOpen);
   const playlist = usePlayerStore((s) => s.playlist);
   const activityPulseToken = usePlayerStore((s) => s.activityPulseToken);
@@ -96,7 +102,9 @@ const MusicPlayerWrapper = ({ className = '' }) => {
   };
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const { glyph: shuffleGlyph, title: shuffleTitle } = PLAYBACK_MODE_DISPLAY[playbackMode];
+  const { glyph: shuffleGlyph, title: shuffleTitle } = playbackMode === 'shuffle-scope'
+    ? { glyph: SHUFFLE_SCOPE, title: `Shuffle ${SCOPE_TYPE_LABEL[scopeContext?.type] || 'Scope'}` }
+    : PLAYBACK_MODE_DISPLAY[playbackMode];
 
   return (
     <div className={`music-player-wrapper ${className}`}>

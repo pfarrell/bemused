@@ -29,14 +29,14 @@ export default function Collection() {
   const [showImageModal, setShowImageModal] = useState(false);
   const isFavorite = useFavoritesStore((s) => s.isFavorite('collection', parseInt(id)));
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
-  const startCollectionShuffle = usePlayerStore((s) => s.startCollectionShuffle);
+  const startScopeShuffle = usePlayerStore((s) => s.startScopeShuffle);
   const [shuffleLoading, setShuffleLoading] = useState(false);
   const ctxMenu = useContextMenu({ shouldIgnore: (e) => !isAuthenticated || e.target.tagName === 'A' || !!e.target.closest('button') });
 
   const handleShuffleAll = async () => {
     setShuffleLoading(true);
     try {
-      await startCollectionShuffle(collectionData.collection.id);
+      await startScopeShuffle('collection', collectionData.collection.id);
     } finally {
       setShuffleLoading(false);
     }

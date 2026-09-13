@@ -342,4 +342,58 @@ artists.get('/:id', async (c) => {
   return c.json({ artist, summary: summary ?? {}, albums: filteredAlbums, singles, appears_on, performances, related_artists, members, group_albums, similar_artists })
 })
 
+// POST /artist/:id/tracks/random — powers Shuffle Artist playback mode. Returns a random
+// batch of tracks from this artist's own discography (their own albums plus any they're
+// credited as a 'collaborator' on — the same album set fetchArtistDiscography above uses for
+// the artist page's own albums grid, including the "_Singles" pseudo-album), shaped exactly
+// like GET /album/:id's track objects. Deliberately excludes "Appears On"/"Performances"
+// credits (guest/featured/composer/performer spots on other artists' releases) — this is a
+// shuffle of the artist's own catalog, not everything they've ever touched.
+artists.post('/:id/tracks/random', async (c) => {
+  const artistId = parseInt(c.req.param('id'))
+  if (!Number.isInteger(artistId)) return c.json({ error: 'Not found' }, 404)
+
+  const artist = await db.selectFrom('artists').select('id').where('id', '=', artistId).executeTakeFirst()
+  if (!artist) return c.json({ error: 'Not found' }, 404)
+
+  const body = await c.req.json().catch(() => ({} as any))
+  const limit = Math.min(Math.max(parseInt(body.limit) || 25, 1), 100)
+  const excludeTrackIds: number[] = Array.isArray(body.excludeTrackIds)
+    ? body.excludeTrackIds.filter((id: any) => Number.isInteger(id))
+    : []
+
+  const rows = await sql<any>`
+    SELECT t.id, t.title, t.track_number, t.duration_sec,
+           al.id as album_id, al.title as album_title, al.image_path as album_image_path,
+           ar.id as artist_id, ar.name as artist_name,
+           track_ar.id as track_artist_id, track_ar.name as track_artist_name
+    FROM albums al
+    INNER JOIN artists ar ON ar.id = al.artist_id
+    INNER JOIN tracks t ON t.album_id = al.id AND t.approved = true
+    LEFT JOIN artists track_ar ON track_ar.id = t.artist_id
+    WHERE (al.artist_id = ${artistId}
+           OR EXISTS (
+             SELECT 1 FROM artist_albums caa
+             WHERE caa.album_id = al.id AND caa.artist_id = ${artistId} AND caa.role = 'collaborator'
+           ))
+      ${excludeTrackIds.length ? sql`AND t.id NOT IN (${sql.join(excludeTrackIds)})` : sql``}
+    ORDER BY random()
+    LIMIT ${limit}
+  `.execute(db)
+
+  const tracks = rows.rows.map((t: any) => ({
+    id: t.id,
+    title: t.title,
+    track_number: t.track_number,
+    duration: t.duration_sec,
+    album: { id: t.album_id, title: t.album_title, artist: { id: t.artist_id, name: t.artist_name } },
+    artist: { id: t.track_artist_id ?? t.artist_id, name: t.track_artist_name ?? t.artist_name },
+    image_path: t.album_image_path,
+    url: `${streamBase(c)}/stream/${t.id}`,
+    download_url: `${streamBase(c)}/download/${t.id}`,
+  }))
+
+  return c.json({ tracks })
+})
+
 export default artists

@@ -159,8 +159,6 @@ export const apiService = {
   // Collections
   getCollections: () => api.get('/collections'),
   getCollection: (id) => api.get(`/collection/${id}`),
-  getRandomCollectionTracks: (collectionId, { limit = 25, excludeTrackIds = [] } = {}) =>
-    api.post(`/collection/${collectionId}/tracks/random`, { limit, excludeTrackIds }),
   createCollection: (name) => api.post('/collections', { name }),
   updateCollection: (id, data) => api.put(`/collection/${id}`, data),
   deleteCollection: (id) => api.delete(`/collection/${id}`),
@@ -175,6 +173,13 @@ export const apiService = {
   resolveStub: (collectionId, stubId, albumId) =>
     api.post(`/collection/${collectionId}/stubs/${stubId}/resolve`, { album_id: albumId }),
   downloadCollectionImage: (id, image_url, image_name) => api.post(`/admin/collection/${id}/image`, { image_url, image_name }),
+
+  // Shuffle scope — dispatches to the right entity's random-tracks endpoint. Used by
+  // playerStore's startScopeShuffle/enterScopeShuffle and usePlayerEngine's top-up effect.
+  getRandomScopeTracks: (type, id, { limit = 25, excludeTrackIds = [] } = {}) => {
+    const path = type === 'artist' ? `/artist/${id}/tracks/random` : `/collection/${id}/tracks/random`;
+    return api.post(path, { limit, excludeTrackIds });
+  },
 
   // Favorites
   getFavorites: (kind = null) => api.get(`/favorites${kind ? `?kind=${encodeURIComponent(kind)}` : ''}`),

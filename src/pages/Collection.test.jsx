@@ -30,7 +30,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   useAuthStore.setState({ isAdmin: false, isAuthenticated: false, user: null });
   useFavoritesStore.setState({ isFavorite: () => false, toggleFavorite: vi.fn() });
-  usePlayerStore.setState({ startCollectionShuffle: vi.fn().mockResolvedValue(undefined) });
+  usePlayerStore.setState({ startScopeShuffle: vi.fn().mockResolvedValue(undefined) });
 });
 
 describe('Collection page — wikipedia summary', () => {
@@ -103,7 +103,7 @@ describe('Collection page — Shuffle All', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Play' }));
 
     await waitFor(() => {
-      expect(usePlayerStore.getState().startCollectionShuffle).toHaveBeenCalledWith(baseCollection.id);
+      expect(usePlayerStore.getState().startScopeShuffle).toHaveBeenCalledWith('collection', baseCollection.id);
     });
   });
 });

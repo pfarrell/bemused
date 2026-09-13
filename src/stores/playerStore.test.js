@@ -4,7 +4,7 @@ import { apiService } from '../services/api';
 
 vi.mock('../services/api', () => ({
   apiService: {
-    getRandomCollectionTracks: vi.fn(),
+    getRandomScopeTracks: vi.fn(),
   },
 }));
 
@@ -25,7 +25,7 @@ const setActiveAudio = (audioElement, overrides = {}) =>
   usePlayerStore.setState({ audioElementA: audioElement, audioElementB: mockAudioElement(), activeSlot: 'a', ...overrides });
 
 beforeEach(() => {
-  apiService.getRandomCollectionTracks.mockReset();
+  apiService.getRandomScopeTracks.mockReset();
   usePlayerStore.setState({
     audioElementA: null,
     audioElementB: null,
@@ -47,6 +47,7 @@ beforeEach(() => {
     standbyUnlocked: false,
     pageTracks: [],
     collectionContext: null,
+    scopeContext: null,
   });
 });
 
@@ -304,31 +305,41 @@ describe('playNext / playback modes', () => {
     expect(modes).toEqual(['shuffle', 'repeat-all', 'repeat-one', 'off']);
   });
 
-  test('cyclePlaybackMode inserts shuffle-collection when collectionContext is set', () => {
-    apiService.getRandomCollectionTracks.mockResolvedValue({ data: { tracks: [] } });
+  test('cyclePlaybackMode inserts shuffle-scope when scopeContext is set', () => {
+    usePlayerStore.setState({ playbackMode: 'off', scopeContext: { type: 'artist', id: 3 } });
+    const modes = [];
+    for (let i = 0; i < 5; i++) {
+      usePlayerStore.getState().cyclePlaybackMode();
+      modes.push(usePlayerStore.getState().playbackMode);
+    }
+    expect(modes).toEqual(['shuffle-scope', 'shuffle', 'repeat-all', 'repeat-one', 'off']);
+  });
+
+  test('cyclePlaybackMode inserts shuffle-scope when only collectionContext is set (album played from a collection)', () => {
+    apiService.getRandomScopeTracks.mockResolvedValue({ data: { tracks: [] } });
     usePlayerStore.setState({ playbackMode: 'off', collectionContext: { collectionId: 7, albumId: 42 } });
     const modes = [];
     for (let i = 0; i < 5; i++) {
       usePlayerStore.getState().cyclePlaybackMode();
       modes.push(usePlayerStore.getState().playbackMode);
     }
-    expect(modes).toEqual(['shuffle-collection', 'shuffle', 'repeat-all', 'repeat-one', 'off']);
+    expect(modes).toEqual(['shuffle-scope', 'shuffle', 'repeat-all', 'repeat-one', 'off']);
   });
 
-  test('shuffle-collection: advances linearly through the queue', () => {
+  test('shuffle-scope: advances linearly through the queue', () => {
     setActiveAudio(mockAudioElement(), {
       playlist: [track(1), track(2)],
       currentTrackIndex: 0,
       nextTrackIndex: 1,
-      playbackMode: 'shuffle-collection',
+      playbackMode: 'shuffle-scope',
     });
     usePlayerStore.getState().playNext();
     expect(usePlayerStore.getState().currentTrackIndex).toBe(1);
   });
 
-  test('shuffle-collection: marks playlistFinished and pauses once the queue runs out', () => {
+  test('shuffle-scope: marks playlistFinished and pauses once the queue runs out', () => {
     const audioElement = mockAudioElement();
-    setActiveAudio(audioElement, { playlist: [track(1), track(2)], currentTrackIndex: 1, playbackMode: 'shuffle-collection' });
+    setActiveAudio(audioElement, { playlist: [track(1), track(2)], currentTrackIndex: 1, playbackMode: 'shuffle-scope' });
     usePlayerStore.getState().playNext();
     const state = usePlayerStore.getState();
     expect(state.playlistFinished).toBe(true);
@@ -825,39 +836,87 @@ describe('collectionContext', () => {
   });
 });
 
-describe('enterCollectionShuffle', () => {
-  test('does nothing without an active collectionContext', async () => {
-    usePlayerStore.setState({ playlist: [track(1)], currentTrackIndex: 0, collectionContext: null });
-    await usePlayerStore.getState().enterCollectionShuffle();
-    expect(apiService.getRandomCollectionTracks).not.toHaveBeenCalled();
+describe('scopeContext queue-mutation clearing', () => {
+  test.each([
+    ['addTrack', () => usePlayerStore.getState().addTrack(track(1))],
+    ['addTracks', () => usePlayerStore.getState().addTracks([track(1)])],
+    ['clearPlaylist', () => usePlayerStore.getState().clearPlaylist()],
+  ])('%s clears an existing scopeContext', (_name, action) => {
+    usePlayerStore.setState({ scopeContext: { type: 'artist', id: 3 } });
+    action();
+    expect(usePlayerStore.getState().scopeContext).toBeNull();
+  });
+
+  test('removeTrackFromPlaylist clears an existing scopeContext', () => {
+    usePlayerStore.setState({
+      playlist: [track(1), track(2)],
+      currentTrackIndex: 0,
+      scopeContext: { type: 'artist', id: 3 },
+    });
+    usePlayerStore.getState().removeTrackFromPlaylist(1);
+    expect(usePlayerStore.getState().scopeContext).toBeNull();
+  });
+
+  test('reorderPlaylist clears an existing scopeContext', () => {
+    usePlayerStore.setState({
+      playlist: [track(1), track(2)],
+      currentTrackIndex: 0,
+      scopeContext: { type: 'artist', id: 3 },
+    });
+    usePlayerStore.getState().reorderPlaylist(0, 1);
+    expect(usePlayerStore.getState().scopeContext).toBeNull();
+  });
+});
+
+describe('enterScopeShuffle', () => {
+  test('does nothing without an active scopeContext or collectionContext', async () => {
+    usePlayerStore.setState({ playlist: [track(1)], currentTrackIndex: 0, scopeContext: null, collectionContext: null });
+    await usePlayerStore.getState().enterScopeShuffle();
+    expect(apiService.getRandomScopeTracks).not.toHaveBeenCalled();
     expect(usePlayerStore.getState().playlist).toEqual([track(1)]);
   });
 
-  test('drops everything queued after the current track, keeps the current track, and appends a random batch', async () => {
-    apiService.getRandomCollectionTracks.mockResolvedValue({ data: { tracks: [track(10), track(11)] } });
+  test('drops everything queued after the current track, keeps the current track, and appends a random batch (explicit scopeContext)', async () => {
+    apiService.getRandomScopeTracks.mockResolvedValue({ data: { tracks: [track(10), track(11)] } });
     usePlayerStore.setState({
       playlist: [track(1), track(2), track(3)],
       currentTrackIndex: 0,
-      playbackMode: 'shuffle-collection',
-      collectionContext: { collectionId: 7, albumId: 42 },
+      playbackMode: 'shuffle-scope',
+      scopeContext: { type: 'artist', id: 3 },
     });
-    await usePlayerStore.getState().enterCollectionShuffle();
+    await usePlayerStore.getState().enterScopeShuffle();
     const state = usePlayerStore.getState();
     expect(state.playlist.map((t) => t.id)).toEqual([1, 10, 11]);
-    expect(state.collectionContext).toEqual({ collectionId: 7, albumId: 42 });
-    expect(apiService.getRandomCollectionTracks).toHaveBeenCalledWith(7, { limit: 25, excludeTrackIds: [1] });
+    expect(state.scopeContext).toEqual({ type: 'artist', id: 3 });
+    expect(apiService.getRandomScopeTracks).toHaveBeenCalledWith('artist', 3, { limit: 25, excludeTrackIds: [1] });
   });
 
-  test('discards the fetched batch if playbackMode changed away from shuffle-collection while the fetch was in flight', async () => {
-    let resolveFetch;
-    apiService.getRandomCollectionTracks.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
+  test('derives scopeContext from collectionContext when scopeContext is not already set (shuffle toggled while playing an album from a collection)', async () => {
+    apiService.getRandomScopeTracks.mockResolvedValue({ data: { tracks: [track(10)] } });
     usePlayerStore.setState({
       playlist: [track(1)],
       currentTrackIndex: 0,
-      playbackMode: 'shuffle-collection',
+      playbackMode: 'shuffle-scope',
+      scopeContext: null,
       collectionContext: { collectionId: 7, albumId: 42 },
     });
-    const pending = usePlayerStore.getState().enterCollectionShuffle();
+    await usePlayerStore.getState().enterScopeShuffle();
+    const state = usePlayerStore.getState();
+    expect(state.scopeContext).toEqual({ type: 'collection', id: 7 });
+    expect(state.collectionContext).toEqual({ collectionId: 7, albumId: 42 }); // untouched
+    expect(apiService.getRandomScopeTracks).toHaveBeenCalledWith('collection', 7, { limit: 25, excludeTrackIds: [1] });
+  });
+
+  test('discards the fetched batch if playbackMode changed away from shuffle-scope while the fetch was in flight', async () => {
+    let resolveFetch;
+    apiService.getRandomScopeTracks.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
+    usePlayerStore.setState({
+      playlist: [track(1)],
+      currentTrackIndex: 0,
+      playbackMode: 'shuffle-scope',
+      scopeContext: { type: 'artist', id: 3 },
+    });
+    const pending = usePlayerStore.getState().enterScopeShuffle();
     usePlayerStore.setState({ playbackMode: 'off' });
     resolveFetch({ data: { tracks: [track(10)] } });
     await pending;
@@ -865,35 +924,39 @@ describe('enterCollectionShuffle', () => {
   });
 });
 
-describe('startCollectionShuffle', () => {
-  test('replaces the playlist, tags a null-albumId collectionContext, and starts playing track 0', async () => {
+describe('startScopeShuffle', () => {
+  test.each([
+    ['collection', 7],
+    ['artist', 3],
+  ])('replaces the playlist, tags scopeContext (type: %s), and starts playing track 0', async (type, id) => {
     const audioElement = mockAudioElement();
     setActiveAudio(audioElement, { playlist: [track(1)], currentTrackIndex: 0, isPlaying: true });
-    apiService.getRandomCollectionTracks.mockResolvedValue({ data: { tracks: [track(10), track(11)] } });
+    apiService.getRandomScopeTracks.mockResolvedValue({ data: { tracks: [track(10), track(11)] } });
 
-    await usePlayerStore.getState().startCollectionShuffle(7);
+    await usePlayerStore.getState().startScopeShuffle(type, id);
 
     const state = usePlayerStore.getState();
     expect(state.playlist.map((t) => t.id)).toEqual([10, 11]);
     expect(state.currentTrackIndex).toBe(0);
     expect(state.currentTrack.id).toBe(10);
-    expect(state.playbackMode).toBe('shuffle-collection');
-    expect(state.collectionContext).toEqual({ collectionId: 7, albumId: null });
-    expect(apiService.getRandomCollectionTracks).toHaveBeenCalledWith(7, { limit: 25, excludeTrackIds: [] });
+    expect(state.playbackMode).toBe('shuffle-scope');
+    expect(state.scopeContext).toEqual({ type, id });
+    expect(state.collectionContext).toBeNull();
+    expect(apiService.getRandomScopeTracks).toHaveBeenCalledWith(type, id, { limit: 25, excludeTrackIds: [] });
   });
 
-  test('does nothing further when the collection has no tracks', async () => {
-    apiService.getRandomCollectionTracks.mockResolvedValue({ data: { tracks: [] } });
-    await usePlayerStore.getState().startCollectionShuffle(7);
+  test('does nothing further when the scope has no tracks', async () => {
+    apiService.getRandomScopeTracks.mockResolvedValue({ data: { tracks: [] } });
+    await usePlayerStore.getState().startScopeShuffle('artist', 3);
     const state = usePlayerStore.getState();
     expect(state.playlist).toEqual([]);
     expect(state.currentTrackIndex).toBe(-1);
   });
 
-  test('discards the fetched batch if playbackMode changed away from shuffle-collection while the fetch was in flight', async () => {
+  test('discards the fetched batch if playbackMode changed away from shuffle-scope while the fetch was in flight', async () => {
     let resolveFetch;
-    apiService.getRandomCollectionTracks.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
-    const pending = usePlayerStore.getState().startCollectionShuffle(7);
+    apiService.getRandomScopeTracks.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
+    const pending = usePlayerStore.getState().startScopeShuffle('artist', 3);
     usePlayerStore.setState({ playbackMode: 'off' });
     resolveFetch({ data: { tracks: [track(10)] } });
     await pending;
@@ -901,23 +964,23 @@ describe('startCollectionShuffle', () => {
   });
 });
 
-describe('appendCollectionShuffleTracks', () => {
-  test('appends tracks to the playlist without touching collectionContext or currentTrackIndex', () => {
+describe('appendScopeShuffleTracks', () => {
+  test('appends tracks to the playlist without touching scopeContext or currentTrackIndex', () => {
     usePlayerStore.setState({
       playlist: [track(1)],
       currentTrackIndex: 0,
-      collectionContext: { collectionId: 7, albumId: 42 },
+      scopeContext: { type: 'artist', id: 3 },
     });
-    usePlayerStore.getState().appendCollectionShuffleTracks([track(2), track(3)]);
+    usePlayerStore.getState().appendScopeShuffleTracks([track(2), track(3)]);
     const state = usePlayerStore.getState();
     expect(state.playlist.map((t) => t.id)).toEqual([1, 2, 3]);
     expect(state.currentTrackIndex).toBe(0);
-    expect(state.collectionContext).toEqual({ collectionId: 7, albumId: 42 });
+    expect(state.scopeContext).toEqual({ type: 'artist', id: 3 });
   });
 
   test('is a no-op for an empty batch', () => {
     usePlayerStore.setState({ playlist: [track(1)] });
-    usePlayerStore.getState().appendCollectionShuffleTracks([]);
+    usePlayerStore.getState().appendScopeShuffleTracks([]);
     expect(usePlayerStore.getState().playlist).toEqual([track(1)]);
   });
 });

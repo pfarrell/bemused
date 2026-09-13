@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { apiService } from '../services/api';
 
-// Shuffle Collection fetches tracks from the whole collection in batches rather than all at
-// once (collections can be large) — an initial batch on entry, then another whenever the
-// queue is down to this many unplayed tracks (see the top-up effect in usePlayerEngine).
-export const COLLECTION_SHUFFLE_BATCH_SIZE = 25;
-export const COLLECTION_SHUFFLE_TOPUP_REMAINING = 5;
+// "Shuffle scope" (collection, artist, ...) fetches tracks from the scope in batches rather
+// than all at once (a scope can be large) — an initial batch on entry, then another whenever
+// the queue is down to this many unplayed tracks (see the top-up effect in usePlayerEngine).
+export const SCOPE_SHUFFLE_BATCH_SIZE = 25;
+export const SCOPE_SHUFFLE_TOPUP_REMAINING = 5;
 
 const validateTrack = (track) => {
   if (!track || !track.title || !track.url) {
@@ -20,9 +20,9 @@ const validateTrack = (track) => {
 const computeNextIndex = ({ playbackMode, shuffleHistory, playlist, currentTrackIndex }) => {
   if (playlist.length === 0) return -1;
   if (playbackMode === 'repeat-one') return currentTrackIndex;
-  // Tracks arrive pre-randomized from the server (see enterCollectionShuffle /
-  // appendCollectionShuffleTracks), so "next" is just the next queued slot.
-  if (playbackMode === 'shuffle-collection') {
+  // Tracks arrive pre-randomized from the server (see enterScopeShuffle /
+  // appendScopeShuffleTracks), so "next" is just the next queued slot.
+  if (playbackMode === 'shuffle-scope') {
     return currentTrackIndex < playlist.length - 1 ? currentTrackIndex + 1 : -1;
   }
   if (playbackMode === 'shuffle') {
@@ -82,11 +82,19 @@ export const usePlayerStore = create((set, get) => ({
   // so usePlayerEngine can auto-advance into the collection's next album once the
   // queue naturally runs out. Cleared by any generic queue mutation below so a stale
   // collection binge doesn't silently resume after the user's queued something else.
+  // Unrelated to shuffle scope (below) — this only drives the next-album auto-advance.
   collectionContext: null,
   setCollectionContext: (collectionContext) => set({ collectionContext }),
 
+  // The active "shuffle scope" — e.g. { type: 'collection', id } or { type: 'artist', id } —
+  // set by startScopeShuffle (a page's "Shuffle All" button) or derived on the fly by
+  // enterScopeShuffle from collectionContext (the player's shuffle toggle, cycled while
+  // collectionContext is set from playing an album from a collection). Cleared by any
+  // generic queue mutation below, same as collectionContext.
+  scopeContext: null,
+
   // Shuffle/repeat state
-  playbackMode: 'off', // 'off' | 'shuffle' | 'shuffle-collection' | 'repeat-all' | 'repeat-one'
+  playbackMode: 'off', // 'off' | 'shuffle' | 'shuffle-scope' | 'repeat-all' | 'repeat-one'
   shuffleHistory: [],
 
   // UI state
@@ -234,76 +242,83 @@ export const usePlayerStore = create((set, get) => ({
     get().playTrackAtIndex(prevIndex);
   },
 
-  // Shuffle Collection only ever appears as a cycle stop when playback started from a
-  // collection (collectionContext is set) — there's nothing for it to shuffle otherwise.
+  // Shuffle Scope only ever appears as a cycle stop when a scope is available — either
+  // scopeContext (set by a page's "Shuffle All" button) or collectionContext (set whenever an
+  // album is played from a collection's Album page) — there's nothing for it to shuffle
+  // otherwise. collectionContext is the older, narrower signal (collection-only, carries no
+  // artist/other scope types); enterScopeShuffle below derives a real scopeContext from it on
+  // the fly the first time this cycle stop is actually entered that way.
   cyclePlaybackMode: () => {
-    const { playbackMode, currentTrackIndex, shuffleHistory, collectionContext } = get();
-    const order = collectionContext
-      ? ['off', 'shuffle-collection', 'shuffle', 'repeat-all', 'repeat-one']
+    const { playbackMode, currentTrackIndex, shuffleHistory, scopeContext, collectionContext } = get();
+    const order = (scopeContext || collectionContext)
+      ? ['off', 'shuffle-scope', 'shuffle', 'repeat-all', 'repeat-one']
       : ['off', 'shuffle', 'repeat-all', 'repeat-one'];
     const next = order[(order.indexOf(playbackMode) + 1) % order.length];
     set({
       playbackMode: next,
       shuffleHistory: next === 'shuffle' && currentTrackIndex >= 0 ? [currentTrackIndex] : shuffleHistory,
     });
-    if (next === 'shuffle-collection') {
-      get().enterCollectionShuffle();
+    if (next === 'shuffle-scope') {
+      get().enterScopeShuffle();
     } else {
       get().syncNextTrackIndex();
     }
   },
 
-  // Entered only via cyclePlaybackMode landing on 'shuffle-collection'. The currently playing
-  // track keeps playing uninterrupted (mirrors how toggling plain Shuffle on today reshuffles
-  // what's next without restarting playback) — everything queued after it is dropped and
-  // replaced with a fresh random batch from the whole collection. Unlike addTracks, this does
-  // NOT clear collectionContext, since the point is to keep shuffling within it.
-  enterCollectionShuffle: async () => {
-    const { playlist, currentTrackIndex, collectionContext } = get();
-    if (!collectionContext) return;
+  // Entered only via cyclePlaybackMode landing on 'shuffle-scope'. The currently playing track
+  // keeps playing uninterrupted (mirrors how toggling plain Shuffle on today reshuffles what's
+  // next without restarting playback) — everything queued after it is dropped and replaced
+  // with a fresh random batch from the whole scope. Unlike addTracks, this does NOT clear
+  // collectionContext, since the point is to keep shuffling within it.
+  enterScopeShuffle: async () => {
+    const { playlist, currentTrackIndex, scopeContext, collectionContext } = get();
+    const scope = scopeContext || (collectionContext ? { type: 'collection', id: collectionContext.collectionId } : null);
+    if (!scope) return;
+    if (!scopeContext) set({ scopeContext: scope });
     const truncated = currentTrackIndex >= 0 ? playlist.slice(0, currentTrackIndex + 1) : [];
     set({ playlist: truncated });
     get().syncNextTrackIndex();
     try {
-      const response = await apiService.getRandomCollectionTracks(collectionContext.collectionId, {
-        limit: COLLECTION_SHUFFLE_BATCH_SIZE,
+      const response = await apiService.getRandomScopeTracks(scope.type, scope.id, {
+        limit: SCOPE_SHUFFLE_BATCH_SIZE,
         excludeTrackIds: truncated.map((t) => t.id),
       });
-      if (get().playbackMode !== 'shuffle-collection') return;
-      get().appendCollectionShuffleTracks(response.data?.tracks || []);
+      if (get().playbackMode !== 'shuffle-scope') return;
+      get().appendScopeShuffleTracks(response.data?.tracks || []);
     } catch (error) {
-      console.error('Failed to load collection shuffle tracks:', error);
+      console.error('Failed to load scope shuffle tracks:', error);
     }
   },
 
-  // Shared by enterCollectionShuffle (initial batch) and usePlayerEngine's top-up effect
+  // Shared by enterScopeShuffle (initial batch) and usePlayerEngine's top-up effect
   // (subsequent batches, fetched as the queue runs low). Appends without touching
-  // collectionContext or currentTrackIndex.
-  appendCollectionShuffleTracks: (tracks) => {
+  // scopeContext, collectionContext, or currentTrackIndex.
+  appendScopeShuffleTracks: (tracks) => {
     if (!tracks || tracks.length === 0) return;
     set({ playlist: [...get().playlist, ...tracks] });
     get().syncNextTrackIndex();
   },
 
-  // Entered directly from a collection's "Shuffle All" button (Collection.jsx) rather than via
-  // cyclePlaybackMode — there's no current track to preserve, so this replaces whatever was
-  // playing outright and starts fresh. albumId is null (there's no single "current album" here);
-  // the collection auto-advance effect in usePlayerEngine is guarded against running while
-  // playbackMode is 'shuffle-collection', so it never tries to resolve an adjacent album for it.
-  startCollectionShuffle: async (collectionId) => {
+  // Entered directly from a page's "Shuffle All" button (Collection.jsx, Artist.jsx) rather
+  // than via cyclePlaybackMode — there's no current track to preserve, so this replaces
+  // whatever was playing outright and starts fresh. Does not touch collectionContext (the
+  // older next-album-auto-advance signal, collection-only and unrelated to shuffle scope) —
+  // the auto-advance effect in usePlayerEngine is guarded against running while playbackMode
+  // is 'shuffle-scope' regardless.
+  startScopeShuffle: async (type, id) => {
     get().clearPlaylist();
-    set({ collectionContext: { collectionId, albumId: null }, playbackMode: 'shuffle-collection' });
+    set({ scopeContext: { type, id }, playbackMode: 'shuffle-scope' });
     try {
-      const response = await apiService.getRandomCollectionTracks(collectionId, {
-        limit: COLLECTION_SHUFFLE_BATCH_SIZE,
+      const response = await apiService.getRandomScopeTracks(type, id, {
+        limit: SCOPE_SHUFFLE_BATCH_SIZE,
         excludeTrackIds: [],
       });
       const tracks = response.data?.tracks || [];
-      if (tracks.length === 0 || get().playbackMode !== 'shuffle-collection') return;
+      if (tracks.length === 0 || get().playbackMode !== 'shuffle-scope') return;
       set({ playlist: tracks });
       get().playTrackAtIndex(0);
     } catch (error) {
-      console.error('Failed to start collection shuffle:', error);
+      console.error('Failed to start scope shuffle:', error);
     }
   },
 
@@ -317,7 +332,7 @@ export const usePlayerStore = create((set, get) => ({
     validateTrack(track);
     const { playlist, isPlaying } = get();
     const newPlaylist = [...playlist, track];
-    set({ playlist: newPlaylist, collectionContext: null });
+    set({ playlist: newPlaylist, collectionContext: null, scopeContext: null });
     if (flashActivity) {
       set({ recentlyAddedIndices: [newPlaylist.length - 1] });
       get().triggerActivityPulse();
@@ -348,7 +363,7 @@ export const usePlayerStore = create((set, get) => ({
       newPlaylist = [...playlist, ...tracks];
     }
 
-    set({ playlist: newPlaylist, collectionContext: null });
+    set({ playlist: newPlaylist, collectionContext: null, scopeContext: null });
     if (flashActivity) {
       const newIndices = tracks.map((_, i) => startIndex + i);
       set({ recentlyAddedIndices: newIndices });
@@ -380,6 +395,7 @@ export const usePlayerStore = create((set, get) => ({
       currentTime: 0,
       duration: 0,
       collectionContext: null,
+      scopeContext: null,
     });
     if (audioElement) {
       audioElement.pause();
@@ -402,7 +418,7 @@ export const usePlayerStore = create((set, get) => ({
       newShuffleHistory = shuffleHistory.filter((i) => i !== index).map((i) => (i > index ? i - 1 : i));
     }
 
-    set({ playlist: newPlaylist, currentTrackIndex: newCurrentIndex, shuffleHistory: newShuffleHistory, collectionContext: null });
+    set({ playlist: newPlaylist, currentTrackIndex: newCurrentIndex, shuffleHistory: newShuffleHistory, collectionContext: null, scopeContext: null });
 
     if (newPlaylist.length === 0) {
       set({ currentTrackIndex: -1, currentTrack: null, isPlaying: false, currentTime: 0, duration: 0 });
@@ -426,7 +442,7 @@ export const usePlayerStore = create((set, get) => ({
     }
     newPlaylist.splice(insertIndex, 0, moved);
     const newCurrentIndex = currentTrackRef ? newPlaylist.indexOf(currentTrackRef) : -1;
-    set({ playlist: newPlaylist, currentTrackIndex: newCurrentIndex, collectionContext: null });
+    set({ playlist: newPlaylist, currentTrackIndex: newCurrentIndex, collectionContext: null, scopeContext: null });
     get().syncNextTrackIndex();
   },
 

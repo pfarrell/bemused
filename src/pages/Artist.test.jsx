@@ -4,6 +4,7 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import Artist from './Artist';
 import { useAuthStore } from '../stores/authStore';
 import { useFavoritesStore } from '../stores/favoritesStore';
+import { usePlayerStore } from '../stores/playerStore';
 import { apiService } from '../services/api';
 
 vi.mock('../components/TagsSection', () => ({ default: () => null }));
@@ -48,6 +49,7 @@ const album = (id, title, release_year) => ({
 beforeEach(() => {
   useAuthStore.setState({ isAdmin: false, isAuthenticated: true });
   useFavoritesStore.setState({ isFavorite: () => false, toggleFavorite: vi.fn() });
+  usePlayerStore.setState({ startScopeShuffle: vi.fn().mockResolvedValue(undefined) });
 });
 
 describe('Artist page — Overtone menu item', () => {
@@ -328,5 +330,36 @@ describe('Artist page — header context menu', () => {
     fireEvent.contextMenu(screen.getByText('Test Artist').closest('.media-page-header'));
 
     expect(screen.getByText('📤 Share')).toBeInTheDocument();
+  });
+});
+
+describe('Artist page — Shuffle All', () => {
+  test('shows no Play button when the artist has no albums or singles', async () => {
+    apiService.getArtist.mockResolvedValue({ data: { ...artistData, albums: [], singles: [] } });
+    renderArtist();
+    await screen.findByText('Test Artist');
+    expect(screen.queryByRole('button', { name: 'Play' })).not.toBeInTheDocument();
+  });
+
+  test('shows a Play button that starts artist scope shuffle when the artist has albums', async () => {
+    apiService.getArtist.mockResolvedValue({
+      data: { ...artistData, albums: [album(1, 'Album One', '2000')] },
+    });
+    renderArtist();
+    await screen.findByText('Test Artist');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }));
+
+    await waitFor(() => {
+      expect(usePlayerStore.getState().startScopeShuffle).toHaveBeenCalledWith('artist', artistData.artist.id);
+    });
+  });
+
+  test('shows a Play button when the artist has singles but no albums', async () => {
+    const single = { id: 5, title: 'A Single', url: '/stream/5', artist: { id: 1, name: 'Test Artist' }, album: { id: 9, title: 'Singles' } };
+    apiService.getArtist.mockResolvedValue({ data: { ...artistData, albums: [], singles: [single] } });
+    renderArtist();
+    await screen.findByText('Test Artist');
+    expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
   });
 });

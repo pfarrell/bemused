@@ -12,7 +12,7 @@ vi.mock('../services/api', () => ({
     getImageUrl: vi.fn(() => 'http://example.com/art.jpg'),
     getAdjacentAlbums: vi.fn(),
     getAlbum: vi.fn(),
-    getRandomCollectionTracks: vi.fn(),
+    getRandomScopeTracks: vi.fn(),
   },
 }));
 
@@ -28,7 +28,7 @@ beforeEach(() => {
     audioElementA: null, audioElementB: null, activeSlot: 'a',
     currentTrack: null, currentTime: 0, duration: 0, isPlaying: false, isBuffering: false,
     nextTrackIndex: -1, playlist: [], playlistFinished: false, collectionContext: null,
-    playbackMode: 'off', currentTrackIndex: -1,
+    scopeContext: null, playbackMode: 'off', currentTrackIndex: -1,
   });
   // Default to a logged-in session for these tests — the log-gating
   // behavior itself (anonymous playback must not call apiService.log) is
@@ -274,7 +274,7 @@ describe('collection auto-advance', () => {
     expect(setCollectionContext).toHaveBeenCalledWith({ collectionId: 7, albumId: 11 });
   });
 
-  test('does not auto-advance while playbackMode is shuffle-collection (its own top-up effect handles this, and albumId may be null)', async () => {
+  test('does not auto-advance while playbackMode is shuffle-scope (its own top-up effect handles this)', async () => {
     const audioRefA = makeAudioRef();
     const audioRefB = makeAudioRef();
     renderHook(() => usePlayerEngine(audioRefA, audioRefB));
@@ -283,8 +283,8 @@ describe('collection auto-advance', () => {
       usePlayerStore.setState({
         playlistFinished: true,
         collectionContext: { collectionId: 7, albumId: null },
-        playbackMode: 'shuffle-collection',
-        // Enough tracks that the shuffle-collection top-up effect (a separate concern,
+        playbackMode: 'shuffle-scope',
+        // Enough tracks that the scope shuffle top-up effect (a separate concern,
         // covered by its own describe block) doesn't also fire here.
         playlist: Array.from({ length: 10 }, (_, i) => ({ id: i + 1, title: `T${i + 1}`, url: `/stream/${i + 1}` })),
         currentTrackIndex: 0,
@@ -314,8 +314,8 @@ describe('collection auto-advance', () => {
   });
 });
 
-describe('collection shuffle top-up', () => {
-  test('does nothing when playbackMode is not shuffle-collection', async () => {
+describe('scope shuffle top-up', () => {
+  test('does nothing when playbackMode is not shuffle-scope', async () => {
     const audioRefA = makeAudioRef();
     const audioRefB = makeAudioRef();
     renderHook(() => usePlayerEngine(audioRefA, audioRefB));
@@ -323,30 +323,30 @@ describe('collection shuffle top-up', () => {
     await act(async () => {
       usePlayerStore.setState({
         playbackMode: 'shuffle',
-        collectionContext: { collectionId: 7, albumId: 10 },
+        scopeContext: { type: 'collection', id: 7 },
         playlist: [{ id: 1, title: 'T1', url: '/stream/1' }],
         currentTrackIndex: 0,
       });
     });
 
-    expect(apiService.getRandomCollectionTracks).not.toHaveBeenCalled();
+    expect(apiService.getRandomScopeTracks).not.toHaveBeenCalled();
   });
 
-  test('does nothing without an active collectionContext', async () => {
+  test('does nothing without an active scopeContext', async () => {
     const audioRefA = makeAudioRef();
     const audioRefB = makeAudioRef();
     renderHook(() => usePlayerEngine(audioRefA, audioRefB));
 
     await act(async () => {
       usePlayerStore.setState({
-        playbackMode: 'shuffle-collection',
-        collectionContext: null,
+        playbackMode: 'shuffle-scope',
+        scopeContext: null,
         playlist: [{ id: 1, title: 'T1', url: '/stream/1' }],
         currentTrackIndex: 0,
       });
     });
 
-    expect(apiService.getRandomCollectionTracks).not.toHaveBeenCalled();
+    expect(apiService.getRandomScopeTracks).not.toHaveBeenCalled();
   });
 
   test('does not fetch while more than 5 tracks remain queued', async () => {
@@ -357,18 +357,18 @@ describe('collection shuffle top-up', () => {
 
     await act(async () => {
       usePlayerStore.setState({
-        playbackMode: 'shuffle-collection',
-        collectionContext: { collectionId: 7, albumId: 10 },
+        playbackMode: 'shuffle-scope',
+        scopeContext: { type: 'artist', id: 3 },
         playlist,
         currentTrackIndex: 0, // 7 tracks remain after this one
       });
     });
 
-    expect(apiService.getRandomCollectionTracks).not.toHaveBeenCalled();
+    expect(apiService.getRandomScopeTracks).not.toHaveBeenCalled();
   });
 
   test('fetches and appends another batch once 5 or fewer tracks remain queued', async () => {
-    apiService.getRandomCollectionTracks.mockResolvedValue({ data: { tracks: [{ id: 100, title: 'New', url: '/stream/100' }] } });
+    apiService.getRandomScopeTracks.mockResolvedValue({ data: { tracks: [{ id: 100, title: 'New', url: '/stream/100' }] } });
     const playlist = Array.from({ length: 3 }, (_, i) => ({ id: i + 1, title: `T${i + 1}`, url: `/stream/${i + 1}` }));
 
     const audioRefA = makeAudioRef();
@@ -377,8 +377,8 @@ describe('collection shuffle top-up', () => {
 
     await act(async () => {
       usePlayerStore.setState({
-        playbackMode: 'shuffle-collection',
-        collectionContext: { collectionId: 7, albumId: 10 },
+        playbackMode: 'shuffle-scope',
+        scopeContext: { type: 'artist', id: 3 },
         playlist,
         currentTrackIndex: 0, // 2 tracks remain after this one
       });
@@ -386,13 +386,13 @@ describe('collection shuffle top-up', () => {
       await Promise.resolve();
     });
 
-    expect(apiService.getRandomCollectionTracks).toHaveBeenCalledWith(7, { limit: 25, excludeTrackIds: [1, 2, 3] });
+    expect(apiService.getRandomScopeTracks).toHaveBeenCalledWith('artist', 3, { limit: 25, excludeTrackIds: [1, 2, 3] });
     expect(usePlayerStore.getState().playlist.map((t) => t.id)).toEqual([1, 2, 3, 100]);
   });
 
   test('does not fire a second fetch while one is already in flight', async () => {
     let resolveFetch;
-    apiService.getRandomCollectionTracks.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
+    apiService.getRandomScopeTracks.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
     const playlist = [{ id: 1, title: 'T1', url: '/stream/1' }];
 
     const audioRefA = makeAudioRef();
@@ -401,21 +401,21 @@ describe('collection shuffle top-up', () => {
 
     await act(async () => {
       usePlayerStore.setState({
-        playbackMode: 'shuffle-collection',
-        collectionContext: { collectionId: 7, albumId: 10 },
+        playbackMode: 'shuffle-scope',
+        scopeContext: { type: 'artist', id: 3 },
         playlist,
         currentTrackIndex: 0,
       });
       await Promise.resolve();
     });
-    expect(apiService.getRandomCollectionTracks).toHaveBeenCalledTimes(1);
+    expect(apiService.getRandomScopeTracks).toHaveBeenCalledTimes(1);
 
     // Re-trigger the effect (new playlist reference, same remaining count) while the first fetch is still pending.
     await act(async () => {
       usePlayerStore.setState({ playlist: [...playlist] });
       await Promise.resolve();
     });
-    expect(apiService.getRandomCollectionTracks).toHaveBeenCalledTimes(1);
+    expect(apiService.getRandomScopeTracks).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       resolveFetch({ data: { tracks: [] } });
