@@ -46,6 +46,56 @@ describe('authStore — initial state', () => {
   });
 });
 
+describe('authStore — initialize', () => {
+  test('sets isAuthenticated on success', async () => {
+    apiService.getMe.mockResolvedValue({
+      data: { user: { id: 1, username: 'pat', admin: false, default_tag: null } },
+    });
+
+    await useAuthStore.getState().initialize();
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+  });
+
+  test('clears auth state on a real 401', async () => {
+    useAuthStore.setState({ user: { id: 1, username: 'pat' }, isAuthenticated: true, isAdmin: false });
+    apiService.getMe.mockRejectedValue({ response: { status: 401 } });
+
+    await useAuthStore.getState().initialize();
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    expect(useAuthStore.getState().user).toBeNull();
+  });
+
+  test('does not clear existing auth state on a 502', async () => {
+    useAuthStore.setState({ user: { id: 1, username: 'pat' }, isAuthenticated: true, isAdmin: true });
+    apiService.getMe.mockRejectedValue({ response: { status: 502 } });
+
+    await useAuthStore.getState().initialize();
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    expect(useAuthStore.getState().user).toEqual({ id: 1, username: 'pat' });
+    expect(useAuthStore.getState().isAdmin).toBe(true);
+  });
+
+  test('does not clear existing auth state on a network error with no response', async () => {
+    useAuthStore.setState({ user: { id: 1, username: 'pat' }, isAuthenticated: true, isAdmin: false });
+    apiService.getMe.mockRejectedValue(new Error('Network Error'));
+
+    await useAuthStore.getState().initialize();
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+  });
+
+  test('clears loading after a non-401 error', async () => {
+    apiService.getMe.mockRejectedValue({ response: { status: 502 } });
+
+    await useAuthStore.getState().initialize();
+
+    expect(useAuthStore.getState().loading).toBe(false);
+  });
+});
+
 describe('authStore — login', () => {
   test('sets isAuthenticated on success', async () => {
     apiService.login.mockResolvedValue({

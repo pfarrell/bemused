@@ -113,14 +113,22 @@ export const useAuthStore = create((set) => ({
       });
       return true;
     } catch (error) {
-      // Not authenticated or session expired
       console.log('Auth initialization failed:', error.response?.status, error.response?.data);
-      set({
-        user: null,
-        isAuthenticated: false,
-        isAdmin: false,
-        loading: false
-      });
+
+      if (error.response?.status === 401) {
+        // Actually not authenticated or session expired
+        set({
+          user: null,
+          isAuthenticated: false,
+          isAdmin: false,
+          loading: false
+        });
+      } else {
+        // Network error or non-401 response (e.g. a 502 while the backend is
+        // restarting mid-deploy) — not proof the session is invalid, so
+        // don't clear it and make the user look logged out.
+        set({ loading: false });
+      }
       return false;
     }
   }
