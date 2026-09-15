@@ -74,58 +74,51 @@ export default function Collection() {
   const canEdit = isAdmin || (user && collection.user_id === user.id);
 
   return (
-    <div style={{ padding: '2rem', backgroundColor: 'var(--color-bg-surface-muted)', minHeight: '100%' }}>
+    <div style={{ padding: '.5rem', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Collection Header */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '2rem',
-          marginBottom: '2rem',
-          backgroundColor: 'var(--color-bg-surface)',
-          padding: '2rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
-        }}
-        {...ctxMenu.triggerProps}
-      >
+      <div className='media-page-header' {...ctxMenu.triggerProps}>
         {/* Collection Image */}
-        <div style={{ flexShrink: 0, width: '200px', height: '200px', borderRadius: '0.5rem', overflow: 'hidden' }}>
-          <CoverCollage
-            imagePath={collection.image_path}
-            items={albums}
-            alt={collection.name}
-            onImageClick={collection.image_path ? () => setShowImageModal(true) : undefined}
-            placeholderGlyph="▣"
-            imageContext="album_page"
-          />
+        <div style={{ flexShrink: 0 }}>
+          <div className="full-image" style={{ width: '300px', height: '300px', overflow: 'hidden' }}>
+            <CoverCollage
+              imagePath={collection.image_path}
+              items={albums}
+              alt={collection.name}
+              onImageClick={collection.image_path ? () => setShowImageModal(true) : undefined}
+              placeholderGlyph="▣"
+              imageContext="album_page"
+            />
+          </div>
         </div>
 
         {/* Collection Info */}
         <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+          <div className="artist-header-title-row" style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem' }}>
             <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: 0, color: 'var(--color-text-primary)' }}>
               {collection.name}
             </h1>
+
+            <div className="artist-header-actions" style={{ display: 'flex', gap: '0.5rem' }}>
+              <PlayActionsMenu
+                onPlay={albums?.length > 0 ? handleShuffleAll : undefined}
+                disabled={shuffleLoading}
+                overflowActions={[
+                  canEdit && { key: 'edit', icon: '✎', label: 'Edit', onClick: () => navigate(`/admin/collection/${id}`) },
+                  isAuthenticated && {
+                    key: 'favorite',
+                    icon: isFavorite ? '★' : '☆',
+                    label: isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
+                    onClick: handleToggleFavorite,
+                  },
+                  isAuthenticated && { key: 'share', icon: '📤', label: 'Share', onClick: () => shareLink({ title: collection.name, text: `${collection.name} collection` }) },
+                ].filter(Boolean)}
+              />
+            </div>
           </div>
 
           <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
             {albums?.length || 0} {albums?.length === 1 ? 'album' : 'albums'}
           </p>
-
-          <PlayActionsMenu
-            onPlay={albums?.length > 0 ? handleShuffleAll : undefined}
-            disabled={shuffleLoading}
-            overflowActions={[
-              canEdit && { key: 'edit', icon: '✎', label: 'Edit', onClick: () => navigate(`/admin/collection/${id}`) },
-              isAuthenticated && {
-                key: 'favorite',
-                icon: isFavorite ? '★' : '☆',
-                label: isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
-                onClick: handleToggleFavorite,
-              },
-              isAuthenticated && { key: 'share', icon: '📤', label: 'Share', onClick: () => shareLink({ title: collection.name, text: `${collection.name} collection` }) },
-            ].filter(Boolean)}
-          />
 
           <AboutSection heading="About this collection" summary={summary} />
         </div>
