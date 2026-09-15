@@ -72,7 +72,7 @@ const TrackPage = () => {
 
   const handlePlayNow = () => {
     if (!track) return;
-    addTrack(track, { playImmediately: true });
+    addTrack(track, { flashActivity: true }); // store auto-starts playback if idle
   };
 
   const handleShare = () => {

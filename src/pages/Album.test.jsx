@@ -95,7 +95,7 @@ describe('Album page', () => {
     expect(addTracks).toHaveBeenCalledWith(albumData.tracks, false, { flashActivity: true });
   });
 
-  test('the default Play button appends and jumps, without clearing the existing queue', async () => {
+  test('the default Play button appends to the queue without clearing it', async () => {
     const addTracks = vi.fn();
     usePlayerStore.setState({ addTracks, currentTrack: null });
 
@@ -104,7 +104,7 @@ describe('Album page', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Play' }));
 
-    expect(addTracks).toHaveBeenCalledWith(albumData.tracks, false, { playImmediately: true });
+    expect(addTracks).toHaveBeenCalledWith(albumData.tracks, false, { flashActivity: true });
   });
 
   test('the Play Now menu item replaces the queue outright', async () => {

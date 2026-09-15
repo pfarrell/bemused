@@ -42,7 +42,7 @@ describe('Playlist page', () => {
     source_playlist: { id: playlistData.playlist.id, name: playlistData.playlist.name },
   }));
 
-  test('the default Play button appends and jumps, without clearing the existing queue', async () => {
+  test('the default Play button appends to the queue without clearing it', async () => {
     const addTracks = vi.fn();
     usePlayerStore.setState({ addTracks });
     renderPlaylist();
@@ -50,7 +50,7 @@ describe('Playlist page', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Play' }));
 
-    expect(addTracks).toHaveBeenCalledWith(withSourcePlaylist, false, { playImmediately: true });
+    expect(addTracks).toHaveBeenCalledWith(withSourcePlaylist, false, { flashActivity: true });
   });
 
   test('the Play Now menu item replaces the queue outright', async () => {

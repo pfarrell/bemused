@@ -101,7 +101,7 @@ test('shows a not-found state when the API returns no track', async () => {
   await screen.findByText('Track not found');
 });
 
-test('the hero play button appends this track to the queue and plays it immediately', async () => {
+test('the hero play button appends this track to the queue', async () => {
   const addTrack = vi.fn();
   usePlayerStore.setState({ addTrack, setPageTracks: vi.fn(), currentTrack: null, playlist: [] });
   apiService.getTrack.mockResolvedValue({ data: trackData });
@@ -110,7 +110,7 @@ test('the hero play button appends this track to the queue and plays it immediat
 
   fireEvent.click(screen.getByRole('button', { name: 'Play' }));
 
-  expect(addTrack).toHaveBeenCalledWith(trackData.track, { playImmediately: true });
+  expect(addTrack).toHaveBeenCalledWith(trackData.track, { flashActivity: true });
 });
 
 describe('TrackPage — cover art zoom modal', () => {

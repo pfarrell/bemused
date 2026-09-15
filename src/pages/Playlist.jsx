@@ -71,7 +71,7 @@ export default function Playlist() {
 
   const handlePlayAll = () => {
     if (!playlistData?.tracks?.length) return;
-    addTracks(playlistData.tracks, false, { playImmediately: true });
+    addTracks(playlistData.tracks, false, { flashActivity: true }); // store auto-starts playback if idle
   };
 
   const handlePlayNow = () => {

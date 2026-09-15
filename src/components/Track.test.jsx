@@ -210,10 +210,10 @@ describe('Track component', () => {
     expect(usePlayerStore.getState().addTracks).toHaveBeenCalledWith([mockTrack], true, { flashActivity: true });
   });
 
-  test('tapping the play button appends this track to the queue and plays it immediately', () => {
+  test('tapping the play button appends this track to the queue', () => {
     renderWithPlayer();
     fireEvent.click(screen.getByRole('button', { name: 'Play Test Track' }));
-    expect(usePlayerStore.getState().addTrack).toHaveBeenCalledWith(mockTrack, { playImmediately: true });
+    expect(usePlayerStore.getState().addTrack).toHaveBeenCalledWith(mockTrack, { flashActivity: true });
     expect(usePlayerStore.getState().addTracks).not.toHaveBeenCalled();
   });
 

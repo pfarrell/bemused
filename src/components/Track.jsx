@@ -48,7 +48,7 @@ const Track = ({ track, index, trackCount, includeMeta = false, isPlaying = fals
     if (existingIndex !== -1) {
       playTrackAtIndex(existingIndex);
     } else {
-      addTrack(track, { playImmediately: true });
+      addTrack(track, { flashActivity: true }); // store auto-starts playback if idle
     }
   };
 

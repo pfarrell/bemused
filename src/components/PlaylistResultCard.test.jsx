@@ -68,7 +68,7 @@ describe('mobile row layout', () => {
     expect(screen.getByText('Playlist')).toBeInTheDocument();
   });
 
-  test('tapping play fetches the playlist, appends it to the queue and plays it immediately, and does not navigate', async () => {
+  test('tapping play fetches the playlist, appends it to the queue, and does not navigate', async () => {
     apiService.getPlaylist.mockResolvedValue({
       data: { tracks: [{ id: 1, title: 'Track One', url: 'http://x/1.mp3' }] },
     });
@@ -86,7 +86,7 @@ describe('mobile row layout', () => {
     expect(addTracks).toHaveBeenCalledWith(
       [{ id: 1, title: 'Track One', url: 'http://x/1.mp3', source_playlist: { id: 5, name: 'Test Playlist' } }],
       false,
-      { playImmediately: true }
+      { flashActivity: true }
     );
     expect(onClick).not.toHaveBeenCalled();
   });
@@ -106,7 +106,7 @@ describe('mobile row layout', () => {
       expect(addTracks).toHaveBeenCalledWith(
         [{ id: 1, title: 'Track One', url: 'http://x/1.mp3', source_playlist: { id: 5, name: 'Test Playlist' } }],
         false,
-        { playImmediately: true }
+        { flashActivity: true }
       );
     });
   });
@@ -259,7 +259,7 @@ describe('desktop list-mode row layout', () => {
     expect(addTracks).toHaveBeenCalledWith(
       [{ id: 1, title: 'Track One', url: 'http://x/1.mp3', source_playlist: { id: 5, name: 'Test Playlist' } }],
       false,
-      { playImmediately: true }
+      { flashActivity: true }
     );
   });
 });

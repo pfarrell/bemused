@@ -104,7 +104,7 @@ const Album = () => {
 
   const handlePlay = () => {
     if (albumData?.tracks) {
-      addTracks(albumData.tracks, false, { playImmediately: true });
+      addTracks(albumData.tracks, false, { flashActivity: true }); // store auto-starts playback if idle
       tagCollectionContext();
     }
   };

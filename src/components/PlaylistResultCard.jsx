@@ -53,7 +53,7 @@ const PlaylistResultCard = ({ playlist, onClick, imageUrl, previewAlbums }) => {
   };
 
   const handlePlayAll = () => withPlaylistTracks((tracks) => {
-    addTracks(tracks, false, { playImmediately: true });
+    addTracks(tracks, false, { flashActivity: true }); // store auto-starts playback if idle
   });
 
   const handlePlayNow = () => withPlaylistTracks((tracks) => {

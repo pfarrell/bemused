@@ -126,7 +126,7 @@ const Artist = () => {
 
   const handlePlaySingles = () => {
     if (singles?.length) {
-      addTracks(singles, false, { playImmediately: true });
+      addTracks(singles, false, { flashActivity: true }); // store auto-starts playback if idle
     }
   };
 

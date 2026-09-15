@@ -314,7 +314,7 @@ describe('mobile row layout', () => {
     expect(screen.getByText('Album ·')).toBeInTheDocument();
   });
 
-  test('tapping play fetches the album, appends it to the queue and plays it immediately, and does not navigate', async () => {
+  test('tapping play fetches the album, appends it to the queue, and does not navigate', async () => {
     apiService.getAlbum.mockResolvedValue({
       data: { tracks: [{ id: 1, title: 'Track One', url: 'http://x/1.mp3' }] },
     });
@@ -332,7 +332,7 @@ describe('mobile row layout', () => {
     expect(addTracks).toHaveBeenCalledWith(
       [{ id: 1, title: 'Track One', url: 'http://x/1.mp3' }],
       false,
-      { playImmediately: true }
+      { flashActivity: true }
     );
     expect(onClick).not.toHaveBeenCalled();
   });
@@ -464,7 +464,7 @@ describe('desktop list-mode row layout', () => {
     expect(addTracks).toHaveBeenCalledWith(
       [{ id: 1, title: 'Track One', url: 'http://x/1.mp3' }],
       false,
-      { playImmediately: true }
+      { flashActivity: true }
     );
   });
 });

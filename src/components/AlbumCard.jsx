@@ -61,7 +61,7 @@ const AlbumCard = ({ album, artist, onClick, imageUrl, hideArtist = false, colle
   };
 
   const handlePlayAll = () => withAlbumTracks((tracks) => {
-    addTracks(tracks, false, { playImmediately: true });
+    addTracks(tracks, false, { flashActivity: true }); // store auto-starts playback if idle
     tagCollectionContext();
   });
 

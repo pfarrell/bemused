@@ -33,7 +33,9 @@ const getMenuPosition = (toggleRef, menuWidth, menuHeight) => {
 // Add to Queue first (whichever are provided), then whatever page-specific
 // overflowActions the caller passes in (Edit, Share, Add to Collection,
 // Add to Favorites, ...). Play (onPlay) appends to the end of the current
-// queue and jumps playback there — it never destroys what's already queued.
+// queue, and jumps playback there only if nothing is currently playing —
+// otherwise it just enqueues, same as Add to Queue, so it never interrupts
+// what's already playing or destroys what's already queued.
 // Play Now (onPlayNow) is the one destructive action: it replaces the queue
 // outright, which is why it lives in the menu rather than being the default
 // tap target. When both onPlay and menu items exist, the two render as one
