@@ -282,6 +282,7 @@ const AdminAlbum = () => {
           entityId={id}
           defaultFilename={`${toFilename(albumData?.artist?.name || '')}-${toFilename(title)}.jpg`}
           onPrimaryChange={setImagePath}
+          musicbrainzId={albumData?.album?.musicbrainz_id}
         />
 
         {/* Tags */}

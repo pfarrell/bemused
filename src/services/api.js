@@ -44,7 +44,10 @@ const notes = (kind) => ({
   remove: (id, noteId) => api.delete(`/${kind}/${id}/notes/${noteId}`),
 });
 
-const images = { album: entityImages('album'), artist: entityImages('artist') };
+const images = {
+  album: { ...entityImages('album'), fetchCoverArt: (id, source) => api.post(`/admin/album/${id}/fetch-cover-art`, { source }) },
+  artist: entityImages('artist'),
+};
 const noteApis = { album: notes('album'), collection: notes('collection'), track: notes('track') };
 
 export const apiService = {

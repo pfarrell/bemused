@@ -17,8 +17,12 @@ interface CAAImage {
   image: string
 }
 
-async function fetchCAAImages(mbid: string): Promise<CAAImage[]> {
-  const res = await fetch(`${CAA_BASE}/release/${mbid}`, {
+// 'release-group' is what Overtone shows: a release often has no art of its
+// own while its release group (any edition) does.
+export type CAAEntity = 'release' | 'release-group'
+
+async function fetchCAAImages(mbid: string, entity: CAAEntity = 'release'): Promise<CAAImage[]> {
+  const res = await fetch(`${CAA_BASE}/${entity}/${mbid}`, {
     headers: { 'User-Agent': USER_AGENT }
   })
   if (res.status === 404) return []
@@ -53,11 +57,12 @@ function selectBestImageUrl(image: CAAImage): string | null {
 export async function fetchAlbumArtFromCAA(
   albumId: number,
   mbid: string,
-  imagesDir: string
+  imagesDir: string,
+  entity: CAAEntity = 'release'
 ): Promise<boolean> {
   let images: CAAImage[]
   try {
-    images = await fetchCAAImages(mbid)
+    images = await fetchCAAImages(mbid, entity)
   } catch (err) {
     console.warn(`  ⚠️  CAA fetch failed for album ${albumId}: ${(err as Error).message}`)
     errorLogService.record({ source: 'cover_art_archive', message: (err as Error).message, context: `fetch for album ${albumId}` })

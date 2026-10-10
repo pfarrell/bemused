@@ -151,6 +151,52 @@ router.put('/album/:id', async (c) => {
   }
 })
 
+// POST /admin/album/:id/fetch-cover-art — manual Cover Art Archive fetch for an
+// album that has a MusicBrainz id but no image. source 'release' uses the
+// album's release MBID (what the automatic fetch does); 'release-group' uses
+// its release group's MBID (what Overtone displays), looking it up from
+// MusicBrainz and saving it if the album doesn't have it yet.
+router.post('/album/:id/fetch-cover-art', async (c) => {
+  const id = parseInt(c.req.param('id'))
+  const { source } = await c.req.json().catch(() => ({}))
+  if (source !== 'release' && source !== 'release-group') {
+    return c.json({ error: "source must be 'release' or 'release-group'" }, 400)
+  }
+
+  try {
+    const album = await db
+      .selectFrom('albums')
+      .select(['musicbrainz_id', 'release_group_musicbrainz_id'])
+      .where('id', '=', id)
+      .executeTakeFirst()
+    if (!album) return c.json({ error: 'Album not found' }, 404)
+    if (!album.musicbrainz_id) return c.json({ error: 'Album has no MusicBrainz ID' }, 400)
+
+    let mbid = album.musicbrainz_id
+    if (source === 'release-group') {
+      let rgMbid = album.release_group_musicbrainz_id
+      if (!rgMbid) {
+        const { getReleaseByMbid } = await import('../../services/musicbrainz.js')
+        rgMbid = (await getReleaseByMbid(album.musicbrainz_id))?.release_group_id ?? null
+        if (!rgMbid) return c.json({ error: 'MusicBrainz has no release group for this release' }, 404)
+        await db.updateTable('albums').set({ release_group_musicbrainz_id: rgMbid }).where('id', '=', id).execute()
+      }
+      mbid = rgMbid
+    }
+
+    const { fetchAlbumArtFromCAA } = await import('../../services/coverArtArchive.js')
+    const found = await fetchAlbumArtFromCAA(id, mbid, imagesDir(), source)
+    if (!found) {
+      return c.json({ error: 'No cover art found (or the Cover Art Archive was unavailable - see the error log)' }, 404)
+    }
+    const updated = await db.selectFrom('albums').select('image_path').where('id', '=', id).executeTakeFirst()
+    return c.json({ success: true, image_path: updated?.image_path ?? null })
+  } catch (error) {
+    console.error('Error fetching cover art:', error)
+    return c.json({ error: 'Failed to fetch cover art' }, 500)
+  }
+})
+
 // DELETE /admin/album/:id — delete an album and cascade to tracks, media_files
 router.delete('/album/:id', async (c) => {
   const id = parseInt(c.req.param('id'))

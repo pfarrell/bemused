@@ -9,9 +9,11 @@ const IMAGE_CONTEXT = { artist: 'artist_page', album: 'album_page' };
 // Image gallery for an artist or album admin page: shows every stored image,
 // lets the admin pick the primary one or delete one, and downloads a new
 // image from a URL. The first image added becomes primary automatically.
-const EntityImageGallery = ({ kind, entityId, defaultFilename, onPrimaryChange }) => {
+const EntityImageGallery = ({ kind, entityId, defaultFilename, onPrimaryChange, musicbrainzId }) => {
   const imagesApi = apiService.entityImages[kind];
   const [images, setImages] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  const [fetchingSource, setFetchingSource] = useState(null);
   const [newImageUrl, setNewImageUrl] = useState('');
   const [newImageName, setNewImageName] = useState(defaultFilename);
   const [adding, setAdding] = useState(false);
@@ -19,7 +21,7 @@ const EntityImageGallery = ({ kind, entityId, defaultFilename, onPrimaryChange }
   useEffect(() => {
     let cancelled = false;
     imagesApi.list(entityId)
-      .then((res) => { if (!cancelled) setImages(res.data); })
+      .then((res) => { if (!cancelled) { setImages(res.data); setLoaded(true); } })
       .catch((err) => console.error(`Error loading ${kind} images:`, err));
     return () => { cancelled = true; };
     // imagesApi is a stable module-level object per kind.
@@ -69,11 +71,38 @@ const EntityImageGallery = ({ kind, entityId, defaultFilename, onPrimaryChange }
     }
   };
 
+  const handleFetchCoverArt = async (source) => {
+    setFetchingSource(source);
+    try {
+      const res = await imagesApi.fetchCoverArt(entityId, source);
+      await reload();
+      if (res.data?.image_path) onPrimaryChange(res.data.image_path);
+      toast.success('Cover art fetched');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to fetch cover art'));
+    } finally {
+      setFetchingSource(null);
+    }
+  };
+
+  const showFetchCoverArt = kind === 'album' && loaded && images.length === 0 && !!musicbrainzId;
   const addDisabled = adding || !newImageUrl || !newImageName;
 
   return (
     <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'var(--color-bg-surface)', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
       <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: '1rem' }}>Images</h3>
+
+      {showFetchCoverArt && (
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '16px' }}>
+          <span style={{ fontSize: '0.875rem', color: 'var(--color-text-faint)' }}>No images yet. Fetch cover art from:</span>
+          <button type="button" className="btn" disabled={!!fetchingSource} onClick={() => handleFetchCoverArt('release')}>
+            {fetchingSource === 'release' ? 'Fetching...' : 'MusicBrainz (this release)'}
+          </button>
+          <button type="button" className="btn" disabled={!!fetchingSource} onClick={() => handleFetchCoverArt('release-group')}>
+            {fetchingSource === 'release-group' ? 'Fetching...' : 'Overtone (release group)'}
+          </button>
+        </div>
+      )}
 
       {images.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '12px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '8px' }}>

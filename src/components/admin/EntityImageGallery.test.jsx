@@ -6,7 +6,7 @@ import { apiService } from '../../services/api';
 
 vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('../../services/api', () => {
-  const kindApi = () => ({ list: vi.fn(), add: vi.fn(), setPrimary: vi.fn(), remove: vi.fn() });
+  const kindApi = () => ({ list: vi.fn(), add: vi.fn(), setPrimary: vi.fn(), remove: vi.fn(), fetchCoverArt: vi.fn() });
   return { apiService: { entityImages: { album: kindApi(), artist: kindApi() }, getImageUrl: (p) => `/images/${p}` } };
 });
 
@@ -49,5 +49,35 @@ describe('EntityImageGallery', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Set Primary' }));
     await waitFor(() => expect(albumApi().setPrimary).toHaveBeenCalledWith('10', 2));
     expect(onPrimaryChange).toHaveBeenCalledWith('two.jpg');
+  });
+
+  describe('fetch cover art', () => {
+    test('album with an MBID and no images offers both sources and reports the new primary', async () => {
+      const onPrimaryChange = vi.fn();
+      albumApi().fetchCoverArt.mockResolvedValue({ data: { success: true, image_path: 'album_10_caa_1.jpg' } });
+      render(<EntityImageGallery kind="album" entityId="10" defaultFilename="a-b.jpg" onPrimaryChange={onPrimaryChange} musicbrainzId="abc" />);
+      await userEvent.click(await screen.findByRole('button', { name: 'Overtone (release group)' }));
+      await waitFor(() => expect(albumApi().fetchCoverArt).toHaveBeenCalledWith('10', 'release-group'));
+      expect(onPrimaryChange).toHaveBeenCalledWith('album_10_caa_1.jpg');
+      expect(toast.success).toHaveBeenCalledWith('Cover art fetched');
+      expect(screen.getByRole('button', { name: 'MusicBrainz (this release)' })).toBeInTheDocument();
+    });
+
+    test('a failed fetch shows the server error', async () => {
+      albumApi().fetchCoverArt.mockRejectedValue({ response: { data: { error: 'No cover art found' } } });
+      render(<EntityImageGallery kind="album" entityId="10" defaultFilename="a-b.jpg" onPrimaryChange={vi.fn()} musicbrainzId="abc" />);
+      await userEvent.click(await screen.findByRole('button', { name: 'MusicBrainz (this release)' }));
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith('No cover art found'));
+    });
+
+    test('hidden without an MBID, or when images exist', async () => {
+      const { rerender } = render(<EntityImageGallery kind="album" entityId="10" defaultFilename="a-b.jpg" onPrimaryChange={vi.fn()} />);
+      await waitFor(() => expect(albumApi().list).toHaveBeenCalled());
+      expect(screen.queryByRole('button', { name: 'MusicBrainz (this release)' })).toBeNull();
+      albumApi().list.mockResolvedValue({ data: [{ id: 1, path: 'x.jpg', is_primary: true, source: 'manual' }] });
+      rerender(<EntityImageGallery kind="album" entityId="11" defaultFilename="a-b.jpg" onPrimaryChange={vi.fn()} musicbrainzId="abc" />);
+      await screen.findByText('manual');
+      expect(screen.queryByRole('button', { name: 'MusicBrainz (this release)' })).toBeNull();
+    });
   });
 });
