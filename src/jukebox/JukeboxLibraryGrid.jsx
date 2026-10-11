@@ -7,7 +7,9 @@ import JukeboxCollectionTile from './JukeboxCollectionTile';
 // the Playlists / Collections selector button is active (see SearchTab.jsx).
 // Sorted A-Z by default; "Recent" orders by the server's last_activity (the
 // later of last edit and last play, which the list endpoints supply).
-const byName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+// A playlist can have a null name (one does in prod), so never call a string
+// method on it directly - a throw here would blank the whole kiosk.
+const byName = (a, b) => (a.name ?? '').localeCompare(b.name ?? '', undefined, { sensitivity: 'base' });
 const activityOf = (item) => {
   const t = Date.parse(item.last_activity);
   return Number.isNaN(t) ? -Infinity : t;

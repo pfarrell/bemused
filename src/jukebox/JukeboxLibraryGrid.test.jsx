@@ -63,3 +63,10 @@ test('shows an empty message, and an error with retry', async () => {
   fireEvent.click(await screen.findByRole('button', { name: 'Retry' }));
   expect(await screen.findByText('Zebra')).toBeInTheDocument();
 });
+
+test('an item with a null name does not crash the grid and sorts first', async () => {
+  apiService.getPlaylists.mockResolvedValue({ data: [playlists[0], { id: 9, name: null, track_count: 2, image_path: null, last_activity: null }] });
+  render(<JukeboxLibraryGrid kind="playlists" onSelectPlaylist={vi.fn()} />);
+  await screen.findByText('Zebra');
+  expect(tileNames()).toEqual(['2 tracks', 'Zebra3 tracks']);
+});
