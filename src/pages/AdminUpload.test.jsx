@@ -19,7 +19,10 @@ vi.mock('../services/api', () => ({
 vi.mock('jsmediatags', () => ({
   default: {
     read: (file, callbacks) => {
-      if (file.name === 'tagged.mp3') {
+      const m = /^artist-(\w+)\.mp3$/.exec(file.name);
+      if (m) {
+        callbacks.onSuccess({ tags: { title: file.name, artist: m[1] } });
+      } else if (file.name === 'tagged.mp3') {
         callbacks.onSuccess({ tags: { title: 'My Song', artist: 'My Artist', album: 'My Album', track: '3' } });
       } else {
         callbacks.onSuccess({ tags: {} });
@@ -195,6 +198,27 @@ describe('AdminUpload — Various artists compilation checkbox', () => {
     await screen.findByText(/Successfully queued/);
     const formData = apiService.uploadTracks.mock.calls[0][0];
     expect(formData.get('is_compilation')).toBe('true');
+  });
+
+  test('auto-checks compilation when files have more than three distinct artists', async () => {
+    const user = userEvent.setup();
+    renderUpload();
+
+    const files = ['a', 'b', 'c', 'd'].map((n) => new File([''], `artist-${n}.mp3`, { type: 'audio/mpeg' }));
+    await user.upload(document.getElementById('file-input'), files);
+
+    await waitFor(() => expect(screen.getByLabelText('Various artists compilation')).toBeChecked());
+  });
+
+  test('does not auto-check compilation for three or fewer distinct artists', async () => {
+    const user = userEvent.setup();
+    renderUpload();
+
+    const files = ['a', 'b', 'c', 'a'].map((n) => new File([''], `artist-${n}.mp3`, { type: 'audio/mpeg' }));
+    await user.upload(document.getElementById('file-input'), files);
+
+    await screen.findAllByText('artist-a.mp3');
+    expect(screen.getByLabelText('Various artists compilation')).not.toBeChecked();
   });
 
   test('defaults to is_compilation=false when unchecked', async () => {

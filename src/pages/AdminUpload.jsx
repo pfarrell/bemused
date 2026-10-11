@@ -120,6 +120,16 @@ const AdminUpload = () => {
       })
     );
     setFilePreviews(previews);
+
+    // A batch with more than three distinct track artists is almost certainly
+    // a various-artists compilation. Only ever turns the box on, and never
+    // overrides an explicit Singles choice.
+    const uniqueArtists = new Set(
+      previews.map((p) => p.artist?.trim().toLowerCase()).filter(Boolean)
+    );
+    if (uniqueArtists.size > 3 && !isSingle) {
+      setIsCompilation(true);
+    }
   };
 
   // Builds the FormData for a single file's request, repeating the shared
