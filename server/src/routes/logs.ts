@@ -17,8 +17,9 @@ logs.get('/admin', requireAdmin, async (c) => {
   return c.json({ logs: items, pagination })
 })
 
-// GET /log/:id?playlist=<id>  — log a play event at the 5-second mark; the
-// optional playlist is the queue's source playlist (ignored if invalid)
+// GET /log/:id?playlist=<id>|collection=<id>  — log a play event at the
+// 5-second mark; the optional playlist/collection is the queue's source
+// (ignored if invalid)
 logs.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
 
@@ -30,6 +31,7 @@ logs.get('/:id', async (c) => {
   const ip_address = extractIpAddress(c)
 
   const playlist_id = await logService.resolvePlaylistId(c.req.query('playlist'))
+  const collection_id = await logService.resolveCollectionId(c.req.query('collection'))
 
   await logService.record({
     track_id: track.id,
@@ -39,6 +41,7 @@ logs.get('/:id', async (c) => {
     created_at: new Date(),
     ip_address,
     playlist_id,
+    collection_id,
   })
 
   return c.text('', 200)

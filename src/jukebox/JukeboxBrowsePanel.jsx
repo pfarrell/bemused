@@ -7,6 +7,7 @@ import JukeboxArtistView from './JukeboxArtistView';
 import JukeboxCollectionView from './JukeboxCollectionView';
 import JukeboxTracksPanel from './JukeboxTracksPanel';
 import JukeboxPlaylistPanel from './JukeboxPlaylistPanel';
+import JukeboxRecentsPanel from './JukeboxRecentsPanel';
 import { useTouchScroll } from './useTouchScroll';
 
 // The drawer body. Which destination is showing — and whether the drawer is
@@ -20,18 +21,19 @@ import { useTouchScroll } from './useTouchScroll';
 // frequent action and unmounting would throw away the Search query/results/
 // filter every time.
 //
-// Owns two pieces of navigation state: the drill-down stack (Search can push
+// Owns three pieces of navigation state: the drill-down stack (Search can push
 // an artist or a collection, whose albums show in place of the destination —
-// see JukeboxArtistView/JukeboxCollectionView), and which album/playlist is
-// selected. Neither replaces anything in this panel: selecting one opens a
-// tracks-style panel to this one's left, so the list you tapped from stays
-// put. An album and a playlist panel are mutually exclusive — selecting one
-// closes the other, since they render in the same slot. Any destination can
+// see JukeboxArtistView/JukeboxCollectionView), which album/playlist is
+// selected, and whether the Recent drawer is open. None replaces anything in
+// this panel: selecting an album/playlist opens a tracks-style panel to this
+// one's left, so the list you tapped from stays put. The album panel, the
+// playlist panel and the Recent drawer are mutually exclusive — each closes
+// the others, since they render in the same left-hand slot. Any destination can
 // select an album; only Search can select a playlist so far. Both panels
 // close with the drawer.
 //
-// There are four destinations: 'browse' (Search, with Quick Hit as its
-// empty-box state — see SearchTab.jsx), 'nextup', 'settings' (QR code,
+// There are four destinations: 'browse' (Search / Playlists / Collections
+// selector plus the Recent drawer — see SearchTab.jsx), 'nextup', 'settings' (QR code,
 // screensaver mode and profile filter), and
 // 'aimix' (prompt-driven playlist generation — see JukeboxAiMixTab.jsx).
 // Settings, Next Up, and AI Mix all unmount when switched away from, same as
@@ -44,14 +46,18 @@ const JukeboxBrowsePanel = ({ activeDestination, onSelectDestination, onEnqueue,
   const panelRef = useTouchScroll({ axis: 'y' });
   const open = activeDestination !== null;
 
-  const selectAlbum = (album) => { setSelectedPlaylist(null); setSelectedAlbum(album); };
-  const selectPlaylist = (playlist) => { setSelectedAlbum(null); setSelectedPlaylist(playlist); };
+  const [recentsOpen, setRecentsOpen] = useState(false);
+
+  const selectAlbum = (album) => { setSelectedPlaylist(null); setRecentsOpen(false); setSelectedAlbum(album); };
+  const selectPlaylist = (playlist) => { setSelectedAlbum(null); setRecentsOpen(false); setSelectedPlaylist(playlist); };
+  const openRecents = () => { setSelectedAlbum(null); setSelectedPlaylist(null); setRecentsOpen((open) => !open); };
 
   useEffect(() => {
     if (activeDestination === null) {
       // drawer closed: don't leave an orphaned tracks/playlist panel
       setSelectedAlbum(null);
       setSelectedPlaylist(null);
+      setRecentsOpen(false);
       return;
     }
     // A pending item — from the tracks panel's artist link, or the idle
@@ -84,7 +90,7 @@ const JukeboxBrowsePanel = ({ activeDestination, onSelectDestination, onEnqueue,
     lastShownDestinationRef.current = activeDestination;
   }, [activeDestination, pendingItem, onPendingItemConsumed]);
 
-  const pushView = (view) => setViewStack((stack) => [...stack, view]);
+  const pushView = (view) => { setRecentsOpen(false); setViewStack((stack) => [...stack, view]); };
   const popView = () => setViewStack((stack) => stack.slice(0, -1));
   // The tracks panel's artist link: close it and hand the artist up to
   // JukeboxApp, which owns activeDestination and switches to Browse if
@@ -130,12 +136,21 @@ const JukeboxBrowsePanel = ({ activeDestination, onSelectDestination, onEnqueue,
             onSelectPlaylist={selectPlaylist}
             onSelectCollection={(collection) => pushView({ type: 'collection', data: collection })}
             onEnqueue={onEnqueue}
+            onOpenRecents={openRecents}
           />
         </div>
         {!currentView && activeDestination === 'nextup' && <JukeboxNextUpTab onSaved={onPlaylistSaved} onOpenAiMix={() => onSelectDestination?.('aimix')} />}
         {!currentView && activeDestination === 'settings' && <JukeboxSettingsTab onStartScreensaver={onStartScreensaver} />}
         {!currentView && activeDestination === 'aimix' && <JukeboxAiMixTab onPlaylistSaved={onPlaylistSaved} onBack={() => onSelectDestination?.('nextup')} onEnqueue={onEnqueue} onGeneratingChange={onGeneratingChange} />}
       </div>
+      {open && recentsOpen && (
+        <JukeboxRecentsPanel
+          onClose={() => setRecentsOpen(false)}
+          onSelectAlbum={selectAlbum}
+          onSelectPlaylist={selectPlaylist}
+          onSelectCollection={(collection) => pushView({ type: 'collection', data: collection })}
+        />
+      )}
       {open && selectedAlbum && (
         <JukeboxTracksPanel
           album={selectedAlbum}

@@ -10,6 +10,7 @@ import { loadOwned } from '../utils/http.js'
 import { downloadToDisk, ImageStorageError } from '../services/imageStorage.js'
 import { generatePlaylist } from '../services/playlistGeneratorService.js'
 import { suggestPlaylistName } from '../services/playlistNameSuggesterService.js'
+import { lastActivityByIds } from '../services/listActivityService.js'
 import { recentPlaylistsService } from '../services/recentPlaylistsService.js'
 import { checkAndRecordGeneration, MAX_GENERATIONS_PER_WINDOW } from '../services/playlistGenerationRateLimiter.js'
 
@@ -236,10 +237,12 @@ export async function listPlaylists() {
     previewsByPlaylist.set(row.playlist_id, list)
   }
 
+  const activity = await lastActivityByIds('playlist', rows)
   return rows.map((r) => ({
     ...r,
     track_count: trackCounts.get(r.id) ?? 0,
     preview_albums: previewsByPlaylist.get(r.id) ?? [],
+    last_activity: activity.get(r.id) ?? null,
   }))
 }
 

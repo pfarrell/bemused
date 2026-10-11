@@ -10,6 +10,8 @@ vi.mock('../services/api', () => ({
     search: vi.fn(),
     getRecentAlbums: vi.fn(),
     getRecentPlaylists: vi.fn(),
+    getPlaylists: vi.fn(),
+    getCollections: vi.fn(),
     getProfiles: vi.fn(),
     getImageUrl: vi.fn(() => '/img/sm/x.jpg'),
   },
@@ -54,11 +56,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   __resetProfilesCacheForTests();
   useProfileFilterStore.setState({ activeProfileId: null });
-  // Quick Hit mounts immediately (the box starts empty) in every test unless
-  // a test overrides this — a harmless empty grid by default so unrelated
-  // search-behavior tests aren't left with an unresolved fetch.
-  apiService.getRecentAlbums.mockResolvedValue({ data: [] });
-  apiService.getRecentPlaylists.mockResolvedValue({ data: [] });
   // Same defensive-default reasoning as getRecentAlbums above — the
   // active-profile-name lookup (and its self-heal check) fetches this.
   apiService.getProfiles.mockResolvedValue({ data: [] });
@@ -68,44 +65,85 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-test('shows the Quick Hit grid instead of a prompt before any search has been run, and no filter chips yet', async () => {
-  apiService.getRecentAlbums.mockResolvedValue({
-    data: [{ id: 1, title: 'Quick Hit Album', image_path: 'a.jpg', artist: { id: 1, name: 'Quick Hit Artist' }, track_count: 10 }],
-  });
+test('shows a prompt, no recents and no filter chips before any search has been run', async () => {
   renderTab();
 
-  await waitFor(() => expect(screen.getByText('Quick Hit Album')).toBeInTheDocument());
-  expect(screen.queryByText('Search for something to play')).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /^Albums/ })).not.toBeInTheDocument();
+  expect(screen.getByText('Search for something to play')).toBeInTheDocument();
+  expect(apiService.getRecentAlbums).not.toHaveBeenCalled();
+  expect(screen.queryByRole('group', { name: 'Filter results' })).not.toBeInTheDocument();
 });
 
-test('typing a query hides the Quick Hit grid', async () => {
-  apiService.getRecentAlbums.mockResolvedValue({
-    data: [{ id: 1, title: 'Quick Hit Album', image_path: 'a.jpg', artist: { id: 1, name: 'Quick Hit Artist' }, track_count: 10 }],
-  });
+test('typing a query hides the prompt', async () => {
   apiService.search.mockResolvedValue({ data: smallResponse });
   renderTab();
-  await waitFor(() => expect(screen.getByText('Quick Hit Album')).toBeInTheDocument());
 
   await runSearch('test query');
 
-  expect(screen.queryByText('Quick Hit Album')).not.toBeInTheDocument();
+  expect(screen.queryByText('Search for something to play')).not.toBeInTheDocument();
 });
 
-test('clearing the search box brings back the Quick Hit grid, even after a previous search', async () => {
-  apiService.getRecentAlbums.mockResolvedValue({
-    data: [{ id: 1, title: 'Quick Hit Album', image_path: 'a.jpg', artist: { id: 1, name: 'Quick Hit Artist' }, track_count: 10 }],
-  });
+test('clearing the search box brings back the prompt, even after a previous search', async () => {
   apiService.search.mockResolvedValue({ data: smallResponse });
   renderTab();
-  await waitFor(() => expect(screen.getByText('Quick Hit Album')).toBeInTheDocument());
   await runSearch('test query');
   await waitFor(() => expect(screen.getByText('Found Album')).toBeInTheDocument());
 
   fireEvent.change(screen.getByPlaceholderText('Search'), { target: { value: '' } });
 
   expect(screen.queryByText('Found Album')).not.toBeInTheDocument();
-  await waitFor(() => expect(screen.getByText('Quick Hit Album')).toBeInTheDocument());
+  expect(screen.getByText('Search for something to play')).toBeInTheDocument();
+});
+
+test('Search is selected by default; the Playlists and Collections buttons are there too', () => {
+  renderTab();
+  expect(screen.getByRole('button', { name: 'Search', pressed: true })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Playlists', pressed: false })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Collections', pressed: false })).toBeInTheDocument();
+});
+
+test('Playlists lists every playlist, blurs the input, and tapping one calls onSelectPlaylist', async () => {
+  apiService.getPlaylists.mockResolvedValue({ data: [{ id: 3, name: 'Road Trip', image_path: null, track_count: 9, last_activity: null }] });
+  const onSelectPlaylist = vi.fn();
+  renderTab({ onSelectPlaylist });
+  screen.getByPlaceholderText('Search').focus();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Playlists' }));
+
+  expect(document.activeElement).not.toBe(screen.getByPlaceholderText('Search'));
+  fireEvent.click(await screen.findByText('Road Trip'));
+  expect(onSelectPlaylist).toHaveBeenCalledWith(expect.objectContaining({ id: 3 }));
+});
+
+test('Collections lists every collection, and tapping one calls onSelectCollection', async () => {
+  apiService.getCollections.mockResolvedValue({ data: [{ id: 4, name: 'Swing Era', image_path: null, album_count: 15, last_activity: null }] });
+  const onSelectCollection = vi.fn();
+  renderTab({ onSelectCollection });
+
+  fireEvent.click(screen.getByRole('button', { name: 'Collections' }));
+
+  fireEvent.click(await screen.findByText('Swing Era'));
+  expect(onSelectCollection).toHaveBeenCalledWith(expect.objectContaining({ id: 4 }));
+});
+
+test('Search button returns from a list and focuses the input; the query is kept', async () => {
+  apiService.getPlaylists.mockResolvedValue({ data: [] });
+  renderTab();
+  fireEvent.change(screen.getByPlaceholderText('Search'), { target: { value: 'hello' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Playlists' }));
+  await screen.findByText('No playlists yet');
+
+  fireEvent.click(screen.getByRole('button', { name: 'Search', pressed: false }));
+
+  expect(screen.queryByText('No playlists yet')).not.toBeInTheDocument();
+  expect(document.activeElement).toBe(screen.getByPlaceholderText('Search'));
+  expect(screen.getByPlaceholderText('Search')).toHaveValue('hello');
+});
+
+test('the Recent button calls onOpenRecents', () => {
+  const onOpenRecents = vi.fn();
+  renderTab({ onOpenRecents });
+  fireEvent.click(screen.getByRole('button', { name: /Recent/ }));
+  expect(onOpenRecents).toHaveBeenCalled();
 });
 
 test('shows no clear button while the search box is empty', () => {
@@ -114,12 +152,8 @@ test('shows no clear button while the search box is empty', () => {
 });
 
 test('shows a clear button once text is typed, and it empties the box', async () => {
-  apiService.getRecentAlbums.mockResolvedValue({
-    data: [{ id: 1, title: 'Quick Hit Album', image_path: 'a.jpg', artist: { id: 1, name: 'Quick Hit Artist' }, track_count: 10 }],
-  });
   apiService.search.mockResolvedValue({ data: smallResponse });
   renderTab();
-  await waitFor(() => expect(screen.getByText('Quick Hit Album')).toBeInTheDocument());
   await runSearch('test query');
   await waitFor(() => expect(screen.getByText('Found Album')).toBeInTheDocument());
 
@@ -127,20 +161,7 @@ test('shows a clear button once text is typed, and it empties the box', async ()
 
   expect(screen.getByPlaceholderText('Search')).toHaveValue('');
   expect(screen.queryByText('Found Album')).not.toBeInTheDocument();
-  await waitFor(() => expect(screen.getByText('Quick Hit Album')).toBeInTheDocument());
-});
-
-test('tapping a Quick Hit album calls onSelectAlbum, same as a search result album', async () => {
-  apiService.getRecentAlbums.mockResolvedValue({
-    data: [{ id: 1, title: 'Quick Hit Album', image_path: 'a.jpg', artist: { id: 1, name: 'Quick Hit Artist' }, track_count: 10 }],
-  });
-  const onSelectAlbum = vi.fn();
-  renderTab({ onSelectAlbum });
-  await waitFor(() => screen.getByText('Quick Hit Album'));
-
-  fireEvent.click(screen.getByText('Quick Hit Album'));
-
-  expect(onSelectAlbum).toHaveBeenCalledWith(expect.objectContaining({ id: 1, title: 'Quick Hit Album' }));
+  expect(screen.getByText('Search for something to play')).toBeInTheDocument();
 });
 
 // --- Profile filtering ------------------------------------------------
@@ -204,12 +225,6 @@ test('clears an active profile id that is deleted while mounted, after an extern
 
   await waitFor(() => expect(useProfileFilterStore.getState().activeProfileId).toBeNull());
   expect(screen.queryByText('Kids')).not.toBeInTheDocument();
-});
-
-test('passes the active profile id to getRecentAlbums (Quick Hit)', async () => {
-  useProfileFilterStore.setState({ activeProfileId: 5 });
-  renderTab();
-  await waitFor(() => expect(apiService.getRecentAlbums).toHaveBeenCalledWith(20, 5));
 });
 
 test('passes the active profile id to search', async () => {
@@ -451,8 +466,9 @@ test('playlist and collection chips are not rendered when there are none', async
   await runSearch();
 
   await waitFor(() => screen.getByRole('button', { name: 'Albums (1)' }));
-  expect(screen.queryByRole('button', { name: /^Playlists/ })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /^Collections/ })).not.toBeInTheDocument();
+  const chips = within(screen.getByRole('group', { name: 'Filter results' }));
+  expect(chips.queryByRole('button', { name: /^Playlists/ })).not.toBeInTheDocument();
+  expect(chips.queryByRole('button', { name: /^Collections/ })).not.toBeInTheDocument();
 });
 
 test('playlist and collection tiles are plain buttons — no play buttons or menus', async () => {
@@ -664,13 +680,3 @@ test('"See all" for a type still under 100 shows its exact count', async () => {
   expect(within(section('Albums')).getByRole('button', { name: 'See all (6)' })).toBeInTheDocument();
 });
 
-test('tapping a recently played playlist in the empty-box Quick Hit grid calls onSelectPlaylist', async () => {
-  apiService.getRecentPlaylists.mockResolvedValue({
-    data: [{ id: 9, name: 'Sunday Kitchen', image_path: null, track_count: 7, last_played: '2026-09-15T00:00:00Z' }],
-  });
-  const onSelectPlaylist = vi.fn();
-  renderTab({ onSelectPlaylist });
-
-  fireEvent.click(await screen.findByText('Sunday Kitchen'));
-  expect(onSelectPlaylist).toHaveBeenCalledWith(expect.objectContaining({ id: 9, name: 'Sunday Kitchen' }));
-});

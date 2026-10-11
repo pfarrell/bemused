@@ -68,9 +68,13 @@ export const usePlayerEngine = (audioRefA, audioRefB) => {
         if (track && isAuthenticated) {
           const { queueSource } = usePlayerStore.getState();
           const playlistId = queueSource?.type === 'playlist' ? queueSource.id : null;
-          // Only pass the second arg for playlist plays, so every other play
-          // keeps the exact apiService.log(id) call it always had.
-          const request = playlistId ? apiService.log(track.id, playlistId) : apiService.log(track.id);
+          const collectionId = queueSource?.type === 'collection' ? queueSource.id : null;
+          // Only pass extra args for playlist/collection plays, so every other
+          // play keeps the exact apiService.log(id) call it always had.
+          let request;
+          if (playlistId) request = apiService.log(track.id, playlistId);
+          else if (collectionId) request = apiService.log(track.id, null, collectionId);
+          else request = apiService.log(track.id);
           request.catch(() => {});
         }
       }

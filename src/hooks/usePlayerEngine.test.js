@@ -161,6 +161,17 @@ test('the 5-second log passes the playlist id when the queue came from a playlis
   expect(apiService.log).toHaveBeenCalledWith(42, 9);
 });
 
+test('the 5-second log passes the collection id when the queue came from a collection', () => {
+  const audioRefA = makeAudioRef();
+  const audioRefB = makeAudioRef();
+  usePlayerStore.setState({ currentTrack: { id: 42 }, queueSource: { type: 'collection', id: 4 } });
+  renderHook(() => usePlayerEngine(audioRefA, audioRefB));
+
+  audioRefA.current.currentTime = 6;
+  audioRefA.current.dispatchEvent(new Event('timeupdate'));
+  expect(apiService.log).toHaveBeenCalledWith(42, null, 4);
+});
+
 test('the 5-second log has no playlist arg for a non-playlist queue source', () => {
   const audioRefA = makeAudioRef();
   const audioRefB = makeAudioRef();

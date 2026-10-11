@@ -137,7 +137,7 @@ const JukeboxApp = () => {
       idleTimerRef.current = setTimeout(closeAll, IDLE_CLOSE_MS);
     };
     const handlePointerDown = (e) => {
-      if (e.target.closest('.jukebox-browse-panel, .jukebox-tracks-panel, .jukebox-playlist-panel, .jukebox-keyboard')) {
+      if (e.target.closest('.jukebox-browse-panel, .jukebox-tracks-panel, .jukebox-playlist-panel, .jukebox-recents-panel, .jukebox-keyboard')) {
         armTimer();
       }
     };

@@ -98,6 +98,7 @@ interface LogTable {
   cookie: string | null
   query: string | null
   playlist_id: number | null
+  collection_id: number | null
 }
 
 interface FavoriteTable {

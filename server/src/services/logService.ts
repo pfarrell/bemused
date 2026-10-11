@@ -10,6 +10,7 @@ interface NewLogEntry {
   ip_address: string | null
   query?: string | null
   playlist_id?: number | null
+  collection_id?: number | null
 }
 
 export function createLogService(db: Kysely<Database>) {
@@ -56,6 +57,15 @@ export function createLogService(db: Kysely<Database>) {
       const id = Number(raw)
       if (!Number.isSafeInteger(id)) return null
       const row = await db.selectFrom('playlists').select('id').where('id', '=', id).executeTakeFirst()
+      return row ? row.id : null
+    },
+
+    // Same contract as resolvePlaylistId, for the queue's source collection.
+    async resolveCollectionId(raw: string | undefined): Promise<number | null> {
+      if (!raw || !/^[1-9]\d*$/.test(raw)) return null
+      const id = Number(raw)
+      if (!Number.isSafeInteger(id)) return null
+      const row = await db.selectFrom('collections').select('id').where('id', '=', id).executeTakeFirst()
       return row ? row.id : null
     },
 

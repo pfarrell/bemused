@@ -91,6 +91,7 @@ export const apiService = {
   getAlbum: (id, { summary = true } = {}) => api.get(`/album/${id}${qs({ summary: summary ? null : 0 })}`),
   getRandomAlbums: (size = 30, profileId = null) => api.get(`/albums/random${qs({ size, profileId })}`),
   getRecentAlbums: (size = 20, profileId = null) => api.get(`/albums/recent${qs({ size, profileId })}`),
+  getRecentCollections: (size = 20) => api.get(`/collections/recent${qs({ size })}`),
   getRecentPlaylists: (size = 20) => api.get(`/playlists/recent${qs({ size })}`),
   getAdjacentAlbums: (id, collectionId = null) => api.get(`/album/${id}/adjacent${qs({ collection_id: collectionId })}`), // Returns { prev, next }
 
@@ -162,7 +163,7 @@ export const apiService = {
   rotateJukeboxToken: (deviceId) => api.post(`/jukebox/devices/${deviceId}/rotate-token`),
 
   // log
-  log: (id, playlistId = null) => api.get(`/log/${id}${qs({ playlist: playlistId })}`),
+  log: (id, playlistId = null, collectionId = null) => api.get(`/log/${id}${qs({ playlist: playlistId, collection: collectionId })}`),
   getLogs: (page = 1, limit = 25) => api.get(`/log/admin${qs({ page, limit })}`),
 
   // Admin

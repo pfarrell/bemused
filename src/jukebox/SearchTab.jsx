@@ -4,7 +4,7 @@ import JukeboxAlbumTile from './JukeboxAlbumTile';
 import JukeboxArtistTile from './JukeboxArtistTile';
 import JukeboxPlaylistTile from './JukeboxPlaylistTile';
 import JukeboxCollectionTile from './JukeboxCollectionTile';
-import QuickHitTab from './QuickHitTab';
+import JukeboxLibraryGrid from './JukeboxLibraryGrid';
 import Track from '../components/Track';
 import { useProfileFilterStore } from '../stores/profileFilterStore';
 import { getProfilesCached, subscribeProfilesInvalidated } from '../utils/profilesCache';
@@ -45,7 +45,12 @@ const Section = ({ title, count, previewCount, onSeeAll, children }) => (
   </section>
 );
 
-const SearchTab = ({ onSelectArtist, onSelectAlbum, onSelectPlaylist, onSelectCollection, onEnqueue }) => {
+const SearchTab = ({ onSelectArtist, onSelectAlbum, onSelectPlaylist, onSelectCollection, onEnqueue, onOpenRecents }) => {
+  // Which of the three entry points is showing below the buttons. Search keeps
+  // its query/results while Playlists or Collections is showing (this
+  // component stays mounted), so switching back finds them as they were.
+  const [mode, setMode] = useState('search'); // 'search' | 'playlists' | 'collections'
+  const inputRef = useRef(null);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState(null);
   const [error, setError] = useState(false);
@@ -249,13 +254,20 @@ const SearchTab = ({ onSelectArtist, onSelectAlbum, onSelectPlaylist, onSelectCo
   // back to browsing, not just the state before your first-ever search.
   const isEmpty = query.trim() === '';
 
+  // Search: focus the input, which is what brings the on-screen keyboard up.
+  // Playlists/Collections: blur it so the keyboard goes away.
+  const showSearch = () => { setMode('search'); inputRef.current?.focus(); };
+  const showLibrary = (kind) => { inputRef.current?.blur(); setMode(kind); };
+
   return (
     <div className="jukebox-search-tab">
       <div className="jukebox-search-bar">
         <form role="search" onSubmit={handleSubmit}>
           <input
+            ref={inputRef}
             placeholder="Search"
             value={query}
+            onFocus={() => setMode('search')}
             onChange={(e) => setQuery(e.target.value)}
           />
           {query !== '' && (
@@ -271,7 +283,14 @@ const SearchTab = ({ onSelectArtist, onSelectAlbum, onSelectPlaylist, onSelectCo
           <button type="submit">Search</button>
         </form>
 
-        {!isEmpty && results !== null && !noResults && !error && (
+        <div className="jukebox-mode-buttons" role="group" aria-label="Browse">
+          <button type="button" aria-pressed={mode === 'search'} onClick={showSearch}>Search</button>
+          <button type="button" aria-pressed={mode === 'playlists'} onClick={() => showLibrary('playlists')}>Playlists</button>
+          <button type="button" aria-pressed={mode === 'collections'} onClick={() => showLibrary('collections')}>Collections</button>
+          <button type="button" className="jukebox-recent-button" onClick={onOpenRecents}>≡ Recent</button>
+        </div>
+
+        {mode === 'search' && !isEmpty && results !== null && !noResults && !error && (
           <div className="jukebox-search-chips" role="group" aria-label="Filter results">
             {chips.map((chip) => (
               <button
@@ -287,12 +306,21 @@ const SearchTab = ({ onSelectArtist, onSelectAlbum, onSelectPlaylist, onSelectCo
         )}
       </div>
 
-      {activeProfileName && <p className="jukebox-active-profile">{activeProfileName}</p>}
+      {mode !== 'search' && (
+        <JukeboxLibraryGrid
+          kind={mode}
+          onSelectPlaylist={onSelectPlaylist}
+          onSelectCollection={onSelectCollection}
+        />
+      )}
 
-      {/* An empty box is always Quick Hit — even after a previous search,
-          clearing the box gets you back to browsing, not a frozen view of
-          stale results. See SearchTab.test.jsx. */}
-      {isEmpty && <QuickHitTab onSelectAlbum={onSelectAlbum} onSelectPlaylist={onSelectPlaylist} profileId={activeProfileId} />}
+      <div hidden={mode !== 'search'}>
+      {mode === 'search' && activeProfileName && <p className="jukebox-active-profile">{activeProfileName}</p>}
+
+      {/* An empty box shows a prompt - even after a previous search, clearing
+          the box gets you back to this, not a frozen view of stale results.
+          Recent plays live in the Recent drawer. See SearchTab.test.jsx. */}
+      {isEmpty && <p className="jukebox-panel-empty">Search for something to play</p>}
 
       {!isEmpty && error && (
         <div className="jukebox-panel-error">
@@ -338,6 +366,7 @@ const SearchTab = ({ onSelectArtist, onSelectAlbum, onSelectPlaylist, onSelectCo
       {!isEmpty && !error && results !== null && !noResults && effectiveFilter === 'playlists' && renderPlaylists(playlistResults)}
       {!isEmpty && !error && results !== null && !noResults && effectiveFilter === 'collections' && renderCollections(collectionResults)}
       {!isEmpty && !error && results !== null && !noResults && effectiveFilter === 'tracks' && renderTracks(trackResults)}
+      </div>
     </div>
   );
 };

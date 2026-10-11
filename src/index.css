@@ -3237,6 +3237,37 @@ body:has(.jukebox-app) {
   opacity: 0.4;
   cursor: default;
 }
+/* Search / Playlists / Collections selector (SearchTab.jsx) and the A-Z /
+   Recent sort toggle (JukeboxLibraryGrid.jsx): same pill look as the chips. */
+.jukebox-app .jukebox-mode-buttons,
+.jukebox-app .jukebox-library-sort {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.jukebox-app .jukebox-mode-buttons button,
+.jukebox-app .jukebox-library-sort button {
+  min-height: 2.75rem;
+  padding: 0 0.8rem;
+  font-size: 0.95rem;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.jukebox-app .jukebox-mode-buttons button[aria-pressed="true"],
+.jukebox-app .jukebox-library-sort button[aria-pressed="true"] {
+  background: #2f6fd6;
+  border-color: #2f6fd6;
+  font-weight: 600;
+}
+.jukebox-app .jukebox-mode-buttons .jukebox-recent-button {
+  margin-left: auto;
+}
+.jukebox-app .jukebox-library-sort {
+  margin-bottom: 0.75rem;
+}
 .jukebox-app .jukebox-search-section {
   display: flex;
   flex-direction: column;

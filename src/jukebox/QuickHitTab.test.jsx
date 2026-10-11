@@ -7,6 +7,7 @@ vi.mock('../services/api', () => ({
   apiService: {
     getRecentAlbums: vi.fn(),
     getRecentPlaylists: vi.fn(),
+    getRecentCollections: vi.fn(),
     getImageUrl: vi.fn(() => '/img/sm/x.jpg'),
   },
 }));
@@ -16,6 +17,7 @@ import { apiService } from '../services/api';
 beforeEach(() => {
   vi.clearAllMocks();
   apiService.getRecentPlaylists.mockResolvedValue({ data: [] });
+  apiService.getRecentCollections.mockResolvedValue({ data: [] });
 });
 
 const renderTab = (props = {}) => render(<MemoryRouter><QuickHitTab onSelectAlbum={vi.fn()} {...props} /></MemoryRouter>);
@@ -70,7 +72,7 @@ test('shows an empty-state message when there is no play history yet', async () 
   renderTab();
 
   await waitFor(() => {
-    expect(screen.getByText('Nothing played yet — try searching for something')).toBeInTheDocument();
+    expect(screen.getByText('Nothing played yet')).toBeInTheDocument();
   });
 });
 
@@ -156,4 +158,29 @@ test('an album with no last_played sorts after ones that have it, without crashi
   const { container } = renderTab();
   await waitFor(() => screen.getByText('Dated'));
   expect(titlesIn(container)).toEqual(['Dated', 'No Date']);
+});
+
+test('mixes recent collections in by time, and tapping one calls onSelectCollection', async () => {
+  const onSelectCollection = vi.fn();
+  apiService.getRecentAlbums.mockResolvedValue({
+    data: [{ id: 1, title: 'Old Album', image_path: 'a.jpg', artist: { id: 1, name: 'A' }, track_count: 3, last_played: '2026-09-01T00:00:00Z' }],
+  });
+  const collection = { id: 4, name: 'Swing Era', image_path: null, album_count: 15, last_played: '2026-09-20T00:00:00Z' };
+  apiService.getRecentCollections.mockResolvedValue({ data: [collection] });
+  renderTab({ onSelectCollection });
+
+  const tiles = await screen.findAllByRole('button');
+  expect(tiles[0]).toHaveTextContent('Swing Era');
+  expect(tiles[1]).toHaveTextContent('Old Album');
+  fireEvent.click(tiles[0]);
+  expect(onSelectCollection).toHaveBeenCalledWith(collection);
+});
+
+test('still shows recent albums when the collections request fails', async () => {
+  apiService.getRecentAlbums.mockResolvedValue({
+    data: [{ id: 1, title: 'Still Here', image_path: 'a.jpg', artist: { id: 1, name: 'A' }, track_count: 3, last_played: '2026-09-01T00:00:00Z' }],
+  });
+  apiService.getRecentCollections.mockRejectedValue(new Error('boom'));
+  renderTab();
+  expect(await screen.findByText('Still Here')).toBeInTheDocument();
 });

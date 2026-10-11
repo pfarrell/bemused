@@ -6,7 +6,7 @@ import JukeboxBrowsePanel from './JukeboxBrowsePanel';
 // SearchTab's own empty-box state now (see SearchTab.jsx / SearchTab.test.jsx)
 // — so JukeboxBrowsePanel only needs to know about SearchTab.
 vi.mock('./SearchTab', () => ({
-  default: ({ onSelectArtist, onSelectAlbum, onSelectPlaylist, onSelectCollection, onEnqueue }) => (
+  default: ({ onSelectArtist, onSelectAlbum, onSelectPlaylist, onSelectCollection, onEnqueue, onOpenRecents }) => (
     <div data-testid="search-tab">
       {/* Uncontrolled on purpose: its value lives in the DOM node, so it's lost if the tab remounts. */}
       <input data-testid="search-input" placeholder="mock search" />
@@ -15,6 +15,7 @@ vi.mock('./SearchTab', () => ({
       <button onClick={() => onSelectPlaylist({ id: 5, name: 'Search Playlist' })}>select-search-playlist</button>
       <button onClick={() => onSelectCollection({ id: 6, name: 'Search Collection' })}>select-search-collection</button>
       <button onClick={onEnqueue}>search-enqueue</button>
+      <button onClick={onOpenRecents}>open-recents</button>
     </div>
   ),
 }));
@@ -35,6 +36,16 @@ vi.mock('./JukeboxCollectionView', () => ({
       <button onClick={() => onSelectAlbum({ id: 7, title: 'Album From Collection' })}>select-album-from-collection</button>
       <button onClick={onBack}>back-from-collection</button>
       <button onClick={onEnqueue}>collection-view-enqueue</button>
+    </div>
+  ),
+}));
+vi.mock('./JukeboxRecentsPanel', () => ({
+  default: ({ onClose, onSelectAlbum, onSelectPlaylist, onSelectCollection }) => (
+    <div data-testid="jukebox-recents-panel">
+      <button onClick={onClose}>close-recents</button>
+      <button onClick={() => onSelectAlbum({ id: 11, title: 'Recent Album' })}>recents-select-album</button>
+      <button onClick={() => onSelectPlaylist({ id: 12, name: 'Recent Playlist' })}>recents-select-playlist</button>
+      <button onClick={() => onSelectCollection({ id: 13, name: 'Recent Collection' })}>recents-select-collection</button>
     </div>
   ),
 }));
@@ -427,4 +438,55 @@ test('switching to a different tab dismisses an open collection view, same as an
   rerender(<JukeboxBrowsePanel activeDestination="browse" />);
 
   expect(screen.queryByTestId('jukebox-collection-view')).not.toBeInTheDocument();
+});
+
+test('the Recent button toggles the Recent drawer', () => {
+  renderPanel('browse');
+  expect(screen.queryByTestId('jukebox-recents-panel')).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByText('open-recents'));
+  expect(screen.getByTestId('jukebox-recents-panel')).toBeInTheDocument();
+
+  fireEvent.click(screen.getByText('open-recents'));
+  expect(screen.queryByTestId('jukebox-recents-panel')).not.toBeInTheDocument();
+});
+
+test('picking an album from Recent replaces the drawer with the tracks panel', () => {
+  renderPanel('browse');
+  fireEvent.click(screen.getByText('open-recents'));
+  fireEvent.click(screen.getByText('recents-select-album'));
+
+  expect(screen.queryByTestId('jukebox-recents-panel')).not.toBeInTheDocument();
+  expect(screen.getByText('tracks-panel: Recent Album')).toBeInTheDocument();
+});
+
+test('picking a playlist from Recent replaces the drawer with the playlist panel', () => {
+  renderPanel('browse');
+  fireEvent.click(screen.getByText('open-recents'));
+  fireEvent.click(screen.getByText('recents-select-playlist'));
+
+  expect(screen.queryByTestId('jukebox-recents-panel')).not.toBeInTheDocument();
+  expect(screen.getByText('playlist-panel: Recent Playlist')).toBeInTheDocument();
+});
+
+test('picking a collection from Recent opens the collection view and closes the drawer', () => {
+  renderPanel('browse');
+  fireEvent.click(screen.getByText('open-recents'));
+  fireEvent.click(screen.getByText('recents-select-collection'));
+
+  expect(screen.queryByTestId('jukebox-recents-panel')).not.toBeInTheDocument();
+  expect(screen.getByText('collection-view: Recent Collection')).toBeInTheDocument();
+});
+
+test('opening Recent closes an open tracks panel, and closing the drawer closes Recent', () => {
+  const { rerender } = renderPanel('browse');
+  fireEvent.click(screen.getByText('select-search-album'));
+  expect(screen.getByTestId('jukebox-tracks-panel')).toBeInTheDocument();
+
+  fireEvent.click(screen.getByText('open-recents'));
+  expect(screen.queryByTestId('jukebox-tracks-panel')).not.toBeInTheDocument();
+  expect(screen.getByTestId('jukebox-recents-panel')).toBeInTheDocument();
+
+  rerender(<JukeboxBrowsePanel activeDestination={null} />);
+  expect(screen.queryByTestId('jukebox-recents-panel')).not.toBeInTheDocument();
 });

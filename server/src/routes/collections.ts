@@ -6,6 +6,8 @@ import { notesService } from '../services/notesService.js'
 import { getRecallItem, decryptRecallToken, stripBacklink } from '../services/recallService.js'
 import { getCollectionSummary } from '../services/wikipedia.js'
 import { streamBase } from '../db/streamUrl.js'
+import { lastActivityByIds } from '../services/listActivityService.js'
+import { recentCollectionsService } from '../services/recentCollectionsService.js'
 import { requireAuth } from '../middleware/auth.js'
 import { loadOwned } from '../utils/http.js'
 import { downloadToDisk, ImageStorageError } from '../services/imageStorage.js'
@@ -47,7 +49,43 @@ collections.get('/', async (c) => {
     }
   }
 
-  return c.json(rows.map((r) => ({ ...r, preview_albums: previewsByCollection.get(r.id) ?? [] })))
+  const counts = await db
+    .selectFrom('collection_albums')
+    .select(['collection_id', db.fn.countAll<string>().as('n')])
+    .where('collection_id', 'in', collectionIds)
+    .groupBy('collection_id')
+    .execute()
+  const countById = new Map(counts.map((r) => [r.collection_id, Number(r.n)]))
+  const activity = await lastActivityByIds('collection', rows)
+
+  return c.json(rows.map((r) => ({
+    ...r,
+    preview_albums: previewsByCollection.get(r.id) ?? [],
+    album_count: countById.get(r.id) ?? 0,
+    last_activity: activity.get(r.id) ?? null,
+  })))
+})
+
+// GET /collections/recent?size=N - gated, powers Jukebox Mode's Recent drawer
+// (recently played collections, most recent first). Must stay above /:id.
+collections.get('/recent', requireAuth, async (c) => {
+  const requested = parseInt(c.req.query('size') ?? '10')
+  const size = Math.min(Number.isNaN(requested) || requested < 1 ? 10 : requested, 200)
+  const rows = await recentCollectionsService.recentlyPlayed(size)
+  const counts = rows.length === 0 ? [] : await db
+    .selectFrom('collection_albums')
+    .select(['collection_id', db.fn.countAll<string>().as('n')])
+    .where('collection_id', 'in', rows.map((r) => r.id))
+    .groupBy('collection_id')
+    .execute()
+  const countById = new Map(counts.map((r) => [r.collection_id, Number(r.n)]))
+  return c.json(rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    image_path: r.image_path,
+    album_count: countById.get(r.id) ?? 0,
+    last_played: r.last_played,
+  })))
 })
 
 // GET /collection/:id
