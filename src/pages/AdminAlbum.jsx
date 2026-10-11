@@ -7,6 +7,7 @@ import Loading from '../components/Loading';
 import PageError from '../components/PageError';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import TagsSection from '../components/TagsSection';
+import ExternalLinksSection from './admin/ExternalLinksSection';
 import MusicBrainzPicker from '../components/MusicBrainzPicker';
 import ReprocessAlbumModal from '../components/ReprocessAlbumModal';
 import AdminPanel from '../components/admin/AdminPanel';
@@ -369,6 +370,8 @@ const AdminAlbum = () => {
       <AlbumTransferSection albumId={id} album={albumData?.album} onError={setError} />
 
       <AlbumAdditionalArtistsSection albumId={id} primaryArtistId={albumData?.album?.artist_id} />
+
+      <ExternalLinksSection entityType="album" entityId={id} />
 
       <FactoidsPanel kind="album" targetId={id} />
 

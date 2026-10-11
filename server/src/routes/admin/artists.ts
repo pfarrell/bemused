@@ -118,11 +118,12 @@ router.delete('/artist/:id', async (c) => {
     const artist = await db.selectFrom('artists').select('id').where('id', '=', id).executeTakeFirst()
     if (!artist) return c.json({ error: 'Artist not found' }, 404)
 
-    const { deleteAlbumsCascade, deleteFactoidsFor } = await import('../../services/entityDeleteService.js')
+    const { deleteAlbumsCascade, deleteFactoidsFor, deleteExternalLinksFor } = await import('../../services/entityDeleteService.js')
     const deleted = await db.transaction().execute(async (trx) => {
       const albums = await trx.selectFrom('albums').select('id').where('artist_id', '=', id).execute()
       await deleteAlbumsCascade(albums.map((a) => a.id), trx)
       await deleteFactoidsFor('artist', [id], trx)
+      await deleteExternalLinksFor('artist', [id], trx)
       return trx.deleteFrom('artists').where('id', '=', id).returningAll().executeTakeFirst()
     })
     return c.json({ success: true, deleted })

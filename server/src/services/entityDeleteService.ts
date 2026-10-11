@@ -18,6 +18,36 @@ export async function deleteFactoidsFor(
   }
 }
 
+// external_links is polymorphic too (entity_type + entity_id, no FK).
+export async function deleteExternalLinksFor(
+  type: 'artist' | 'album',
+  ids: number[],
+  trx: Kysely<Database>,
+): Promise<void> {
+  if (ids.length === 0) return
+  await trx.deleteFrom('external_links').where('entity_type', '=', type).where('entity_id', 'in', ids).execute()
+}
+
+// Moves links to the merge target, dropping ones it already has.
+export async function reassignExternalLinks(
+  type: 'artist' | 'album',
+  fromId: number,
+  toId: number,
+  trx: Kysely<Database>,
+): Promise<void> {
+  await trx
+    .deleteFrom('external_links')
+    .where('entity_type', '=', type)
+    .where('entity_id', '=', fromId)
+    .where(sql<boolean>`(source, kind, external_id) IN (
+      SELECT source, kind, external_id FROM external_links WHERE entity_type = ${type} AND entity_id = ${toId}
+    )`)
+    .execute()
+  await trx.updateTable('external_links').set({ entity_id: toId })
+    .where('entity_type', '=', type).where('entity_id', '=', fromId)
+    .execute()
+}
+
 export async function reassignFactoids(
   kind: 'artist' | 'album' | 'track',
   fromId: number,
@@ -81,6 +111,7 @@ export async function deleteAlbumsCascade(albumIds: number[], trx: Kysely<Databa
   // Before the rows disappear: no FK means nothing else will do this.
   await deleteFactoidsFor('track', tracks.map((t) => t.id), trx)
   await deleteFactoidsFor('album', albumIds, trx)
+  await deleteExternalLinksFor('album', albumIds, trx)
 
   if (tracks.length > 0) {
     await trx.deleteFrom('tracks').where('album_id', 'in', albumIds).execute()

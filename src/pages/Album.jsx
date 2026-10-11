@@ -9,6 +9,7 @@ import Track from '../components/Track';
 import Loading from '../components/Loading';
 import PageError from '../components/PageError';
 import TagsSection from '../components/TagsSection';
+import ExternalLinks from '../components/ExternalLinks';
 import NotesSection from '../components/NotesSection';
 import CompilationArtistLinks from '../components/CompilationArtistLinks';
 import AboutSection from '../components/AboutSection';
@@ -276,6 +277,7 @@ const Album = () => {
         ))}
       </div>
 
+      <ExternalLinks entityType="album" entityId={parseInt(id)} />
       <TagsSection entityType="album" entityId={parseInt(id)} isLoggedIn={isAdmin} />
       <NotesSection entityType="album" entityId={parseInt(id)} notes={notes || []} isLoggedIn={isAuthenticated} onChange={reload} />
     </div>

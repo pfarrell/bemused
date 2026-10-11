@@ -7,6 +7,7 @@ import Loading from '../components/Loading';
 import PageError from '../components/PageError';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import TagsSection from '../components/TagsSection';
+import ExternalLinksSection from './admin/ExternalLinksSection';
 import MusicBrainzPicker from '../components/MusicBrainzPicker';
 import AdminPanel from '../components/admin/AdminPanel';
 import AdminField from '../components/admin/AdminField';
@@ -275,6 +276,8 @@ const AdminArtist = () => {
         onMergedKeepingThis={() => setRelationsReloadKey((k) => k + 1)}
         onError={setError}
       />
+
+      <ExternalLinksSection entityType="artist" entityId={id} />
 
       <FactoidsPanel kind="artist" targetId={id} />
 

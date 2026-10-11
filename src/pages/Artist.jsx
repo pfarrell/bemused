@@ -13,6 +13,7 @@ import Loading from '../components/Loading';
 import Retry from '../components/Retry';
 import PageError from '../components/PageError';
 import TagsSection from '../components/TagsSection';
+import ExternalLinks from '../components/ExternalLinks';
 import PlayActionsMenu from '../components/PlayActionsMenu';
 import ContextMenu from '../components/ContextMenu';
 import CardGrid from '../components/CardGrid';
@@ -347,6 +348,7 @@ const Artist = () => {
         </div>
       )}
 
+      <ExternalLinks entityType="artist" entityId={parseInt(id)} />
       <TagsSection entityType="artist" entityId={parseInt(id)} isLoggedIn={isAdmin} />
     </div>
   );

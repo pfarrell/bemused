@@ -426,6 +426,18 @@ interface PhotoTable {
   created_at: ColumnType<Date, string | Date | undefined, never>
 }
 
+interface ExternalLinkTable {
+  id: Generated<number>
+  entity_type: 'album' | 'artist'
+  entity_id: number
+  source: string
+  kind: string
+  external_id: string
+  url: string
+  matched_by: ColumnType<string, string | undefined, string>
+  created_at: ColumnType<Date, string | Date | undefined, never>
+}
+
 export interface Database {
   artists: ArtistTable
   albums: AlbumTable
@@ -469,6 +481,7 @@ export interface Database {
   signup_log: SignupLogTable
   ai_playlist_generations: AiPlaylistGenerationsTable
   photos: PhotoTable
+  external_links: ExternalLinkTable
 }
 
 // ---- DB instance ----

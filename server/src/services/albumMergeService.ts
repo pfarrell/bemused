@@ -1,6 +1,6 @@
 import { sql, type Kysely } from 'kysely'
 import type { Database } from '../db/database.js'
-import { reassignFactoids } from './entityDeleteService.js'
+import { reassignExternalLinks, reassignFactoids } from './entityDeleteService.js'
 
 // Folds `loserId` into `targetId` and deletes the loser. Run inside
 // db.transaction(). Mirrors artistMergeService.ts's mergeArtistInto:
@@ -159,6 +159,7 @@ export async function mergeAlbumInto(
   // Track-scoped factoids are keyed by track id, and the tracks were re-parented
   // above rather than copied, so only the album's own rows need to move.
   await reassignFactoids('album', loserId, targetId, trx)
+  await reassignExternalLinks('album', loserId, targetId, trx)
 
   await trx.deleteFrom('albums').where('id', '=', loserId).execute()
 
