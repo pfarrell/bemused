@@ -54,11 +54,31 @@ function selectBestImageUrl(image: CAAImage): string | null {
   return candidates[0] ?? null
 }
 
-export async function fetchAlbumArtFromCAA(
+// The worker kicks off one MBID lookup (and so one art fetch) per uploaded
+// track, and they overlap. Run fetches for the same album one at a time so the
+// "already attached?" check below sees the previous fetch's insert.
+const albumFetchQueue = new Map<number, Promise<unknown>>()
+
+export function fetchAlbumArtFromCAA(
   albumId: number,
   mbid: string,
   imagesDir: string,
   entity: CAAEntity = 'release'
+): Promise<boolean> {
+  const previous = albumFetchQueue.get(albumId) ?? Promise.resolve()
+  const run = previous.catch(() => {}).then(() => fetchAlbumArt(albumId, mbid, imagesDir, entity))
+  albumFetchQueue.set(albumId, run)
+  run.catch(() => {}).finally(() => {
+    if (albumFetchQueue.get(albumId) === run) albumFetchQueue.delete(albumId)
+  })
+  return run
+}
+
+async function fetchAlbumArt(
+  albumId: number,
+  mbid: string,
+  imagesDir: string,
+  entity: CAAEntity
 ): Promise<boolean> {
   let images: CAAImage[]
   try {
@@ -97,6 +117,20 @@ export async function fetchAlbumArtFromCAA(
   // Download the image
   const ext = url.split('.').pop()?.split('?')[0] ?? 'jpg'
   const filename = `album_${albumId}_caa_${best.id}.${ext}`
+
+  // The filename encodes the CAA image id, so an existing row with it means this
+  // exact image is already attached - don't download or record it again.
+  const alreadyAttached = await db
+    .selectFrom('images')
+    .innerJoin('media_files', (join) =>
+      join.onRef('media_files.entity_id', '=', 'images.id').on('media_files.entity_type', '=', 'image')
+    )
+    .select('images.id')
+    .where('images.album_id', '=', albumId)
+    .where('images.status', '=', 'active')
+    .where('media_files.absolute_path', '=', filename)
+    .executeTakeFirst()
+  if (alreadyAttached) return true
 
   try {
     const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } })
