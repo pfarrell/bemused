@@ -200,6 +200,8 @@ export const apiService = {
   setCanonicalTrackFile: (keepId, trackIds) => api.post(`/admin/duplicates/tracks/${keepId}/canonical-file`, { track_ids: trackIds }),
   getExternalLinks: (type, id) => api.get(`/external-links/${type}/${id}`),
   addExternalLink: (type, id, input, hint = {}) => api.post(`/admin/external-links/${type}/${id}`, { input, ...hint }),
+  searchDiscogs: (entity, id, q) => api.get('/admin/discogs/search', { params: { entity, id, ...(q ? { q } : {}) } }),
+  fetchDiscogsCover: (albumId, linkId) => api.post(`/admin/album/${albumId}/discogs-cover`, { link_id: linkId }),
   deleteExternalLink: (linkId) => api.delete(`/admin/external-links/${linkId}`),
   getAlbumSecondaryArtists: (id) => api.get(`/admin/album/${id}/artists`),
   addArtistToAlbum: (albumId, artistId, role) => api.post(`/admin/album/${albumId}/artists`, { artist_id: artistId, role }),

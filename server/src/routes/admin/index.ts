@@ -10,6 +10,7 @@ import tags from './tags.js'
 import duplicates from './duplicates.js'
 import profiles from './profiles.js'
 import photos from './photos.js'
+import discogs from './discogs.js'
 import { externalLinksAdmin } from '../externalLinks.js'
 import factoids from './factoids.js'
 
@@ -25,6 +26,7 @@ admin.route('/', tags)
 admin.route('/', duplicates)
 admin.route('/', profiles)
 admin.route('/', photos)
+admin.route('/', discogs)
 admin.route('/', externalLinksAdmin)
 admin.route('/', factoids)
 

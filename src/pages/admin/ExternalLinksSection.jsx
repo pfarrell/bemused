@@ -13,6 +13,11 @@ const ExternalLinksSection = ({ entityType, entityId }) => {
   const [kind, setKind] = useState(entityType === 'album' ? 'release' : 'artist');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [results, setResults] = useState(null);
+  const [coverBusy, setCoverBusy] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,6 +58,47 @@ const ExternalLinksSection = ({ entityType, entityId }) => {
     }
   };
 
+  const handleSearch = async () => {
+    setSearching(true);
+    setError('');
+    setMessage('');
+    try {
+      const response = await apiService.searchDiscogs(entityType, entityId, searchQuery.trim());
+      setResults(response.data.results);
+    } catch (err) {
+      setResults(null);
+      setError(getErrorMessage(err, 'Discogs search failed'));
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleLinkResult = async (result) => {
+    setError('');
+    try {
+      const response = await apiService.addExternalLink(entityType, entityId, String(result.id), { source: 'discogs', kind: result.kind });
+      setLinks(response.data);
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to add link'));
+    }
+  };
+
+  const handleUseCover = async (link) => {
+    setCoverBusy(link.id);
+    setError('');
+    setMessage('');
+    try {
+      await apiService.fetchDiscogsCover(entityId, link.id);
+      setMessage('Cover saved. Reload the page to see it in the Images section.');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to fetch the Discogs cover'));
+    } finally {
+      setCoverBusy(null);
+    }
+  };
+
+  const linkedKeys = new Set(links.filter((l) => l.source === 'discogs').map((l) => `${l.kind}:${l.external_id}`));
+
   const kinds = entityType === 'album' ? ['release', 'master'] : ['artist'];
 
   return (
@@ -64,6 +110,13 @@ const ExternalLinksSection = ({ entityType, entityId }) => {
           <a href={link.url} target="_blank" rel="noopener noreferrer">{externalLinkLabel(link)}</a>
         )}
         renderMeta={(link) => <small>{link.source === 'discogs' ? link.external_id : link.url}</small>}
+        rowActions={(link) =>
+          entityType === 'album' && link.source === 'discogs' && link.kind !== 'artist' ? (
+            <button type="button" className="btn btn-secondary btn-sm" disabled={coverBusy === link.id} onClick={() => handleUseCover(link)}>
+              {coverBusy === link.id ? 'Fetching...' : 'Use cover'}
+            </button>
+          ) : null
+        }
         onRemove={handleRemove}
       />
       <form onSubmit={handleAdd} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
@@ -80,6 +133,45 @@ const ExternalLinksSection = ({ entityType, entityId }) => {
         </select>
         <button type="submit" className="btn btn-primary btn-sm" disabled={saving || !input.trim()}>Add link</button>
       </form>
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearch(); } }}
+          placeholder={`Search Discogs (blank = this ${entityType}'s ${entityType === 'album' ? 'artist and title' : 'name'})`}
+          aria-label="Discogs search text"
+          style={{ flex: '1 1 18rem' }}
+        />
+        <button type="button" className="btn btn-secondary btn-sm" disabled={searching} onClick={handleSearch}>
+          {searching ? 'Searching...' : 'Find on Discogs'}
+        </button>
+      </div>
+      {results && results.length === 0 && <p>No Discogs matches.</p>}
+      {results && results.length > 0 && (
+        <ul style={{ listStyle: 'none', padding: 0, margin: '0.5rem 0 0' }}>
+          {results.map((r) => (
+            <li key={`${r.kind}-${r.id}`} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', padding: '0.25rem 0' }}>
+              {r.thumb && <img src={r.thumb} alt="" width="40" height="40" style={{ objectFit: 'cover' }} />}
+              <span style={{ flex: 1 }}>
+                <a href={r.url} target="_blank" rel="noopener noreferrer">{r.title}</a>
+                <small style={{ display: 'block', color: 'var(--color-text-muted)' }}>
+                  {[r.kind, r.year, r.country, r.label, r.format].filter(Boolean).join(' · ')}
+                </small>
+              </span>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                disabled={linkedKeys.has(`${r.kind}:${r.id}`)}
+                onClick={() => handleLinkResult(r)}
+              >
+                {linkedKeys.has(`${r.kind}:${r.id}`) ? 'Linked' : 'Link'}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {message && <p role="status">{message}</p>}
       {error && <p role="alert" style={{ color: 'var(--color-danger, #c00)' }}>{error}</p>}
     </AdminPanel>
   );

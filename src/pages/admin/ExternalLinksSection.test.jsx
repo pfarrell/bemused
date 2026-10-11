@@ -8,6 +8,8 @@ vi.mock('../../services/api', () => ({
     getExternalLinks: vi.fn(),
     addExternalLink: vi.fn(),
     deleteExternalLink: vi.fn(),
+    searchDiscogs: vi.fn(),
+    fetchDiscogsCover: vi.fn(),
   },
 }));
 
@@ -56,4 +58,45 @@ test('removes a link after confirming', async () => {
   await user.click(screen.getByRole('button', { name: 'Remove' }));
   expect(apiService.deleteExternalLink).toHaveBeenCalledWith(1);
   await waitFor(() => expect(screen.queryByRole('link', { name: 'Discogs (release)' })).not.toBeInTheDocument());
+});
+
+test('finds on Discogs and links a result', async () => {
+  const user = userEvent.setup();
+  apiService.getExternalLinks.mockResolvedValue({ data: [] });
+  apiService.searchDiscogs.mockResolvedValue({ data: { results: [
+    { id: 5460, kind: 'master', title: 'Miles Davis - Kind Of Blue', year: '1959', country: 'US', label: 'Columbia', format: 'LP', thumb: null, url: 'https://www.discogs.com/master/5460' },
+  ] } });
+  apiService.addExternalLink.mockResolvedValue({ data: [{ id: 3, source: 'discogs', kind: 'master', external_id: '5460', url: 'https://www.discogs.com/master/5460' }] });
+  render(<ExternalLinksSection entityType="album" entityId="5" />);
+
+  await user.click(screen.getByRole('button', { name: 'Find on Discogs' }));
+  expect(apiService.searchDiscogs).toHaveBeenCalledWith('album', '5', '');
+  await screen.findByText('Miles Davis - Kind Of Blue');
+  await user.click(screen.getByRole('button', { name: 'Link' }));
+
+  expect(apiService.addExternalLink).toHaveBeenCalledWith('album', '5', '5460', { source: 'discogs', kind: 'master' });
+  expect(await screen.findByRole('button', { name: 'Linked' })).toBeDisabled();
+});
+
+test('shows the server error when Discogs search fails', async () => {
+  const user = userEvent.setup();
+  apiService.searchDiscogs.mockRejectedValue({ response: { data: { error: 'DISCOGS_TOKEN is not set on the server' } } });
+  render(<ExternalLinksSection entityType="album" entityId="5" />);
+  await user.click(screen.getByRole('button', { name: 'Find on Discogs' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('DISCOGS_TOKEN');
+});
+
+test('Use cover is offered for album Discogs release links and calls the API', async () => {
+  const user = userEvent.setup();
+  apiService.fetchDiscogsCover.mockResolvedValue({ data: { success: true } });
+  render(<ExternalLinksSection entityType="album" entityId="5" />);
+  await user.click(await screen.findByRole('button', { name: 'Use cover' }));
+  expect(apiService.fetchDiscogsCover).toHaveBeenCalledWith('5', 1);
+  expect(await screen.findByRole('status')).toHaveTextContent('Cover saved');
+});
+
+test('Use cover is not offered on artists', async () => {
+  render(<ExternalLinksSection entityType="artist" entityId="5" />);
+  await screen.findByRole('link', { name: 'Discogs (release)' });
+  expect(screen.queryByRole('button', { name: 'Use cover' })).not.toBeInTheDocument();
 });
