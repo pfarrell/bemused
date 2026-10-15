@@ -44,6 +44,12 @@ export const createJukeboxDevice = (label: string, userId: number) =>
     .returningAll()
     .executeTakeFirstOrThrow()
 
+export const createDesktopDevice = (label: string, userId: number) =>
+  db.insertInto('desktop_devices')
+    .values({ user_id: userId, name: fixtureName(label) })
+    .returningAll()
+    .executeTakeFirstOrThrow()
+
 export const createLog = (albumId: number, trackId: number | null, artistId: number | null, createdAt: Date) =>
   db.insertInto('logs')
     .values({ album_id: albumId, track_id: trackId, artist_id: artistId, action: 'stream', created_at: createdAt, ip_address: null })
@@ -170,6 +176,7 @@ export async function cleanupFixtures(): Promise<void> {
 
   const userIds = (await db.selectFrom('users').select('id').where('username', 'like', like).execute()).map((r) => r.id)
   if (userIds.length > 0) {
+    await db.deleteFrom('desktop_devices').where('user_id', 'in', userIds).execute()
     await db.deleteFrom('jukebox_devices').where('user_id', 'in', userIds).execute()
     await db.deleteFrom('users').where('id', 'in', userIds).execute()
   }

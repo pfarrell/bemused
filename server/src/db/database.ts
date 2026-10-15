@@ -165,6 +165,14 @@ interface JukeboxDeviceTable {
   created_at: ColumnType<Date, string | undefined, never>
 }
 
+interface DesktopDeviceTable {
+  id: Generated<number>
+  user_id: number
+  name: string
+  created_at: ColumnType<Date, string | undefined, never>
+  last_seen_at: ColumnType<Date | null, Date | null | undefined, Date | null>
+}
+
 interface JukeboxQueueSubmissionTable {
   id: Generated<number>
   jukebox_device_id: number
@@ -452,6 +460,7 @@ export interface Database {
   users: UserTable
   password_reset_tokens: PasswordResetTokenTable
   jukebox_devices: JukeboxDeviceTable
+  desktop_devices: DesktopDeviceTable
   jukebox_queue_submissions: JukeboxQueueSubmissionTable
   user_playlists: UserPlaylistTable
   artist_albums: ArtistAlbumTable
