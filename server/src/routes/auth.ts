@@ -9,6 +9,7 @@ import { requireAuth } from '../middleware/auth.js'
 import { authService } from '../services/authService.js'
 import { profilesService } from '../services/profilesService.js'
 import { jukeboxDeviceService } from '../services/jukeboxDeviceService.js'
+import { desktopDeviceService } from '../services/desktopDeviceService.js'
 import { signupLogService } from '../services/signupLogService.js'
 import { sendPasswordResetEmail } from '../services/emailService.js'
 import { isLanHost } from '../db/streamUrl.js'
@@ -57,6 +58,19 @@ function generateJukeboxToken(userId: number, username: string, admin: boolean, 
     { id: userId, username, admin, deviceId },
     JWT_SECRET,
     { expiresIn: JUKEBOX_JWT_EXPIRES_IN }
+  )
+}
+
+// The desktop player keeps this in the OS keyring and sends it as a Bearer
+// header, so unlike the jukebox there's no cookie Max-Age cap; 400 days just
+// mirrors the jukebox. Revocation is by deleting the desktop_devices row.
+const DESKTOP_JWT_EXPIRES_IN = '400d'
+
+function generateDesktopToken(userId: number, username: string, admin: boolean, desktopDeviceId: number): string {
+  return jwt.sign(
+    { id: userId, username, admin, desktopDeviceId },
+    JWT_SECRET,
+    { expiresIn: DESKTOP_JWT_EXPIRES_IN }
   )
 }
 
@@ -436,6 +450,42 @@ auth.post('/jukebox-login', async (c) => {
   } catch (error) {
     console.error('Jukebox login error:', error)
     return c.json({ error: 'Login failed' }, 500)
+  }
+})
+
+// POST /auth/desktop-pair — same credential check as /auth/login, for the
+// P·Share Amp desktop player: creates a desktop_devices row and returns a
+// long-lived JWT in the response body (no cookie; the app sends it as a
+// Bearer header).
+auth.post('/desktop-pair', async (c) => {
+  try {
+    const { username, password, deviceName } = await c.req.json()
+
+    if (!username || !password || !deviceName) {
+      return c.json({ error: 'Username, password, and deviceName are required' }, 400)
+    }
+
+    const user = await authService.findUserForLogin(username)
+    if (!user || !user.password) {
+      return c.json({ error: 'Invalid username or password' }, 401)
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password)
+    if (!passwordMatch) {
+      return c.json({ error: 'Invalid username or password' }, 401)
+    }
+
+    const device = await desktopDeviceService.create(user.id, String(deviceName).slice(0, 100))
+    const token = generateDesktopToken(user.id, user.username, user.admin, device.id)
+
+    return c.json({
+      token,
+      user: await buildUserPayload(user),
+      device: { id: device.id, name: device.name },
+    })
+  } catch (error) {
+    console.error('Desktop pair error:', error)
+    return c.json({ error: 'Pairing failed' }, 500)
   }
 })
 

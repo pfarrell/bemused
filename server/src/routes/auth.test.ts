@@ -3,6 +3,7 @@ import 'dotenv/config'
 import { test, after } from 'node:test'
 import assert from 'node:assert/strict'
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 import { Hono } from 'hono'
 import auth from './auth.js'
 import { authMiddleware } from '../middleware/auth.js'
@@ -167,4 +168,47 @@ test('GET /auth/me returns null jukeboxDeviceId/jukeboxEnqueueToken for a normal
 
   assert.equal(body.jukeboxDeviceId, null)
   assert.equal(body.jukeboxEnqueueToken, null)
+})
+
+const JWT_SECRET_FOR_TEST = process.env.BEMUSED_JWT_SECRET || 'default-secret-change-me'
+
+const pair = (body: Record<string, unknown>) =>
+  app().request('/auth/desktop-pair', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+test('POST /auth/desktop-pair: wrong password is rejected', async () => {
+  const passwordHash = await bcrypt.hash('correct-horse', 4)
+  const user = await createUser('desktop-pair-badpw', { password: passwordHash })
+  const res = await pair({ username: user.username, password: 'wrong', deviceName: 'laptop' })
+  assert.equal(res.status, 401)
+})
+
+test('POST /auth/desktop-pair: missing deviceName is rejected', async () => {
+  const passwordHash = await bcrypt.hash('correct-horse', 4)
+  const user = await createUser('desktop-pair-nodevice', { password: passwordHash })
+  const res = await pair({ username: user.username, password: 'correct-horse' })
+  assert.equal(res.status, 400)
+})
+
+test('POST /auth/desktop-pair: success returns a token in the body, sets no cookie, creates a device row', async () => {
+  const passwordHash = await bcrypt.hash('correct-horse', 4)
+  const user = await createUser('desktop-pair-ok', { password: passwordHash })
+  const res = await pair({ username: user.username, password: 'correct-horse', deviceName: 'laptop' })
+
+  assert.equal(res.status, 200)
+  assert.equal(res.headers.get('set-cookie'), null)
+  const body = await res.json()
+  assert.equal(body.user.username, user.username)
+  assert.equal(body.device.name, 'laptop')
+
+  const claims = jwt.verify(body.token, JWT_SECRET_FOR_TEST) as any
+  assert.equal(claims.id, user.id)
+  assert.equal(claims.desktopDeviceId, body.device.id)
+  assert.ok(claims.exp - claims.iat > 86400 * 300)
+
+  const device = await db.selectFrom('desktop_devices').selectAll().where('user_id', '=', user.id).executeTakeFirstOrThrow()
+  assert.equal(device.id, body.device.id)
 })
