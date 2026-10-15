@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { Hono } from 'hono'
 import jwt from 'jsonwebtoken'
 import { authMiddleware, requireAuth, requireOwnJukeboxDevice } from './auth.js'
-import { createUser, createJukeboxDevice, cleanupFixtures } from '../test/fixtures.js'
+import { createUser, createJukeboxDevice, createDesktopDevice, cleanupFixtures } from '../test/fixtures.js'
 import { jukeboxDeviceService } from '../services/jukeboxDeviceService.js'
 import { db } from '../db/database.js'
 import type { Variables } from '../types.js'
@@ -136,4 +136,58 @@ test('requireOwnJukeboxDevice 403s when jukeboxDeviceId is unset entirely (norma
 
   const res = await app.request(`/devices/${device.id}/thing`, cookieHeader(token))
   assert.equal(res.status, 403)
+})
+
+const bearer = (token: string) => ({ headers: { authorization: `Bearer ${token}` } })
+const desktopToken = (user: { id: number; username: string; admin: boolean }, desktopDeviceId: number) =>
+  jwt.sign({ id: user.id, username: user.username, admin: user.admin, desktopDeviceId }, JWT_SECRET, { expiresIn: '400d' })
+
+test('a Bearer desktop token authenticates', async () => {
+  const user = await createUser('mw-bearer-ok')
+  const device = await createDesktopDevice('mw-bearer-ok-dev', user.id)
+  const res = await appWithAuth().request('/me', bearer(desktopToken(user, device.id)))
+  assert.equal(res.status, 200)
+  assert.equal((await res.json()).user.id, user.id)
+})
+
+test('a Bearer token for a deleted desktop device is unauthenticated', async () => {
+  const user = await createUser('mw-bearer-revoked')
+  const device = await createDesktopDevice('mw-bearer-revoked-dev', user.id)
+  await db.deleteFrom('desktop_devices').where('id', '=', device.id).execute()
+  const res = await appWithAuth().request('/me', bearer(desktopToken(user, device.id)))
+  assert.equal(res.status, 401)
+})
+
+test('a Bearer token issued before a password reset is unauthenticated', async () => {
+  const user = await createUser('mw-bearer-pwreset')
+  const device = await createDesktopDevice('mw-bearer-pwreset-dev', user.id)
+  const iat = Math.floor(Date.now() / 1000) - 3600
+  const token = jwt.sign({ id: user.id, username: user.username, admin: user.admin, desktopDeviceId: device.id, iat }, JWT_SECRET, { expiresIn: '400d' })
+  await db.updateTable('users').set({ password_changed_at: new Date() }).where('id', '=', user.id).execute()
+  const res = await appWithAuth().request('/me', bearer(token))
+  assert.equal(res.status, 401)
+})
+
+test('a malformed Authorization header is ignored, not an error', async () => {
+  const res = await appWithAuth().request('/me', { headers: { authorization: 'Basic abc' } })
+  assert.equal(res.status, 401)
+})
+
+test('the cookie wins when both cookie and Bearer are sent', async () => {
+  const cookieUser = await createUser('mw-both-cookie')
+  const bearerUser = await createUser('mw-both-bearer')
+  const device = await createDesktopDevice('mw-both-dev', bearerUser.id)
+  const cookieToken = jwt.sign({ id: cookieUser.id, username: cookieUser.username, admin: false }, JWT_SECRET, { expiresIn: '14d' })
+  const res = await appWithAuth().request('/me', {
+    headers: { cookie: `auth=${cookieToken}`, authorization: `Bearer ${desktopToken(bearerUser, device.id)}` },
+  })
+  assert.equal((await res.json()).user.id, cookieUser.id)
+})
+
+test('a desktop request sets last_seen_at', async () => {
+  const user = await createUser('mw-bearer-lastseen')
+  const device = await createDesktopDevice('mw-bearer-lastseen-dev', user.id)
+  await appWithAuth().request('/me', bearer(desktopToken(user, device.id)))
+  const row = await db.selectFrom('desktop_devices').select('last_seen_at').where('id', '=', device.id).executeTakeFirstOrThrow()
+  assert.ok(row.last_seen_at instanceof Date)
 })

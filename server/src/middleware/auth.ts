@@ -3,6 +3,7 @@ import { getCookie } from 'hono/cookie'
 import jwt from 'jsonwebtoken'
 import { authService } from '../services/authService.js'
 import { jukeboxDeviceService } from '../services/jukeboxDeviceService.js'
+import { desktopDeviceService } from '../services/desktopDeviceService.js'
 import type { Variables } from '../types.js'
 
 const JWT_SECRET = process.env.BEMUSED_JWT_SECRET || 'default-secret-change-me'
@@ -13,13 +14,17 @@ interface JWTPayload {
   admin: boolean
   iat: number
   deviceId?: number
+  desktopDeviceId?: number
 }
 
 type AppContext = Context<{ Variables: Variables }>
 
 // Middleware to extract and verify JWT from cookie
 export async function authMiddleware(c: AppContext, next: Next) {
-  const token = getCookie(c, 'auth')
+  // Browsers authenticate with the httpOnly cookie; the desktop player has no
+  // cookie jar and sends its device token as a Bearer header instead. The
+  // cookie wins if both are present.
+  const token = getCookie(c, 'auth') ?? bearerToken(c.req.header('authorization'))
 
   if (!token) {
     await next()
@@ -62,8 +67,19 @@ export async function authMiddleware(c: AppContext, next: Next) {
     deviceRevoked = !device
   }
 
+  // Desktop player tokens carry a desktopDeviceId claim; same revocation
+  // model as jukebox devices (delete the desktop_devices row).
+  let desktopDevice: Awaited<ReturnType<typeof desktopDeviceService.findById>> | undefined
+  if (decoded.desktopDeviceId != null) {
+    desktopDevice = await desktopDeviceService.findById(decoded.desktopDeviceId)
+    if (!desktopDevice) deviceRevoked = true
+  }
+
   if (user && !passwordChangedAfterToken && !deviceRevoked) {
     c.set('user', user)
+    if (desktopDevice) {
+      await desktopDeviceService.touchIfStale(desktopDevice.id, desktopDevice.last_seen_at)
+    }
   }
 
   if (user && !passwordChangedAfterToken && !deviceRevoked && decoded.deviceId != null) {
@@ -111,4 +127,9 @@ export async function requireOwnJukeboxDevice(c: AppContext, next: Next) {
   }
 
   await next()
+}
+
+function bearerToken(header: string | undefined): string | undefined {
+  const match = header?.match(/^Bearer\s+(\S+)$/i)
+  return match?.[1]
 }
