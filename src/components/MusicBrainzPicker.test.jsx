@@ -1,5 +1,6 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render as rtlRender, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import MusicBrainzPicker from './MusicBrainzPicker';
 import { apiService } from '../services/api';
 
@@ -10,6 +11,8 @@ vi.mock('../services/api', () => ({
     searchMusicbrainzRecording: vi.fn(),
   },
 }));
+
+const render = (ui) => rtlRender(ui, { wrapper: MemoryRouter });
 
 describe('MusicBrainzPicker', () => {
   test('shows a link and status when a value is set', () => {
@@ -87,6 +90,19 @@ describe('MusicBrainzPicker', () => {
     expect(screen.getByRole('link', { name: 'Overtone' })).toHaveAttribute(
       'href',
       'https://patf.com/overtone/entity/abc-123'
+    );
+  });
+
+  test('clicking the Overtone link opens an in-app modal instead of a new tab', async () => {
+    const user = userEvent.setup();
+    render(
+      <MusicBrainzPicker entityType="release" value="xyz-789" pending={false} onChange={vi.fn()} />
+    );
+    expect(screen.queryByTitle('Overtone')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: 'Overtone' }));
+    expect(screen.getByTitle('Overtone')).toHaveAttribute(
+      'src',
+      'https://patf.com/overtone/release/xyz-789'
     );
   });
 

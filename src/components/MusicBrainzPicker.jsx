@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { overtoneUrl } from '../utils/overtoneUrl';
 import MusicBrainzModal from './MusicBrainzModal';
+import OvertoneModal from './OvertoneModal';
 
 const MB_URL_BASE = {
   artist: 'https://musicbrainz.org/artist/',
@@ -26,6 +28,8 @@ const MusicBrainzPicker = ({ entityType, value, mbidStatus, searchDefault, artis
   const [searchError, setSearchError] = useState(null);
   const [pickedName, setPickedName] = useState(null);
   const [showMusicBrainz, setShowMusicBrainz] = useState(false);
+  const [showOvertone, setShowOvertone] = useState(false);
+  const navigate = useNavigate();
 
   const handleUse = () => {
     if (!pasteText.trim()) return;
@@ -100,6 +104,11 @@ const MusicBrainzPicker = ({ entityType, value, mbidStatus, searchDefault, artis
           </a>
           <a
             href={overtoneUrl(displayId(value), entityType)}
+            onClick={(e) => {
+              if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+              e.preventDefault();
+              setShowOvertone(true);
+            }}
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: '#3b82f6', fontSize: '0.875rem', marginLeft: '0.5rem' }}
@@ -110,6 +119,13 @@ const MusicBrainzPicker = ({ entityType, value, mbidStatus, searchDefault, artis
             <MusicBrainzModal
               url={`${MB_URL_BASE[entityType]}${displayId(value)}`}
               onClose={() => setShowMusicBrainz(false)}
+            />
+          )}
+          {showOvertone && (
+            <OvertoneModal
+              url={overtoneUrl(displayId(value), entityType)}
+              onClose={() => setShowOvertone(false)}
+              onNavigate={navigate}
             />
           )}
         </>
