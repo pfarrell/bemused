@@ -2,12 +2,15 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../stores/playerStore';
+import { useProfileFilterStore } from '../stores/profileFilterStore';
+import { parseSearchCommand, runSearchCommand } from '../utils/searchCommands';
 
 const SearchBar = ({ onSearch, className = "" }) => {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const closeDrawer = usePlayerStore((s) => s.closeDrawer);
+  const activeProfileId = useProfileFilterStore((s) => s.activeProfileId);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -19,6 +22,16 @@ const SearchBar = ({ onSearch, className = "" }) => {
     }
 
     closeDrawer();
+
+    // "play artist|album|collection|playlist <name>" plays the top match
+    // instead of showing results (GH #75). On no match the text stays put so
+    // it can be corrected.
+    const command = parseSearchCommand(query);
+    if (command) {
+      const result = await runSearchCommand(command, { profileId: activeProfileId, navigate });
+      if (result.status === 'playing') setQuery('');
+      return;
+    }
 
     if (onSearch) {
       onSearch(query);
