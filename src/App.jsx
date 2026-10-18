@@ -43,7 +43,7 @@ import AdminNew from './pages/AdminNew';
 import AdminDuplicateAlbums from './pages/AdminDuplicateAlbums';
 import AdminDuplicateTracks from './pages/AdminDuplicateTracks';
 import TagPage from './pages/TagPage';
-import MicTest from './pages/MicTest';
+import DriveMode from './pages/DriveMode';
 import ProtectedRoute from './components/ProtectedRoute';
 import MusicPlayerWrapper from './components/player/MusicPlayerWrapper';
 import NowPlaying from './components/NowPlaying';
@@ -298,7 +298,7 @@ function App() {
                       <Route path="/collections" element={<Collections />} />
                       <Route path="/collection/:id" element={<Collection />} />
                       <Route path="/tags/:name" element={<TagPage />} />
-                      <Route path="/mic-test" element={<MicTest />} />
+                      <Route path="/drive" element={<DriveMode />} />
                       <Route path="/admin/collection/:id" element={<AdminCollection />} />
                       <Route path="/admin/artist/:id" element={
                         <ProtectedRoute requireAdmin>

@@ -50,6 +50,17 @@ const computeNextIndex = ({ playbackMode, shuffleHistory, playlist, currentTrack
 // first track, while we still can.
 const SILENT_AUDIO_DATA_URI = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
 
+const unlockAudioElement = (audioElement) => {
+  if (!audioElement) return;
+  audioElement.src = SILENT_AUDIO_DATA_URI;
+  audioElement.play()
+    .then(() => {
+      // Something real may have been loaded into it while play() was pending.
+      if (audioElement.src === SILENT_AUDIO_DATA_URI) audioElement.pause();
+    })
+    .catch(() => {});
+};
+
 const standbyMatchesTarget = (standby, target) => !!standby && !!target && standby.src.endsWith(target.url);
 
 export const usePlayerStore = create((set, get) => ({
@@ -169,15 +180,24 @@ export const usePlayerStore = create((set, get) => ({
       if (get().currentTrackIndex === index) set({ isPlaying: false });
     });
     if (!standbyUnlocked) {
-      const standby = get().getStandbyAudio();
-      if (standby) {
-        standby.src = SILENT_AUDIO_DATA_URI;
-        standby.play().then(() => standby.pause()).catch(() => {});
-      }
+      unlockAudioElement(get().getStandbyAudio());
       set({ standbyUnlocked: true });
     }
     get().trimQueueHistory();
     get().syncNextTrackIndex();
+  },
+
+  // For a gesture whose playback only starts after async work (a voice
+  // command's search, say): unlock any element that hasn't played yet while
+  // we're still inside the gesture. The active element is only touched before
+  // anything has ever been loaded into it, so a real track is never replaced.
+  unlockForGesture: () => {
+    const { currentTrack, standbyUnlocked } = get();
+    if (!currentTrack) unlockAudioElement(get().getActiveAudio());
+    if (!standbyUnlocked) {
+      unlockAudioElement(get().getStandbyAudio());
+      set({ standbyUnlocked: true });
+    }
   },
 
   togglePlayPause: () => {

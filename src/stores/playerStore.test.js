@@ -1026,3 +1026,57 @@ describe('queue history trimming', () => {
     expect(state.currentTrackIndex).toBeLessThanOrEqual(MAX_QUEUE_HISTORY);
   });
 });
+
+describe('unlockForGesture', () => {
+  test('plays a silent clip on both elements when nothing has played yet, then pauses them', async () => {
+    const active = mockAudioElement();
+    const standby = mockAudioElement();
+    usePlayerStore.setState({ audioElementA: active, audioElementB: standby, activeSlot: 'a' });
+
+    usePlayerStore.getState().unlockForGesture();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    for (const el of [active, standby]) {
+      expect(el.src).toMatch(/^data:audio\/wav/);
+      expect(el.play).toHaveBeenCalled();
+      expect(el.pause).toHaveBeenCalled();
+    }
+    expect(usePlayerStore.getState().standbyUnlocked).toBe(true);
+  });
+
+  test('leaves the active element alone once a track has been loaded into it', () => {
+    const active = mockAudioElement();
+    active.src = '/stream/1';
+    usePlayerStore.setState({ audioElementA: active, audioElementB: mockAudioElement(), activeSlot: 'a', currentTrack: track(1) });
+
+    usePlayerStore.getState().unlockForGesture();
+
+    expect(active.src).toBe('/stream/1');
+    expect(active.play).not.toHaveBeenCalled();
+  });
+
+  test('leaves the standby element alone once it has been unlocked', () => {
+    const standby = mockAudioElement();
+    usePlayerStore.setState({ audioElementA: mockAudioElement(), audioElementB: standby, activeSlot: 'a', standbyUnlocked: true });
+
+    usePlayerStore.getState().unlockForGesture();
+
+    expect(standby.play).not.toHaveBeenCalled();
+  });
+
+  test('does not pause an element whose source was replaced before the silent clip started', async () => {
+    const active = mockAudioElement();
+    let resolvePlay;
+    active.play = vi.fn(() => new Promise((resolve) => { resolvePlay = resolve; }));
+    usePlayerStore.setState({ audioElementA: active, audioElementB: mockAudioElement(), activeSlot: 'a' });
+
+    usePlayerStore.getState().unlockForGesture();
+    active.src = '/stream/7';
+    resolvePlay();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(active.pause).not.toHaveBeenCalled();
+  });
+});
