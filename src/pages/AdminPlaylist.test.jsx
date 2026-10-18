@@ -15,6 +15,7 @@ vi.mock('../services/api', () => ({
     reorderPlaylistTracks: vi.fn(),
     downloadPlaylistImage: vi.fn(),
     search: vi.fn(),
+    getPlaylistTags: vi.fn(() => Promise.resolve({ data: [{ id: 3, name: 'kids' }] })),
     getImageUrl: () => 'http://example.com/image.jpg',
   },
 }));
@@ -185,4 +186,10 @@ describe('AdminPlaylist — unsavedChangesStore registration', () => {
     );
     await waitFor(() => expect(useUnsavedChangesStore.getState().hasUnsavedChanges).toBe(false));
   });
+});
+
+test('shows the playlist\'s tags', async () => {
+  renderAdminPlaylist();
+  expect(await screen.findByText('#kids')).toBeInTheDocument();
+  expect(apiService.getPlaylistTags).toHaveBeenCalledWith(20);
 });

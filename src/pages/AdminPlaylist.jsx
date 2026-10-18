@@ -7,6 +7,7 @@ import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import { useEntitySearch } from '../hooks/useEntitySearch';
 import EntitySearchPicker from '../components/admin/EntitySearchPicker';
 import ReorderableList from '../components/admin/ReorderableList';
+import TagsSection from '../components/TagsSection';
 
 const PlaylistTrackRowContent = ({ track, index, onDelete }) => (
   <>
@@ -266,6 +267,12 @@ export default function AdminPlaylist() {
             />
           </div>
         )}
+
+        {/* Tags — what a profile filter matches this playlist against */}
+        <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'var(--color-bg-surface)', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: '0.5rem', marginTop: 0 }}>Tags</h3>
+          <TagsSection entityType="playlist" entityId={parseInt(id)} isLoggedIn={true} />
+        </div>
 
         {/* Image Download Section */}
         <div style={{

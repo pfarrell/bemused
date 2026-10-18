@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import { test, after } from 'node:test'
 import assert from 'node:assert/strict'
-import { createArtist, createAlbum, createTrack, createTag, tagAlbum, tagArtist, tagTrack, createPlaylist, createCollection, cleanupFixtures } from '../test/fixtures.js'
+import { createArtist, createAlbum, createTrack, createTag, tagAlbum, tagArtist, tagTrack, createPlaylist, createCollection, tagPlaylist, tagCollection, addAlbumToCollection, cleanupFixtures } from '../test/fixtures.js'
 import { searchService } from './searchService.js'
 
 after(cleanupFixtures)
@@ -23,23 +23,27 @@ test('runUnionSearch with tagIds only matches albums/artists carrying one of tho
   assert.equal(ids.includes(nonMatchingAlbum.id), false)
 })
 
-test('runUnionSearch with an empty tagIds array drops albums/artists but keeps playlists/collections', async () => {
-  // Intentional: a profile can end up with zero tags (e.g. its last tag was
-  // deleted, cascading through profile_tags), and playlists/collections have
-  // no tag concept at all — they must still come back even when the tag
-  // filter matches nothing. Only the tag-joined Album/Artist branches go empty.
+test('runUnionSearch with an empty tagIds array drops every type, playlists/collections included', async () => {
+  // A profile can end up with zero tags (e.g. its last tag was deleted,
+  // cascading through profile_tags) — that profile matches nothing, and
+  // playlists/collections are tag-filtered now too.
   const artist = await createArtist('search-emptytags-artist')
   const album = await createAlbum('search-emptytags-album-zzzemptytags', artist.id)
   await createTrack('search-emptytags-track', album.id, artist.id)
   const playlist = await createPlaylist('search-emptytags-playlist-zzzemptytags')
+  const collection = await createCollection('search-emptytags-collection-zzzemptytags')
+
+  const unfiltered = await searchService.runUnionSearch('%zzzemptytags%', 'zzzemptytags', false, 30, 0, null)
+  assert.ok(unfiltered.some((r: any) => r.model_type === 'Playlist' && r.id === playlist.id))
+  assert.ok(unfiltered.some((r: any) => r.model_type === 'Collection' && r.id === collection.id))
 
   const rows = await searchService.runUnionSearch('%zzzemptytags%', 'zzzemptytags', false, 30, 0, [])
-
-  assert.ok(rows.some((r: any) => r.model_type === 'Playlist' && r.id === playlist.id))
+  assert.equal(rows.some((r: any) => r.model_type === 'Playlist' && r.id === playlist.id), false)
+  assert.equal(rows.some((r: any) => r.model_type === 'Collection' && r.id === collection.id), false)
   assert.equal(rows.some((r: any) => r.model_type === 'Album' && r.id === album.id), false)
 })
 
-test('countRankedResults with an empty tagIds array zeroes albums/artists but still counts playlists', async () => {
+test('countRankedResults with an empty tagIds array zeroes every type', async () => {
   const artist = await createArtist('search-emptytags-count-artist')
   const album = await createAlbum('search-emptytags-count-album-zzzemptycount', artist.id)
   await createTrack('search-emptytags-count-track', album.id, artist.id)
@@ -47,31 +51,57 @@ test('countRankedResults with an empty tagIds array zeroes albums/artists but st
 
   const counts = await searchService.countRankedResults('%zzzemptycount%', 'zzzemptycount', false, [])
 
-  assert.equal(counts.Album, 0)
-  assert.equal(counts.Artist, 0)
-  assert.equal(counts.Playlist, 1)
+  assert.deepEqual(counts, { Album: 0, Artist: 0, Playlist: 0, Collection: 0 })
 })
 
-test('runUnionSearch never filters Playlist/Collection results by tagIds', async () => {
-  // Playlists/collections have no tag concept — same rows come back whether
-  // tagIds is null or an array that matches nothing else, as long as the
-  // playlist/collection name itself matches the query. This is a smoke
-  // check that the tag join was only added to the Album/Artist branches.
-  // A real playlist/collection fixture is required here — without one,
-  // both sides are just empty arrays and the comparison below is vacuous
-  // (it would pass even if the tag join incorrectly leaked into these
-  // branches and excluded everything).
-  const playlist = await createPlaylist('search-tagids-smoke-playlist-zzzsearchsmoke')
-  const collection = await createCollection('search-tagids-smoke-collection-zzzsearchsmoke')
+test('runUnionSearch with tagIds keeps only playlists carrying one of those tags', async () => {
+  const tag = await createTag('search-playlist-tag')
+  const tagged = await createPlaylist('search-playlist-tagged-zzzplaylisttag')
+  const untagged = await createPlaylist('search-playlist-untagged-zzzplaylisttag')
+  await tagPlaylist(tagged.id, tag.id)
 
-  const unfiltered = await searchService.runUnionSearch('%zzzsearchsmoke%', 'zzzsearchsmoke', false, 30, 0, null)
-  const withTag = await searchService.runUnionSearch('%zzzsearchsmoke%', 'zzzsearchsmoke', false, 30, 0, [999999999])
-  const playlistsUnfiltered = unfiltered.filter((r: any) => r.model_type === 'Playlist' || r.model_type === 'Collection')
-  const playlistsWithTag = withTag.filter((r: any) => r.model_type === 'Playlist' || r.model_type === 'Collection')
-  assert.deepEqual(playlistsUnfiltered, playlistsWithTag)
+  for (const exactOnly of [false, true]) {
+    const rows = await searchService.runUnionSearch('%zzzplaylisttag%', exactOnly ? '' : 'zzzplaylisttag', exactOnly, 30, 0, [tag.id])
+    assert.ok(rows.some((r: any) => r.model_type === 'Playlist' && r.id === tagged.id), `exactOnly=${exactOnly}`)
+    assert.equal(rows.some((r: any) => r.model_type === 'Playlist' && r.id === untagged.id), false, `exactOnly=${exactOnly}`)
+  }
+})
 
-  assert.ok(withTag.some((r: any) => r.model_type === 'Playlist' && r.id === playlist.id))
-  assert.ok(withTag.some((r: any) => r.model_type === 'Collection' && r.id === collection.id))
+test('runUnionSearch with tagIds keeps collections tagged directly or containing a matching album', async () => {
+  const tag = await createTag('search-collection-tag')
+  const artist = await createArtist('search-collection-artist')
+  const taggedAlbum = await createAlbum('search-collection-tagged-album', artist.id)
+  const plainAlbum = await createAlbum('search-collection-plain-album', artist.id)
+  await tagAlbum(taggedAlbum.id, tag.id)
+
+  const taggedDirectly = await createCollection('search-collection-direct-zzzcollectiontag')
+  await tagCollection(taggedDirectly.id, tag.id)
+  const viaAlbum = await createCollection('search-collection-viaalbum-zzzcollectiontag')
+  await addAlbumToCollection(viaAlbum.id, plainAlbum.id)
+  await addAlbumToCollection(viaAlbum.id, taggedAlbum.id)
+  const noMatch = await createCollection('search-collection-nomatch-zzzcollectiontag')
+  await addAlbumToCollection(noMatch.id, plainAlbum.id)
+
+  const rows = await searchService.runUnionSearch('%zzzcollectiontag%', 'zzzcollectiontag', false, 30, 0, [tag.id])
+  const ids = rows.filter((r: any) => r.model_type === 'Collection').map((r: any) => r.id)
+  assert.ok(ids.includes(taggedDirectly.id))
+  assert.ok(ids.includes(viaAlbum.id))
+  assert.equal(ids.includes(noMatch.id), false)
+
+  const counts = await searchService.countRankedResults('%zzzcollectiontag%', 'zzzcollectiontag', false, [tag.id])
+  assert.equal(counts.Collection, 2)
+})
+
+test('runUnionSearch matches a collection via an album whose artist carries the tag', async () => {
+  const tag = await createTag('search-collection-artisttag-tag')
+  const artist = await createArtist('search-collection-artisttag-artist')
+  const album = await createAlbum('search-collection-artisttag-album', artist.id)
+  await tagArtist(artist.id, tag.id)
+  const collection = await createCollection('search-collection-artisttag-zzzcollartisttag')
+  await addAlbumToCollection(collection.id, album.id)
+
+  const rows = await searchService.runUnionSearch('%zzzcollartisttag%', 'zzzcollartisttag', false, 30, 0, [tag.id])
+  assert.ok(rows.some((r: any) => r.model_type === 'Collection' && r.id === collection.id))
 })
 
 test('findTrackIds with tagIds only returns tracks carrying one of those tags', async () => {

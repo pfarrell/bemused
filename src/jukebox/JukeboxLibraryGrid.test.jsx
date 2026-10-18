@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import JukeboxLibraryGrid from './JukeboxLibraryGrid';
 
@@ -11,6 +11,7 @@ vi.mock('../services/api', () => ({
 }));
 
 import { apiService } from '../services/api';
+import { useProfileFilterStore } from '../stores/profileFilterStore';
 
 const playlists = [
   { id: 1, name: 'Zebra', track_count: 3, image_path: null, last_activity: '2026-10-01T00:00:00Z' },
@@ -22,6 +23,7 @@ const tileNames = () => screen.getAllByRole('button').map((b) => b.textContent.r
 
 beforeEach(() => {
   vi.clearAllMocks();
+  useProfileFilterStore.getState().clearProfile();
   apiService.getPlaylists.mockResolvedValue({ data: playlists });
 });
 
@@ -69,4 +71,24 @@ test('an item with a null name does not crash the grid and sorts first', async (
   render(<JukeboxLibraryGrid kind="playlists" onSelectPlaylist={vi.fn()} />);
   await screen.findByText('Zebra');
   expect(tileNames()).toEqual(['2 tracks', 'Zebra3 tracks']);
+});
+
+test('passes the active profile filter and reloads when it changes', async () => {
+  useProfileFilterStore.getState().setProfile(4);
+  render(<JukeboxLibraryGrid kind="playlists" onSelectPlaylist={vi.fn()} />);
+  await screen.findByText('Zebra');
+  expect(apiService.getPlaylists).toHaveBeenLastCalledWith(4);
+
+  act(() => useProfileFilterStore.getState().clearProfile());
+  await screen.findByText('Zebra');
+  expect(apiService.getPlaylists).toHaveBeenLastCalledWith(null);
+  expect(apiService.getPlaylists).toHaveBeenCalledTimes(2);
+});
+
+test('collections also honor the profile filter', async () => {
+  useProfileFilterStore.getState().setProfile(4);
+  apiService.getCollections.mockResolvedValue({ data: [] });
+  render(<JukeboxLibraryGrid kind="collections" onSelectCollection={vi.fn()} />);
+  expect(await screen.findByText('No collections match this profile')).toBeInTheDocument();
+  expect(apiService.getCollections).toHaveBeenCalledWith(4);
 });

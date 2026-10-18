@@ -3,7 +3,7 @@ import { test, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { Hono } from 'hono'
 import search from './search.js'
-import { createTag, createProfile, createArtist, createAlbum, createTrack, createPlaylist, tagAlbum, cleanupFixtures } from '../test/fixtures.js'
+import { createTag, createProfile, createArtist, createAlbum, createTrack, createPlaylist, tagAlbum, tagPlaylist, cleanupFixtures } from '../test/fixtures.js'
 
 after(cleanupFixtures)
 
@@ -19,9 +19,8 @@ const appWithUser = (user: any = { id: 1, admin: false }) => {
 }
 
 // An unrecognized profileId is "no match", never an error — matching
-// /albums/random, /albums/recent and /artists/random. It filters out
-// albums/artists/tracks but must leave playlists/collections alone, since
-// those have no tag concept.
+// /albums/random, /albums/recent and /artists/random. It filters out every
+// type, playlists/collections included.
 async function seedTaggableAndUntaggable(label: string, substring: string) {
   const artist = await createArtist(`${label}-artist`)
   const album = await createAlbum(`${label}-album-${substring}`, artist.id)
@@ -30,25 +29,25 @@ async function seedTaggableAndUntaggable(label: string, substring: string) {
   return { album, playlist }
 }
 
-test('GET /search?profileId= for a nonexistent profile returns 200, dropping albums but keeping playlists', async () => {
+test('GET /search?profileId= for a nonexistent profile returns 200, dropping albums and playlists', async () => {
   const { album, playlist } = await seedTaggableAndUntaggable('search-route-noprofile', 'zzzroutenoprofile')
 
   const res = await appWithUser().request('/search?q=zzzroutenoprofile&profileId=999999999')
 
   assert.equal(res.status, 200)
   const body = await res.json()
-  assert.ok(body.results.some((r: any) => r.type === 'playlist' && r.data.id === playlist.id))
+  assert.equal(body.results.some((r: any) => r.type === 'playlist' && r.data.id === playlist.id), false)
   assert.equal(body.results.some((r: any) => r.type === 'album' && r.data.id === album.id), false)
 })
 
-test('GET /search?profileId= with a non-numeric value returns 200, dropping albums but keeping playlists', async () => {
+test('GET /search?profileId= with a non-numeric value returns 200, dropping albums and playlists', async () => {
   const { album, playlist } = await seedTaggableAndUntaggable('search-route-nanprofile', 'zzzroutenanprofile')
 
   const res = await appWithUser().request('/search?q=zzzroutenanprofile&profileId=not-a-number')
 
   assert.equal(res.status, 200)
   const body = await res.json()
-  assert.ok(body.results.some((r: any) => r.type === 'playlist' && r.data.id === playlist.id))
+  assert.equal(body.results.some((r: any) => r.type === 'playlist' && r.data.id === playlist.id), false)
   assert.equal(body.results.some((r: any) => r.type === 'album' && r.data.id === album.id), false)
   assert.deepEqual(body.tracks, [])
 })
@@ -69,4 +68,20 @@ test('GET /search?profileId= for a real profile returns only albums carrying one
   const body = await res.json()
   assert.ok(body.results.some((r: any) => r.type === 'album' && r.data.id === tagged.id))
   assert.equal(body.results.some((r: any) => r.type === 'album' && r.data.id === untagged.id), false)
+})
+
+test('GET /search?profileId= for a real profile returns only playlists carrying one of its tags', async () => {
+  const tag = await createTag('search-route-profile-pl-tag')
+  const profile = await createProfile('search-route-profile-pl', [tag.id])
+  const tagged = await createPlaylist('search-route-profile-pl-tagged-zzzrouteplprofile')
+  const untagged = await createPlaylist('search-route-profile-pl-untagged-zzzrouteplprofile')
+  await tagPlaylist(tagged.id, tag.id)
+
+  const res = await appWithUser().request(`/search?q=zzzrouteplprofile&profileId=${profile.id}`)
+
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.ok(body.results.some((r: any) => r.type === 'playlist' && r.data.id === tagged.id))
+  assert.equal(body.results.some((r: any) => r.type === 'playlist' && r.data.id === untagged.id), false)
+  assert.equal(body.resultCounts.playlist, 1)
 })

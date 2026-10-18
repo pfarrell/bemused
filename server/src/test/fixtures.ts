@@ -77,6 +77,15 @@ export const tagArtist = (artistId: number, tagId: number) =>
 export const tagTrack = (trackId: number, tagId: number) =>
   db.insertInto('tags_tracks').values({ track_id: trackId, tag_id: tagId }).execute()
 
+export const tagPlaylist = (playlistId: number, tagId: number) =>
+  db.insertInto('playlists_tags').values({ playlist_id: playlistId, tag_id: tagId }).execute()
+
+export const tagCollection = (collectionId: number, tagId: number) =>
+  db.insertInto('collections_tags').values({ collection_id: collectionId, tag_id: tagId }).execute()
+
+export const addAlbumToCollection = (collectionId: number, albumId: number) =>
+  db.insertInto('collection_albums').values({ collection_id: collectionId, album_id: albumId }).execute()
+
 export const createArtistImage = (
   artistId: number,
   { isPrimary = false, source = 'manual', status = 'active' }: { isPrimary?: boolean, source?: string, status?: string } = {}

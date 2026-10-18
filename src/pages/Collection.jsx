@@ -9,6 +9,7 @@ import AlbumStubCard from '../components/AlbumStubCard';
 import Loading from '../components/Loading';
 import Retry from '../components/Retry';
 import NotesSection from '../components/NotesSection';
+import TagsSection from '../components/TagsSection';
 import AboutSection from '../components/AboutSection';
 import PlayActionsMenu from '../components/PlayActionsMenu';
 import CoverCollage from '../components/CoverCollage';
@@ -178,6 +179,7 @@ export default function Collection() {
         </div>
       )}
 
+      <TagsSection entityType="collection" entityId={parseInt(id)} isLoggedIn={isAdmin} />
       <NotesSection entityType="collection" entityId={parseInt(id)} notes={notes || []} isLoggedIn={isAuthenticated} onChange={loadCollection} />
     </div>
   );

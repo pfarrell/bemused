@@ -6,6 +6,7 @@ import { apiService } from '../services/api';
 import { usePlayerStore } from '../stores/playerStore';
 import { useAuthStore } from '../stores/authStore';
 import Track from '../components/Track';
+import TagsSection from '../components/TagsSection';
 import Loading from '../components/Loading';
 import Retry from '../components/Retry';
 import PlayActionsMenu from '../components/PlayActionsMenu';
@@ -169,6 +170,8 @@ export default function Playlist() {
           </div>
         )}
       </div>
+
+      <TagsSection entityType="playlist" entityId={parseInt(id)} isLoggedIn={isAdmin} />
     </div>
   );
 }

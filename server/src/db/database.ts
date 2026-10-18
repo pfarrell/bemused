@@ -290,6 +290,18 @@ interface ProfileTagTable {
   tag_id: number
 }
 
+interface PlaylistTagTable {
+  id: Generated<number>
+  playlist_id: number
+  tag_id: number
+}
+
+interface CollectionTagTable {
+  id: Generated<number>
+  collection_id: number
+  tag_id: number
+}
+
 interface DiscoverySourceTable {
   id: Generated<number>
   name: string
@@ -475,6 +487,8 @@ export interface Database {
   albums_tags: AlbumTagTable
   artists_tags: ArtistTagTable
   tags_tracks: TrackTagTable
+  playlists_tags: PlaylistTagTable
+  collections_tags: CollectionTagTable
   mb_tags: MbTagTable
   artist_mb_tags: ArtistMbTagTable
   album_mb_tags: AlbumMbTagTable

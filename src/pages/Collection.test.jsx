@@ -11,6 +11,8 @@ vi.mock('../components/AlbumCard', () => ({ default: ({ album }) => <div>{album.
 vi.mock('../services/api', () => ({
   apiService: {
     getCollection: vi.fn(),
+    getCollectionTags: vi.fn(() => Promise.resolve({ data: [{ id: 3, name: 'kids' }] })),
+    getTags: vi.fn(() => Promise.resolve({ data: [] })),
     getImageUrl: (path) => (path ? `http://example.com/${path}` : null),
     getRandomScopeTracks: vi.fn(),
   },
@@ -301,4 +303,13 @@ describe('Collection page — cover collage', () => {
     expect(img).toHaveAttribute('src', 'http://example.com/cover.jpg');
     expect(img.style.cursor).toBe('zoom-in');
   });
+});
+
+test('admins can manage the collection\'s tags on the collection page', async () => {
+  useAuthStore.setState({ isAdmin: true, isAuthenticated: true, user: { id: 1 } });
+  apiService.getCollection.mockResolvedValue({ data: { collection: baseCollection, albums: [], notes: [], summary: null } });
+  renderCollection();
+  expect(await screen.findByText('#kids')).toBeInTheDocument();
+  expect(screen.getByPlaceholderText('add tag…')).toBeInTheDocument();
+  expect(apiService.getCollectionTags).toHaveBeenCalledWith(3);
 });

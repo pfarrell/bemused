@@ -12,6 +12,7 @@ import { generatePlaylist } from '../services/playlistGeneratorService.js'
 import { suggestPlaylistName } from '../services/playlistNameSuggesterService.js'
 import { lastActivityByIds } from '../services/listActivityService.js'
 import { recentPlaylistsService } from '../services/recentPlaylistsService.js'
+import { matchingPlaylistIds, resolveProfileTagIds } from '../services/profileFilter.js'
 import { checkAndRecordGeneration, MAX_GENERATIONS_PER_WINDOW } from '../services/playlistGenerationRateLimiter.js'
 
 const playlists = new Hono<{ Variables: Variables }>()
@@ -203,12 +204,18 @@ playlists.get('/:id', async (c) => {
   return c.json({ playlist, tracks })
 })
 
-export async function listPlaylists() {
-  const rows = await db
+// tagIds non-null limits the list to playlists matching a profile (see
+// profileFilter.ts); null lists everything.
+export async function listPlaylists(tagIds: number[] | null = null) {
+  const matchingIds = tagIds ? await matchingPlaylistIds(tagIds) : null
+  if (matchingIds && matchingIds.length === 0) return []
+
+  let query = db
     .selectFrom('playlists')
     .selectAll()
     .where('auto_generated', 'is', null)
-    .execute()
+  if (matchingIds) query = query.where('id', 'in', matchingIds)
+  const rows = await query.execute()
 
   if (rows.length === 0) return []
 
@@ -246,10 +253,11 @@ export async function listPlaylists() {
   }))
 }
 
-// GET /playlists — gated: the full playlist list must not become
+// GET /playlists?profileId=N — gated: the full playlist list must not become
 // browsable without an account just because a single playlist (/:id,
-// below) is public.
-playlists.get('/', requireAuth, async (c) => c.json(await listPlaylists()))
+// below) is public. An unrecognized profileId means "no match", never an error.
+playlists.get('/', requireAuth, async (c) =>
+  c.json(await listPlaylists(await resolveProfileTagIds(c.req.query('profileId')))))
 
 // Shared by POST /playlists and POST /playlists/generate's autosave.
 export const MAX_PLAYLIST_TRACKS = 1000

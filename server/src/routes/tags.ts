@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { sql } from 'kysely'
 import { db } from '../db/database.js'
 import { requireAuth, requireAdmin } from '../middleware/auth.js'
 import type { Variables } from '../types.js'
@@ -226,5 +227,65 @@ tags.delete('/artist/:id/:tagName', requireAdmin, async (c) => {
 
   return c.json({ ok: true })
 })
+
+// Playlist and collection tags — same contract as the album/artist routes
+// above (GET is public, writes are admin-only), but one implementation for
+// both since the two join tables share a shape. These tags are what a profile
+// filter matches playlists/collections against (see profileFilter.ts).
+const OWNER_TAG_TABLES = {
+  playlist: { table: 'playlists_tags', column: 'playlist_id' },
+  collection: { table: 'collections_tags', column: 'collection_id' },
+} as const
+
+for (const [kind, { table, column }] of Object.entries(OWNER_TAG_TABLES)) {
+  const listTags = async (ownerId: number) => {
+    const { rows } = await sql<{ id: number; name: string }>`
+      SELECT tags.id, tags.name FROM ${sql.table(table)} jt
+      INNER JOIN tags ON tags.id = jt.tag_id
+      WHERE ${sql.ref(`jt.${column}`)} = ${ownerId}
+      ORDER BY tags.name ASC
+    `.execute(db)
+    return rows
+  }
+
+  // GET /tags/playlist/:id, /tags/collection/:id
+  tags.get(`/${kind}/:id`, async (c) => {
+    const ownerId = parseInt(c.req.param('id'))
+    if (Number.isNaN(ownerId)) return c.json({ error: 'Invalid id' }, 400)
+    return c.json(await listTags(ownerId))
+  })
+
+  // POST /tags/playlist/:id, /tags/collection/:id — add a tag (by name)
+  tags.post(`/${kind}/:id`, requireAdmin, async (c) => {
+    const ownerId = parseInt(c.req.param('id'))
+    if (Number.isNaN(ownerId)) return c.json({ error: 'Invalid id' }, 400)
+    const body = await c.req.json()
+    if (!body.name) return c.json({ error: 'name required' }, 400)
+
+    const tagId = await upsertTag(body.name)
+    await sql`
+      INSERT INTO ${sql.table(table)} (${sql.ref(column)}, tag_id) VALUES (${ownerId}, ${tagId})
+      ON CONFLICT (${sql.ref(column)}, tag_id) DO NOTHING
+    `.execute(db)
+
+    return c.json(await listTags(ownerId))
+  })
+
+  // DELETE /tags/playlist/:id/:tagName, /tags/collection/:id/:tagName
+  tags.delete(`/${kind}/:id/:tagName`, requireAdmin, async (c) => {
+    const ownerId = parseInt(c.req.param('id'))
+    if (Number.isNaN(ownerId)) return c.json({ error: 'Invalid id' }, 400)
+    const tagName = slugifyTag(c.req.param('tagName'))
+
+    const tag = await db.selectFrom('tags').select('id').where('name', '=', tagName).executeTakeFirst()
+    if (!tag) return c.json({ error: 'Tag not found' }, 404)
+
+    await sql`
+      DELETE FROM ${sql.table(table)} WHERE ${sql.ref(column)} = ${ownerId} AND tag_id = ${tag.id}
+    `.execute(db)
+
+    return c.json({ ok: true })
+  })
+}
 
 export default tags

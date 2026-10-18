@@ -3,7 +3,7 @@ import type { Context } from 'hono'
 import { searchService, RESULT_LIMIT } from '../services/searchService.js'
 import { logService } from '../services/logService.js'
 import { extractIpAddress } from '../utils/requestIp.js'
-import { profilesService } from '../services/profilesService.js'
+import { resolveProfileTagIds } from '../services/profileFilter.js'
 
 const search = new Hono()
 
@@ -119,18 +119,10 @@ export async function handleSearchRequest(c: Context) {
   }
 
   const likeParam = `%${query}%`
-  const profileIdParam = c.req.query('profileId')
-  let tagIds: number[] | null = null
-  if (profileIdParam) {
-    const profileId = parseInt(profileIdParam)
-    // An unrecognized profileId means "no match", never an error — same as
-    // /albums/random, /albums/recent and /artists/random. A non-numeric value
-    // skips the query entirely (no point binding NaN); a numeric id that
-    // doesn't exist falls out of getTagIds() as an empty array on its own.
-    // Either way tagIds=[] filters Album/Artist/track results down to nothing
-    // while leaving Playlist/Collection results untouched.
-    tagIds = Number.isNaN(profileId) ? [] : await profilesService.getTagIds(profileId)
-  }
+  // An unrecognized profileId means "no match", never an error — same as
+  // /albums/random, /albums/recent and /artists/random; tagIds=[] filters
+  // every result type down to nothing.
+  const tagIds = await resolveProfileTagIds(c.req.query('profileId'))
 
   // Tracks are unpaginated and unlimited by design (the full match list is
   // fetched on page 1), and resultCounts reflects the query's total, which

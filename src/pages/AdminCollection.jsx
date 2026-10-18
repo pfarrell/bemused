@@ -8,6 +8,7 @@ import { useEntitySearch } from '../hooks/useEntitySearch';
 import WikipediaSlugInput from '../components/admin/WikipediaSlugInput';
 import EntitySearchPicker from '../components/admin/EntitySearchPicker';
 import ReorderableList from '../components/admin/ReorderableList';
+import TagsSection from '../components/TagsSection';
 import { handleSmallImageError } from '../utils/imageFallback';
 import { formatCount } from '../utils/formatters';
 
@@ -395,6 +396,12 @@ export default function AdminCollection() {
             />
           </div>
         )}
+
+        {/* Tags — what a profile filter matches this collection against */}
+        <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'var(--color-bg-surface)', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: '0.5rem', marginTop: 0 }}>Tags</h3>
+          <TagsSection entityType="collection" entityId={parseInt(id)} isLoggedIn={true} />
+        </div>
 
         {/* Image download */}
         <div style={{

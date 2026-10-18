@@ -4,24 +4,21 @@ import pg from 'pg'
 import { db, Database, pool } from '../db/database.js'
 import { streamBase } from '../db/streamUrl.js'
 import { countsService } from './countsService.js'
+import { albumTagMatchSql, playlistTagMatchSql, collectionTagMatchSql } from './profileFilter.js'
 
 const EXACT_MATCH_SCORE = 2.0
 const FUZZY_SIMILARITY_THRESHOLD = 0.24
 export const RESULT_LIMIT = 30
 
 function buildSearchClauses(exactOnly: boolean, tagParamIndex: number | null): { exactClauses: string; fuzzyClauses: string } {
-  // Artist branches join to the artist's own tag rows. Album branches match
-  // via EXISTS instead of a join: an album qualifies if it carries the tag
-  // itself OR its own artist (albums.artist_id) does — so tagging an artist
-  // surfaces all of that artist's albums, not just ones tagged directly.
-  // Playlist and Collection branches never get any tag filter; they have no
-  // tag concept.
-  const albumTagFilter = tagParamIndex
-    ? `AND (
-        EXISTS (SELECT 1 FROM albums_tags atag WHERE atag.album_id = a.id AND atag.tag_id = ANY($${tagParamIndex}))
-        OR EXISTS (SELECT 1 FROM artists_tags atag2 WHERE atag2.artist_id = a.artist_id AND atag2.tag_id = ANY($${tagParamIndex}))
-      )`
-    : ''
+  // Artist branches join to the artist's own tag rows. Album, Playlist and
+  // Collection branches use the shared predicates in profileFilter.ts (an
+  // album also matches via its artist's tags; a collection also matches via
+  // any album it contains).
+  const tagParam = `$${tagParamIndex}`
+  const albumTagFilter = tagParamIndex ? `AND ${albumTagMatchSql('a', tagParam)}` : ''
+  const playlistTagFilter = tagParamIndex ? `AND ${playlistTagMatchSql('playlists', tagParam)}` : ''
+  const collectionTagFilter = tagParamIndex ? `AND ${collectionTagMatchSql('collections', tagParam)}` : ''
   const artistTagJoin = tagParamIndex
     ? `INNER JOIN artists_tags stag ON stag.artist_id = a.id AND stag.tag_id = ANY($${tagParamIndex})`
     : ''
@@ -53,11 +50,13 @@ function buildSearchClauses(exactOnly: boolean, tagParamIndex: number | null): {
     (SELECT DISTINCT ON (id) 'Playlist' AS model_type, id, ${EXACT_MATCH_SCORE} AS similarity_score
       FROM playlists
       WHERE f_unaccent(lower(name)) ILIKE f_unaccent(lower($1))
+        ${playlistTagFilter}
       ORDER BY id)
     UNION ALL
     (SELECT DISTINCT ON (id) 'Collection' AS model_type, id, ${EXACT_MATCH_SCORE} AS similarity_score
       FROM collections
       WHERE f_unaccent(lower(name)) ILIKE f_unaccent(lower($1))
+        ${collectionTagFilter}
       ORDER BY id)
   `
 
@@ -103,6 +102,7 @@ function buildSearchClauses(exactOnly: boolean, tagParamIndex: number | null): {
         ROW_NUMBER() OVER(PARTITION BY id ORDER BY similarity(f_unaccent(lower(name)), f_unaccent(lower($2))) DESC) AS rn
       FROM playlists
       WHERE f_unaccent(lower(name)) % f_unaccent(lower($2))
+        ${playlistTagFilter}
     ) ranked WHERE rn = 1)
     UNION ALL
     (SELECT model_type, id, similarity_score FROM (
@@ -111,6 +111,7 @@ function buildSearchClauses(exactOnly: boolean, tagParamIndex: number | null): {
         ROW_NUMBER() OVER(PARTITION BY id ORDER BY similarity(f_unaccent(lower(name)), f_unaccent(lower($2))) DESC) AS rn
       FROM collections
       WHERE f_unaccent(lower(name)) % f_unaccent(lower($2))
+        ${collectionTagFilter}
     ) ranked WHERE rn = 1)
   `
 
@@ -160,12 +161,9 @@ export function createSearchService(db: Kysely<Database>) {
         throw new Error('runUnionSearch: limit and offset must be non-negative integers')
       }
 
-      // No early return for an empty tagIds array: `= ANY($n)` with an empty
-      // array matches zero rows in Postgres, so the Album/Artist branches
-      // (the only ones carrying the tag join) naturally come back empty while
-      // the Playlist/Collection branches — which have no tag concept and must
-      // never be filtered — still return their matches. Short-circuiting here
-      // would abandon the whole UNION and wrongly drop those too.
+      // An empty tagIds array needs no special case: `= ANY($n)` with an
+      // empty array matches zero rows in Postgres, so every branch comes
+      // back empty on its own.
       const tagParamIndex = tagIds ? (exactOnly ? 2 : 3) : null
       const { exactClauses, fuzzyClauses } = buildSearchClauses(exactOnly, tagParamIndex)
 
@@ -195,9 +193,7 @@ export function createSearchService(db: Kysely<Database>) {
     // so a plain GROUP BY over the raw rows would overcount anything that
     // matched both branches.
     async countRankedResults(likeParam: string, filteredQ: string, exactOnly: boolean, tagIds: number[] | null = null) {
-      // Same reasoning as runUnionSearch above: an empty tagIds array must
-      // zero out only the Album/Artist counts, not the Playlist/Collection
-      // ones, so the query runs as normal and `ANY($n)` does the filtering.
+      // Same as runUnionSearch above: `ANY($n)` handles an empty tagIds array.
       const tagParamIndex = tagIds ? (exactOnly ? 2 : 3) : null
       const { exactClauses, fuzzyClauses } = buildSearchClauses(exactOnly, tagParamIndex)
 
@@ -225,9 +221,6 @@ export function createSearchService(db: Kysely<Database>) {
     },
 
     async findTrackIds(likeParam: string, tagIds: number[] | null = null): Promise<number[]> {
-      // Safe to short-circuit here (unlike runUnionSearch/countRankedResults):
-      // this query only touches `tracks`, with no Playlist/Collection branches
-      // to accidentally wipe out.
       if (tagIds && tagIds.length === 0) return []
 
       // Mirrors the album EXISTS filter above: a track qualifies if it

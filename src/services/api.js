@@ -128,6 +128,12 @@ export const apiService = {
   removeTagFromAlbum: (id, tagName) => api.delete(`/tags/album/${id}/${encodeURIComponent(tagName)}`),
   addTagToArtist: (id, name) => api.post(`/tags/artist/${id}`, { name }),
   removeTagFromArtist: (id, tagName) => api.delete(`/tags/artist/${id}/${encodeURIComponent(tagName)}`),
+  getPlaylistTags: (id) => api.get(`/tags/playlist/${id}`),
+  addTagToPlaylist: (id, name) => api.post(`/tags/playlist/${id}`, { name }),
+  removeTagFromPlaylist: (id, tagName) => api.delete(`/tags/playlist/${id}/${encodeURIComponent(tagName)}`),
+  getCollectionTags: (id) => api.get(`/tags/collection/${id}`),
+  addTagToCollection: (id, name) => api.post(`/tags/collection/${id}`, { name }),
+  removeTagFromCollection: (id, tagName) => api.delete(`/tags/collection/${id}/${encodeURIComponent(tagName)}`),
   setDefaultProfile: (profileId) => api.put('/auth/default-profile', { profile_id: profileId }),
 
   // Profiles
@@ -244,7 +250,7 @@ export const apiService = {
   clearFailedUploads: () => api.delete('/admin/upload/failed'),
 
   // Playlists
-  getPlaylists: () => api.get('/playlists'),
+  getPlaylists: (profileId = null) => api.get(`/playlists${qs({ profileId })}`),
   getPlaylist: (id) => api.get(`/playlist/${id}`),
   createPlaylist: (name, trackIds) => api.post('/playlists', { name, track_ids: trackIds }),
   generatePlaylist: (prompt, size) => api.post('/playlists/generate', { prompt, size }),
@@ -256,7 +262,7 @@ export const apiService = {
   downloadPlaylistImage: (id, image_url, image_name) => api.post(`/admin/playlist/${id}/image`, { image_url, image_name }),
 
   // Collections
-  getCollections: () => api.get('/collections'),
+  getCollections: (profileId = null) => api.get(`/collections${qs({ profileId })}`),
   getCollection: (id) => api.get(`/collection/${id}`),
   createCollection: (name) => api.post('/collections', { name }),
   updateCollection: (id, data) => api.put(`/collection/${id}`, data),

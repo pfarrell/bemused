@@ -9,6 +9,8 @@ import { apiService } from '../services/api';
 vi.mock('../services/api', () => ({
   apiService: {
     getPlaylist: vi.fn(),
+    getPlaylistTags: vi.fn(() => Promise.resolve({ data: [{ id: 3, name: 'kids' }] })),
+    getTags: vi.fn(() => Promise.resolve({ data: [] })),
     getImageUrl: vi.fn(() => 'http://example.com/image.jpg'),
   },
 }));
@@ -255,4 +257,12 @@ describe('Playlist page — header context menu', () => {
 
     expect(screen.getByText('📤 Share')).toBeInTheDocument();
   });
+});
+
+test('admins can manage the playlist\'s tags on the playlist page', async () => {
+  useAuthStore.setState({ isAdmin: true, user: { id: 1 }, isAuthenticated: true });
+  renderPlaylist();
+  expect(await screen.findByText('#kids')).toBeInTheDocument();
+  expect(screen.getByPlaceholderText('add tag…')).toBeInTheDocument();
+  expect(apiService.getPlaylistTags).toHaveBeenCalledWith(20);
 });

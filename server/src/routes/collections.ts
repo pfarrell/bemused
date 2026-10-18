@@ -8,6 +8,7 @@ import { getCollectionSummary } from '../services/wikipedia.js'
 import { streamBase } from '../db/streamUrl.js'
 import { lastActivityByIds } from '../services/listActivityService.js'
 import { recentCollectionsService } from '../services/recentCollectionsService.js'
+import { matchingCollectionIds, resolveProfileTagIds } from '../services/profileFilter.js'
 import { requireAuth } from '../middleware/auth.js'
 import { loadOwned } from '../utils/http.js'
 import { downloadToDisk, ImageStorageError } from '../services/imageStorage.js'
@@ -25,9 +26,17 @@ function buildAlbum(a: any) {
   }
 }
 
-// GET /collections
+// GET /collections?profileId=N — with a profile, only collections matching it
+// (see profileFilter.ts). An unrecognized profileId means "no match", never
+// an error.
 collections.get('/', async (c) => {
-  const rows = await db.selectFrom('collections').selectAll().orderBy('name', 'asc').execute()
+  const tagIds = await resolveProfileTagIds(c.req.query('profileId'))
+  const matchingIds = tagIds ? await matchingCollectionIds(tagIds) : null
+  if (matchingIds && matchingIds.length === 0) return c.json([])
+
+  let query = db.selectFrom('collections').selectAll().orderBy('name', 'asc')
+  if (matchingIds) query = query.where('id', 'in', matchingIds)
+  const rows = await query.execute()
   if (rows.length === 0) return c.json([])
 
   const collectionIds = rows.map((r) => r.id)

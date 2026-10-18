@@ -2,7 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 
+const TAG_API = {
+  album: { get: 'getAlbumTags', add: 'addTagToAlbum', remove: 'removeTagFromAlbum' },
+  artist: { get: 'getArtistTags', add: 'addTagToArtist', remove: 'removeTagFromArtist' },
+  playlist: { get: 'getPlaylistTags', add: 'addTagToPlaylist', remove: 'removeTagFromPlaylist' },
+  collection: { get: 'getCollectionTags', add: 'addTagToCollection', remove: 'removeTagFromCollection' },
+};
+
 const TagsSection = ({ entityType, entityId, isLoggedIn }) => {
+  const tagApi = TAG_API[entityType];
   const [tags, setTags] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -12,8 +20,7 @@ const TagsSection = ({ entityType, entityId, isLoggedIn }) => {
 
   const fetchTags = async () => {
     try {
-      const fn = entityType === 'album' ? apiService.getAlbumTags : apiService.getArtistTags;
-      const res = await fn(entityId);
+      const res = await apiService[tagApi.get](entityId);
       setTags(res.data);
     } catch (err) {
       console.error('Failed to load tags', err);
@@ -62,8 +69,7 @@ const TagsSection = ({ entityType, entityId, isLoggedIn }) => {
     if (!trimmed) return;
     setLoading(true);
     try {
-      const fn = entityType === 'album' ? apiService.addTagToAlbum : apiService.addTagToArtist;
-      await fn(entityId, trimmed);
+      await apiService[tagApi.add](entityId, trimmed);
       await fetchTags();
       setInputValue('');
       setSuggestions([]);
@@ -77,8 +83,7 @@ const TagsSection = ({ entityType, entityId, isLoggedIn }) => {
   const handleRemove = async (tagName) => {
     setLoading(true);
     try {
-      const fn = entityType === 'album' ? apiService.removeTagFromAlbum : apiService.removeTagFromArtist;
-      await fn(entityId, tagName);
+      await apiService[tagApi.remove](entityId, tagName);
       await fetchTags();
     } catch (err) {
       console.error('Failed to remove tag', err);

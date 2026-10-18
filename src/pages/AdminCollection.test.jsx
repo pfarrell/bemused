@@ -18,6 +18,7 @@ vi.mock('../services/api', () => ({
     addAlbumToCollection: vi.fn(),
     removeAlbumFromCollection: vi.fn(),
     reorderCollectionAlbums: vi.fn(),
+    getCollectionTags: vi.fn(() => Promise.resolve({ data: [{ id: 3, name: 'kids' }] })),
     getImageUrl: () => 'http://example.com/image.jpg',
   },
 }));
@@ -747,4 +748,10 @@ describe('AdminCollection — unsavedChangesStore registration', () => {
     );
     await waitFor(() => expect(useUnsavedChangesStore.getState().hasUnsavedChanges).toBe(false));
   });
+});
+
+test('shows the collection\'s tags', async () => {
+  renderAdminCollection();
+  expect(await screen.findByText('#kids')).toBeInTheDocument();
+  expect(apiService.getCollectionTags).toHaveBeenCalledWith(7);
 });
