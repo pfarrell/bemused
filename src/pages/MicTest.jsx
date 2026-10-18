@@ -31,6 +31,7 @@ const MicTest = () => {
   const [runCommand, setRunCommand] = useState(false);
   const [wakeLock, setWakeLock] = useState(null);
   const recognitionRef = useRef(null);
+  const endSessionRef = useRef(null);
   const tapTimeRef = useRef(0);
   const activeProfileId = useProfileFilterStore((s) => s.activeProfileId);
 
@@ -77,9 +78,40 @@ const MicTest = () => {
     }
   };
 
+  // iOS's recognizer doesn't always fire 'end' after stop(), so escalate:
+  // stop() → abort() after 1.5s → give up and reset the UI after another 1.5s.
+  const stopListening = () => {
+    const recognition = recognitionRef.current;
+    addLog(`stop tapped (recognizer ${recognition ? 'present' : 'missing'})`);
+    if (!recognition) {
+      setListening(false);
+      return;
+    }
+    try {
+      recognition.stop();
+      addLog('stop() called');
+    } catch (err) {
+      addLog(`stop() threw: ${err.name} ${err.message}`);
+    }
+    setTimeout(() => {
+      if (recognitionRef.current !== recognition) return;
+      addLog('no end event 1.5s after stop() — calling abort()');
+      try {
+        recognition.abort();
+      } catch (err) {
+        addLog(`abort() threw: ${err.name} ${err.message}`);
+      }
+      setTimeout(() => {
+        if (recognitionRef.current !== recognition) return;
+        addLog('no end event 1.5s after abort() — forcing reset');
+        endSessionRef.current?.();
+      }, 1500);
+    }, 1500);
+  };
+
   const startListening = () => {
     if (listening) {
-      recognitionRef.current?.stop();
+      stopListening();
       return;
     }
     tapTimeRef.current = performance.now();
@@ -121,13 +153,21 @@ const MicTest = () => {
       }
     };
     recognition.onerror = (e) => addLog(`error: ${e.error} ${e.message || ''}`);
-    recognition.onend = () => {
-      addLog('event: end');
+    let ended = false;
+    const endSession = () => {
+      if (ended) return;
+      ended = true;
       setListening(false);
       recognitionRef.current = null;
+      endSessionRef.current = null;
       // iOS sometimes ends without marking a result final — fall back to the
       // last interim transcript.
       finish(finalText || latestText, pausedByUs);
+    };
+    endSessionRef.current = endSession;
+    recognition.onend = () => {
+      addLog('event: end');
+      endSession();
     };
 
     try {
