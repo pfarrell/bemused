@@ -4,7 +4,7 @@ import { getArtistSummary, withDeadline } from '../services/wikipedia.js'
 import { streamBase } from '../db/streamUrl.js'
 import { sql } from 'kysely'
 import { countsService } from '../services/countsService.js'
-import { profilesService } from '../services/profilesService.js'
+import { resolveProfileTagIds } from '../services/profileFilter.js'
 import { requireAuth } from '../middleware/auth.js'
 import type { Variables } from '../types.js'
 
@@ -158,16 +158,7 @@ export async function fetchRandomArtists(size: number, tagIds: number[] | null) 
 // or non-numeric profileId means "no match", never an error.
 artists.get('/random', requireAuth, async (c) => {
   const size = Math.min(parseInt(c.req.query('size') ?? '10'), 200)
-  const profileIdParam = c.req.query('profileId')
-
-  let tagIds: number[] | null = null
-  if (profileIdParam) {
-    const profileId = parseInt(profileIdParam)
-    // NaN would be bound as a Postgres integer and throw a raw DB error, so a
-    // non-numeric profileId resolves to "no match" instead. Same for a
-    // numeric id with no profile row — getTagIds() returns [] on its own.
-    tagIds = Number.isNaN(profileId) ? [] : await profilesService.getTagIds(profileId)
-  }
+  const tagIds = await resolveProfileTagIds(c.req.query('profileId'))
 
   return c.json(await fetchRandomArtists(size, tagIds))
 })

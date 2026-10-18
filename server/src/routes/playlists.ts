@@ -7,7 +7,7 @@ import type { Variables } from '../types.js'
 import { countsService } from '../services/countsService.js'
 import { requireAuth } from '../middleware/auth.js'
 import { loadOwned } from '../utils/http.js'
-import { downloadToDisk, ImageStorageError } from '../services/imageStorage.js'
+import { createImageDownloadRoutes } from './imageDownloadRoutes.js'
 import { generatePlaylist } from '../services/playlistGeneratorService.js'
 import { suggestPlaylistName } from '../services/playlistNameSuggesterService.js'
 import { lastActivityByIds } from '../services/listActivityService.js'
@@ -542,41 +542,6 @@ playlists.put('/:id', requireAuth, loadOwned('playlists'), async (c) => {
   return c.json({ success: true })
 })
 
-// POST /playlist/:id/image — download and save a playlist image from a URL
-playlists.post('/:id/image', requireAuth, loadOwned('playlists'), async (c) => {
-  const playlist = c.get('owned')!
-
-  const body = await c.req.json()
-  const { image_url, image_name } = body
-
-  if (!image_url || !image_name) {
-    return c.json({ error: 'image_url and image_name are required' }, 400)
-  }
-
-  try {
-    await downloadToDisk(image_url, image_name, 'albums')
-
-    // Update the playlist record
-    const updated = await db
-      .updateTable('playlists')
-      .set({
-        image_path: image_name,
-        updated_at: new Date(),
-      })
-      .where('id', '=', playlist.id)
-      .returningAll()
-      .executeTakeFirst()
-
-    if (!updated) {
-      return c.json({ error: 'Playlist not found' }, 404)
-    }
-
-    return c.json({ success: true, playlist: updated })
-  } catch (error) {
-    if (error instanceof ImageStorageError) return c.json({ error: error.message }, 400)
-    console.error('Error downloading/saving playlist image:', error)
-    return c.json({ error: 'Failed to save image' }, 500)
-  }
-})
+playlists.route('/', createImageDownloadRoutes('playlist'))
 
 export default playlists

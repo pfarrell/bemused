@@ -3,7 +3,7 @@ import type { Variables } from '../types.js'
 import { getAlbumSummary, withDeadline } from '../services/wikipedia.js'
 import { streamBase } from '../db/streamUrl.js'
 import { albumsService } from '../services/albumsService.js'
-import { profilesService } from '../services/profilesService.js'
+import { resolveProfileTagIds } from '../services/profileFilter.js'
 import { countsService } from '../services/countsService.js'
 import { notesService } from '../services/notesService.js'
 import { getRecallItem, decryptRecallToken, stripBacklink } from '../services/recallService.js'
@@ -35,16 +35,7 @@ export async function fetchRandomAlbums(size: number, tagIds: number[] | null) {
 // non-numeric profileId means "no match", never an error.
 albums.get('/random', requireAuth, async (c) => {
   const size = Math.min(parseInt(c.req.query('size') ?? '10'), 200)
-  const profileIdParam = c.req.query('profileId')
-
-  let tagIds: number[] | null = null
-  if (profileIdParam) {
-    const profileId = parseInt(profileIdParam)
-    // NaN would be bound as a Postgres integer and throw a raw DB error, so a
-    // non-numeric profileId resolves to "no match" instead. Same for a
-    // numeric id with no profile row — getTagIds() returns [] on its own.
-    tagIds = Number.isNaN(profileId) ? [] : await profilesService.getTagIds(profileId)
-  }
+  const tagIds = await resolveProfileTagIds(c.req.query('profileId'))
 
   return c.json(await fetchRandomAlbums(size, tagIds))
 })
@@ -55,14 +46,7 @@ albums.get('/random', requireAuth, async (c) => {
 // non-numeric profileId means "no match", never an error.
 albums.get('/recent', requireAuth, async (c) => {
   const size = Math.min(parseInt(c.req.query('size') ?? '10'), 200)
-  const profileIdParam = c.req.query('profileId')
-
-  let tagIds: number[] | null = null
-  if (profileIdParam) {
-    const profileId = parseInt(profileIdParam)
-    // Same NaN guard as /random above.
-    tagIds = Number.isNaN(profileId) ? [] : await profilesService.getTagIds(profileId)
-  }
+  const tagIds = await resolveProfileTagIds(c.req.query('profileId'))
 
   const rows = await albumsService.recentlyPlayed(size, tagIds)
   const albumIds = rows.rows.map((row: any) => row.id)

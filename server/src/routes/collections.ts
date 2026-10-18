@@ -11,7 +11,7 @@ import { recentCollectionsService } from '../services/recentCollectionsService.j
 import { matchingCollectionIds, resolveProfileTagIds } from '../services/profileFilter.js'
 import { requireAuth } from '../middleware/auth.js'
 import { loadOwned } from '../utils/http.js'
-import { downloadToDisk, ImageStorageError } from '../services/imageStorage.js'
+import { createImageDownloadRoutes } from './imageDownloadRoutes.js'
 import { createNotesRoutes } from './notesRoutes.js'
 
 const collections = new Hono<{ Variables: Variables }>()
@@ -426,35 +426,7 @@ collections.patch('/:id/albums/reorder', requireAuth, loadOwned('collections'), 
   return c.json({ success: true })
 })
 
-// POST /collection/:id/image — download and save a collection image from a URL
-collections.post('/:id/image', requireAuth, loadOwned('collections'), async (c) => {
-  const collection = c.get('owned')!
-
-  const body = await c.req.json()
-  const { image_url, image_name } = body
-
-  if (!image_url || !image_name) {
-    return c.json({ error: 'image_url and image_name are required' }, 400)
-  }
-
-  try {
-    await downloadToDisk(image_url, image_name, 'albums')
-
-    const updated = await db
-      .updateTable('collections')
-      .set({ image_path: image_name, updated_at: new Date() })
-      .where('id', '=', collection.id)
-      .returningAll()
-      .executeTakeFirst()
-
-    if (!updated) return c.json({ error: 'Collection not found' }, 404)
-    return c.json({ success: true, collection: updated })
-  } catch (error) {
-    if (error instanceof ImageStorageError) return c.json({ error: error.message }, 400)
-    console.error('Error downloading/saving collection image:', error)
-    return c.json({ error: 'Failed to save image' }, 500)
-  }
-})
+collections.route('/', createImageDownloadRoutes('collection'))
 
 collections.route('/', createNotesRoutes({
   kind: 'collection',

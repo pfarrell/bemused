@@ -42,32 +42,6 @@ tags.get('/', requireAuth, async (c) => {
   return c.json(rows)
 })
 
-// GET /tags/album/:id — tags on a specific album
-tags.get('/album/:id', async (c) => {
-  const id = parseInt(c.req.param('id'))
-  const rows = await db
-    .selectFrom('albums_tags')
-    .innerJoin('tags', 'tags.id', 'albums_tags.tag_id')
-    .select(['tags.id', 'tags.name'])
-    .where('albums_tags.album_id', '=', id)
-    .orderBy('tags.name', 'asc')
-    .execute()
-  return c.json(rows)
-})
-
-// GET /tags/artist/:id — tags on a specific artist
-tags.get('/artist/:id', async (c) => {
-  const id = parseInt(c.req.param('id'))
-  const rows = await db
-    .selectFrom('artists_tags')
-    .innerJoin('tags', 'tags.id', 'artists_tags.tag_id')
-    .select(['tags.id', 'tags.name'])
-    .where('artists_tags.artist_id', '=', id)
-    .orderBy('tags.name', 'asc')
-    .execute()
-  return c.json(rows)
-})
-
 // GET /tags/:name/content — all albums and artists with this tag (browse page)
 tags.get('/:name/content', requireAuth, async (c) => {
   const tagName = slugifyTag(c.req.param('name'))
@@ -124,115 +98,13 @@ tags.get('/:name/content', requireAuth, async (c) => {
   })
 })
 
-// POST /tags/album/:id — add tag to album
-tags.post('/album/:id', requireAdmin, async (c) => {
-  const albumId = parseInt(c.req.param('id'))
-  const body = await c.req.json()
-  if (!body.name) return c.json({ error: 'name required' }, 400)
-
-  const tagId = await upsertTag(body.name)
-
-  const existing = await db
-    .selectFrom('albums_tags')
-    .select('id')
-    .where('album_id', '=', albumId)
-    .where('tag_id', '=', tagId)
-    .executeTakeFirst()
-
-  if (!existing) {
-    await db.insertInto('albums_tags').values({ album_id: albumId, tag_id: tagId }).execute()
-  }
-
-  const updatedTags = await db
-    .selectFrom('albums_tags')
-    .innerJoin('tags', 'tags.id', 'albums_tags.tag_id')
-    .select(['tags.id', 'tags.name'])
-    .where('albums_tags.album_id', '=', albumId)
-    .orderBy('tags.name', 'asc')
-    .execute()
-
-  return c.json(updatedTags)
-})
-
-// DELETE /tags/album/:id/:tagName — remove tag from album
-tags.delete('/album/:id/:tagName', requireAdmin, async (c) => {
-  const albumId = parseInt(c.req.param('id'))
-  const tagName = slugifyTag(c.req.param('tagName'))
-
-  const tag = await db
-    .selectFrom('tags')
-    .select('id')
-    .where('name', '=', tagName)
-    .executeTakeFirst()
-
-  if (!tag) return c.json({ error: 'Tag not found' }, 404)
-
-  await db
-    .deleteFrom('albums_tags')
-    .where('album_id', '=', albumId)
-    .where('tag_id', '=', tag.id)
-    .execute()
-
-  return c.json({ ok: true })
-})
-
-// POST /tags/artist/:id — add tag to artist
-tags.post('/artist/:id', requireAdmin, async (c) => {
-  const artistId = parseInt(c.req.param('id'))
-  const body = await c.req.json()
-  if (!body.name) return c.json({ error: 'name required' }, 400)
-
-  const tagId = await upsertTag(body.name)
-
-  const existing = await db
-    .selectFrom('artists_tags')
-    .select('id')
-    .where('artist_id', '=', artistId)
-    .where('tag_id', '=', tagId)
-    .executeTakeFirst()
-
-  if (!existing) {
-    await db.insertInto('artists_tags').values({ artist_id: artistId, tag_id: tagId }).execute()
-  }
-
-  const updatedTags = await db
-    .selectFrom('artists_tags')
-    .innerJoin('tags', 'tags.id', 'artists_tags.tag_id')
-    .select(['tags.id', 'tags.name'])
-    .where('artists_tags.artist_id', '=', artistId)
-    .orderBy('tags.name', 'asc')
-    .execute()
-
-  return c.json(updatedTags)
-})
-
-// DELETE /tags/artist/:id/:tagName — remove tag from artist
-tags.delete('/artist/:id/:tagName', requireAdmin, async (c) => {
-  const artistId = parseInt(c.req.param('id'))
-  const tagName = slugifyTag(c.req.param('tagName'))
-
-  const tag = await db
-    .selectFrom('tags')
-    .select('id')
-    .where('name', '=', tagName)
-    .executeTakeFirst()
-
-  if (!tag) return c.json({ error: 'Tag not found' }, 404)
-
-  await db
-    .deleteFrom('artists_tags')
-    .where('artist_id', '=', artistId)
-    .where('tag_id', '=', tag.id)
-    .execute()
-
-  return c.json({ ok: true })
-})
-
-// Playlist and collection tags — same contract as the album/artist routes
-// above (GET is public, writes are admin-only), but one implementation for
-// both since the two join tables share a shape. These tags are what a profile
-// filter matches playlists/collections against (see profileFilter.ts).
+// Per-entity tag routes: GET is public, writes are admin-only. One
+// implementation for every kind, since the join tables share a shape
+// (owner column + tag_id). Playlist/collection tags are what a profile filter
+// matches them against (see profileFilter.ts).
 const OWNER_TAG_TABLES = {
+  album: { table: 'albums_tags', column: 'album_id' },
+  artist: { table: 'artists_tags', column: 'artist_id' },
   playlist: { table: 'playlists_tags', column: 'playlist_id' },
   collection: { table: 'collections_tags', column: 'collection_id' },
 } as const
@@ -248,14 +120,14 @@ for (const [kind, { table, column }] of Object.entries(OWNER_TAG_TABLES)) {
     return rows
   }
 
-  // GET /tags/playlist/:id, /tags/collection/:id
+  // GET /tags/:kind/:id
   tags.get(`/${kind}/:id`, async (c) => {
     const ownerId = parseInt(c.req.param('id'))
     if (Number.isNaN(ownerId)) return c.json({ error: 'Invalid id' }, 400)
     return c.json(await listTags(ownerId))
   })
 
-  // POST /tags/playlist/:id, /tags/collection/:id — add a tag (by name)
+  // POST /tags/:kind/:id — add a tag (by name)
   tags.post(`/${kind}/:id`, requireAdmin, async (c) => {
     const ownerId = parseInt(c.req.param('id'))
     if (Number.isNaN(ownerId)) return c.json({ error: 'Invalid id' }, 400)
@@ -263,15 +135,20 @@ for (const [kind, { table, column }] of Object.entries(OWNER_TAG_TABLES)) {
     if (!body.name) return c.json({ error: 'name required' }, 400)
 
     const tagId = await upsertTag(body.name)
+    // NOT EXISTS rather than ON CONFLICT: albums_tags/artists_tags have no
+    // unique (owner, tag) constraint to conflict on.
     await sql`
-      INSERT INTO ${sql.table(table)} (${sql.ref(column)}, tag_id) VALUES (${ownerId}, ${tagId})
-      ON CONFLICT (${sql.ref(column)}, tag_id) DO NOTHING
+      INSERT INTO ${sql.table(table)} (${sql.ref(column)}, tag_id)
+      SELECT ${ownerId}, ${tagId}
+      WHERE NOT EXISTS (
+        SELECT 1 FROM ${sql.table(table)} WHERE ${sql.ref(column)} = ${ownerId} AND tag_id = ${tagId}
+      )
     `.execute(db)
 
     return c.json(await listTags(ownerId))
   })
 
-  // DELETE /tags/playlist/:id/:tagName, /tags/collection/:id/:tagName
+  // DELETE /tags/:kind/:id/:tagName
   tags.delete(`/${kind}/:id/:tagName`, requireAdmin, async (c) => {
     const ownerId = parseInt(c.req.param('id'))
     if (Number.isNaN(ownerId)) return c.json({ error: 'Invalid id' }, 400)

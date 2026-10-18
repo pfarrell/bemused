@@ -9,6 +9,7 @@ import WikipediaSlugInput from '../components/admin/WikipediaSlugInput';
 import EntitySearchPicker from '../components/admin/EntitySearchPicker';
 import ReorderableList from '../components/admin/ReorderableList';
 import TagsSection from '../components/TagsSection';
+import ImageDownloadForm from '../components/admin/ImageDownloadForm';
 import { handleSmallImageError } from '../utils/imageFallback';
 import { formatCount } from '../utils/formatters';
 
@@ -77,11 +78,6 @@ export default function AdminCollection() {
   const [stubTitle, setStubTitle] = useState('');
   const [stubArtistName, setStubArtistName] = useState('');
   const [resolvingStubId, setResolvingStubId] = useState(null);
-
-  // Image download
-  const [imageUrl, setImageUrl] = useState('');
-  const [imageName, setImageName] = useState('');
-  const [downloadingImage, setDownloadingImage] = useState(false);
 
   useEffect(() => {
     loadCollection();
@@ -280,26 +276,6 @@ export default function AdminCollection() {
     }
   };
 
-  const handleDownloadImage = async (e) => {
-    e.preventDefault();
-    if (!imageUrl || !imageName) {
-      alert('Both Image URL and Image Name are required');
-      return;
-    }
-    setDownloadingImage(true);
-    try {
-      await apiService.downloadCollectionImage(id, imageUrl, imageName);
-      setCollectionData(prev => ({ ...prev, image_path: imageName }));
-      setImageUrl('');
-      setImageName('');
-      await loadCollection();
-    } catch (error) {
-      console.error('Error downloading image:', error);
-      alert(error.response?.data?.error || 'Failed to download image');
-    } finally {
-      setDownloadingImage(false);
-    }
-  };
 
   const canEdit = isAdmin || (user && collectionData?.user_id === user.id);
 
@@ -383,73 +359,21 @@ export default function AdminCollection() {
           </small>
         </div>
 
-        {/* Current image */}
-        {collectionData?.image_path && (
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-              Current Image
-            </label>
-            <img
-              src={apiService.getImageUrl(collectionData.image_path, 'album_small')}
-              alt="Collection cover"
-              style={{ maxWidth: '200px', borderRadius: '4px', border: '1px solid var(--color-border-strong)' }}
-            />
-          </div>
-        )}
-
         {/* Tags — what a profile filter matches this collection against */}
         <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'var(--color-bg-surface)', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
           <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: '0.5rem', marginTop: 0 }}>Tags</h3>
           <TagsSection entityType="collection" entityId={parseInt(id)} isLoggedIn={true} />
         </div>
 
-        {/* Image download */}
-        <div style={{
-          padding: '1rem', backgroundColor: 'var(--color-bg-surface)',
-          borderRadius: '4px', border: '1px solid var(--color-border)'
-        }}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-            Download Image from URL
-          </h3>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Image URL</label>
-            <input
-              type="text"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              style={{
-                width: '100%', padding: '0.5rem', fontSize: '1rem',
-                border: '1px solid var(--color-border-strong)', borderRadius: '4px',
-              }}
-            />
-          </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Save as Filename</label>
-            <input
-              type="text"
-              value={imageName}
-              onChange={(e) => setImageName(e.target.value)}
-              placeholder="collection_cover.jpg"
-              style={{
-                width: '100%', padding: '0.5rem', fontSize: '1rem',
-                border: '1px solid var(--color-border-strong)', borderRadius: '4px',
-              }}
-            />
-          </div>
-          <button
-            onClick={handleDownloadImage}
-            disabled={downloadingImage || !imageUrl || !imageName}
-            style={{
-              padding: '0.5rem 1rem', backgroundColor: '#10b981', color: 'white',
-              border: 'none', borderRadius: '4px', fontSize: '0.875rem',
-              cursor: (downloadingImage || !imageUrl || !imageName) ? 'not-allowed' : 'pointer',
-              opacity: (downloadingImage || !imageUrl || !imageName) ? 0.6 : 1,
-            }}
-          >
-            {downloadingImage ? 'Downloading...' : 'Download & Save Image'}
-          </button>
-        </div>
+        <ImageDownloadForm
+          imagePath={collectionData?.image_path}
+          alt="Collection cover"
+          placeholderName="collection_cover.jpg"
+          onDownload={async (url, filename) => {
+            await apiService.downloadCollectionImage(id, url, filename);
+            await loadCollection();
+          }}
+        />
       </div>
 
       {/* Add Album */}

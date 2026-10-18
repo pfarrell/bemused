@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { Hono } from 'hono'
 import tags from './tags.js'
 import { db } from '../db/database.js'
-import { createPlaylist, createCollection, cleanupFixtures } from '../test/fixtures.js'
+import { createPlaylist, createCollection, createArtist, createAlbum, cleanupFixtures } from '../test/fixtures.js'
 
 after(cleanupFixtures)
 
@@ -18,8 +18,14 @@ const admin = appWithUser({ id: 1, admin: true })
 const post = (app: Hono, path: string, name: string) =>
   app.request(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) })
 
-for (const kind of ['playlist', 'collection'] as const) {
-  const create = kind === 'playlist' ? createPlaylist : createCollection
+const CREATORS = {
+  playlist: createPlaylist,
+  collection: createCollection,
+  artist: createArtist,
+  album: async (label: string) => createAlbum(label, (await createArtist(`${label}-artist`)).id),
+}
+
+for (const [kind, create] of Object.entries(CREATORS)) {
 
   test(`POST/GET/DELETE /tags/${kind}/:id round-trips a tag`, async () => {
     const entity = await create(`tags-route-${kind}`)
@@ -48,3 +54,7 @@ for (const kind of ['playlist', 'collection'] as const) {
     assert.equal(res.status, 403)
   })
 }
+
+test('GET /tags/:kind/:id rejects a non-numeric id instead of erroring in the DB', async () => {
+  assert.equal((await admin.request('/tags/album/abc')).status, 400)
+})
