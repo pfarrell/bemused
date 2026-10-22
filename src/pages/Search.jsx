@@ -9,6 +9,8 @@ import Track from '../components/Track';
 import SearchResultCard from '../components/SearchResultCard';
 import SearchTypeFilterPills from '../components/SearchTypeFilterPills';
 import CardGrid from '../components/CardGrid';
+import SpotifyResults from '../components/SpotifyResults';
+import { filterSpotifyDuplicates } from '../utils/spotifyDedupe';
 
 const EMPTY_COUNTS = { album: 0, artist: 0, playlist: 0, collection: 0 };
 const PAGE_SIZE = 30;
@@ -42,6 +44,31 @@ const Search = () => {
   // loadMore response is dropped instead of being merged into the new
   // query's results.
   const searchGenerationRef = useRef(0);
+  // Spotify results for the current query: { loading, data } where data is
+  // the /search/spotify body, or null when unconfigured/failed/not yet back.
+  const [spotify, setSpotify] = useState({ loading: false, data: null });
+
+  // Fired alongside (not after) the local search and never awaited, so local
+  // results render as soon as they arrive. First page only — loadMore never
+  // calls this. Any failure (unconfigured, 400/429/502, network) just hides
+  // the section: Spotify is a nice-to-have, never worth an error message.
+  const fetchSpotify = async (searchQuery, generation) => {
+    setSpotify({ loading: true, data: null });
+    try {
+      const response = await apiService.searchSpotify(searchQuery);
+      if (generation !== searchGenerationRef.current) return; // superseded by a new search
+      const data = response?.data;
+      setSpotify({ loading: false, data: data?.configured ? data : null });
+    } catch (err) {
+      if (generation !== searchGenerationRef.current) return;
+      if (err?.response?.status === 429) {
+        console.warn('Spotify search rate limited; retry after', err.response.data?.retryAfter ?? 'unknown', 's');
+      } else {
+        console.error('Spotify search error:', err);
+      }
+      setSpotify({ loading: false, data: null });
+    }
+  };
 
   const performSearch = async (searchQuery) => {
 
@@ -51,6 +78,7 @@ const Search = () => {
     setLoading(true);
     setError(null);
     setLoadMoreError(null);
+    fetchSpotify(searchQuery, searchGenerationRef.current);
 
     try {
       const response = await apiService.search(searchQuery, undefined, activeProfileId);
@@ -236,6 +264,13 @@ const Search = () => {
         <div style={{ textAlign: 'center', padding: '3rem' }}>
           <p style={{ color: 'var(--color-text-muted)' }}>No results found for "{query}"</p>
         </div>
+      )}
+
+      {/* External Spotify results, minus anything already in the library */}
+      {spotify.loading ? (
+        <SpotifyResults loading />
+      ) : spotify.data && (
+        <SpotifyResults {...filterSpotifyDuplicates(spotify.data, results)} />
       )}
     </div>
   );
