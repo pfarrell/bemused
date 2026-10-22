@@ -127,6 +127,7 @@ Images are served externally: `https://patf.net/images/` in production, `/images
 - `artists` (`/artists`, `/artist`) — list, random (tag-filterable), detail; singular alias used by frontend
 - `albums` (`/albums`, `/album`) — list, random (tag-filterable), detail; singular alias
 - `search` (`/search`) — full-text search across artists, albums, tracks, playlists
+  - `GET /search/spotify?q=` — Spotify catalog search (Client Credentials, `services/spotify.ts`); returns `{ configured, tracks, albums, artists }`, `configured: false` with empty lists when `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET` are unset; 429 passthrough with `retryAfter`, 502 on other upstream errors
 - `streams` (`/stream`) — audio file streaming
 - `logs` (`/log`) — playback event logging; admin log viewer
 - `playlists` (`/playlist`, `/playlists`, `/top`, `/newborns`, `/surprise`) — playlist CRUD and auto-generated views
