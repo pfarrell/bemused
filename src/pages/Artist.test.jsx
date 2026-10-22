@@ -5,6 +5,7 @@ import Artist from './Artist';
 import { useAuthStore } from '../stores/authStore';
 import { useFavoritesStore } from '../stores/favoritesStore';
 import { usePlayerStore } from '../stores/playerStore';
+import { useAlbumSortStore } from '../stores/albumSortStore';
 import { apiService } from '../services/api';
 
 vi.mock('../components/TagsSection', () => ({ default: () => null }));
@@ -372,5 +373,57 @@ describe('Artist page — Shuffle All', () => {
     renderArtist();
     await screen.findByText('Test Artist');
     expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
+  });
+});
+
+describe('Artist page — album sort', () => {
+  const sortData = {
+    ...artistData,
+    albums: [
+      album(1, 'Zuma', '1975'),
+      album(2, 'Harvest', '1972'),
+      album(3, 'Archives', null),
+    ],
+  };
+  const titles = () =>
+    ['Zuma', 'Harvest', 'Archives']
+      .map((t) => screen.getByText(t))
+      .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))
+      .map((el) => el.textContent);
+
+  beforeEach(() => {
+    useAlbumSortStore.setState({ sortBy: 'newest' });
+  });
+
+  test('defaults to newest first with undated albums last', async () => {
+    apiService.getArtist.mockResolvedValue({ data: sortData });
+    renderArtist();
+    await screen.findByText('Zuma');
+    expect(titles()).toEqual(['Zuma', 'Harvest', 'Archives']);
+  });
+
+  test('switching to Oldest reorders dated albums oldest first', async () => {
+    apiService.getArtist.mockResolvedValue({ data: sortData });
+    renderArtist();
+    await screen.findByText('Zuma');
+    fireEvent.click(screen.getByLabelText('Sort oldest first'));
+    expect(titles()).toEqual(['Harvest', 'Zuma', 'Archives']);
+    expect(document.querySelectorAll('.album-year-divider')).toHaveLength(1);
+  });
+
+  test('switching to A–Z sorts by title and drops the year divider', async () => {
+    apiService.getArtist.mockResolvedValue({ data: sortData });
+    renderArtist();
+    await screen.findByText('Zuma');
+    fireEvent.click(screen.getByLabelText('Sort alphabetically'));
+    expect(titles()).toEqual(['Archives', 'Harvest', 'Zuma']);
+    expect(document.querySelectorAll('.album-year-divider')).toHaveLength(0);
+  });
+
+  test('hides the sort control when there is only one album', async () => {
+    apiService.getArtist.mockResolvedValue({ data: { ...artistData, albums: [album(1, 'Only Album', '2000')] } });
+    renderArtist();
+    await screen.findByText('Only Album');
+    expect(screen.queryByLabelText('Sort alphabetically')).not.toBeInTheDocument();
   });
 });

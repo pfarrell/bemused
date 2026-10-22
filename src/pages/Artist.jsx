@@ -17,6 +17,9 @@ import ExternalLinks from '../components/ExternalLinks';
 import PlayActionsMenu from '../components/PlayActionsMenu';
 import ContextMenu from '../components/ContextMenu';
 import CardGrid from '../components/CardGrid';
+import AlbumSortToggle from '../components/AlbumSortToggle';
+import { useAlbumSortStore } from '../stores/albumSortStore';
+import { sortAlbums } from '../utils/albumSort';
 import { useContextMenu } from '../hooks/useContextMenu';
 import { useOvertoneAction } from '../hooks/useOvertoneAction';
 import { useFetch } from '../hooks/useFetch';
@@ -40,6 +43,7 @@ const Artist = () => {
   );
   const [showAllSimilar, setShowAllSimilar] = useState(false);
   const isMobile = useIsMobile();
+  const albumSort = useAlbumSortStore((s) => s.sortBy);
   const [showArtistModal, setShowArtistModal] = useState(false);
   const { overflowAction: overtoneAction, modal: overtoneModal } = useOvertoneAction(artistData?.artist?.musicbrainz_id);
   const { actions: headerActions, shouldIgnore } = useEntityHeaderActions({
@@ -67,6 +71,11 @@ const Artist = () => {
   }
 
   const { artist, summary, albums, singles, appears_on, performances, related_artists, members, group_albums, similar_artists } = artistData;
+
+  const sortedAlbums = sortAlbums(albums, albumSort);
+  // The dated/undated divider only makes sense when dated albums come first.
+  const showYearDivider = albumSort !== 'alpha';
+  const showAlbumSort = sortedAlbums.length > 1 || group_albums?.some((g) => g.albums?.length > 1);
 
   const handlePlaySingles = () => {
     if (singles?.length) {
@@ -216,13 +225,19 @@ const Artist = () => {
         testId="artist-header-menu-backdrop"
       />
 
+      {showAlbumSort && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+          <AlbumSortToggle />
+        </div>
+      )}
+
       {/* Albums Grid */}
-      {albums && albums.length > 0 && (
+      {sortedAlbums.length > 0 && (
         <div className="artist-grid" style={{ minHeight: 'auto' }}>
           <CardGrid>
-            {albums.map((album, i) => {
+            {sortedAlbums.map((album, i) => {
               const imageUrl = apiService.getImageUrl(album.image_path, 'album_small')
-              const showDivider = i > 0 && !!getAlbumYear(albums[i - 1].release_year) && !getAlbumYear(album.release_year)
+              const showDivider = showYearDivider && i > 0 && !!getAlbumYear(sortedAlbums[i - 1].release_year) && !getAlbumYear(album.release_year)
               return (
                 <Fragment key={album.id}>
                   {showDivider && <div className="album-year-divider" />}
@@ -250,7 +265,7 @@ const Artist = () => {
             With {group.name}
           </h2>
           <CardGrid>
-            {groupAlbums.map((album) => {
+            {sortAlbums(groupAlbums, albumSort).map((album) => {
               const imageUrl = apiService.getImageUrl(album.image_path, 'album_small')
               return (
                 <AlbumCard
