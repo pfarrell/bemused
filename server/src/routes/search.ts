@@ -4,6 +4,7 @@ import { searchService, RESULT_LIMIT } from '../services/searchService.js'
 import { logService } from '../services/logService.js'
 import { extractIpAddress } from '../utils/requestIp.js'
 import { resolveProfileTagIds } from '../services/profileFilter.js'
+import { isSpotifyConfigured, searchSpotify, SpotifyRateLimitError } from '../services/spotify.js'
 
 const search = new Hono()
 
@@ -167,5 +168,27 @@ export async function handleSearchRequest(c: Context) {
 }
 
 search.get('/', handleSearchRequest)
+
+// GET /search/spotify?q= — Spotify catalog matches for the "Spotify" section
+// below local results. Uses the raw query (quotes stripped), not the
+// stop-word-filtered one, since Spotify does its own matching. Unconfigured
+// is a normal 200 with empty lists so the frontend can just hide the section.
+search.get('/spotify', async (c) => {
+  const { query } = parseQuoted(c.req.query('q') ?? '')
+  if (!query) return c.json({ error: 'Missing q' }, 400)
+  if (!isSpotifyConfigured()) return c.json({ configured: false, tracks: [], albums: [], artists: [] })
+
+  try {
+    const { tracks, albums, artists } = await searchSpotify(query)
+    return c.json({ configured: true, tracks, albums, artists })
+  } catch (err) {
+    if (err instanceof SpotifyRateLimitError) {
+      if (err.retryAfter !== null) c.header('Retry-After', String(err.retryAfter))
+      return c.json({ error: 'Spotify rate limit exceeded', retryAfter: err.retryAfter }, 429)
+    }
+    console.error('Spotify search failed:', err)
+    return c.json({ error: 'Spotify search failed' }, 502)
+  }
+})
 
 export default search
