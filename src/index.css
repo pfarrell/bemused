@@ -538,6 +538,133 @@
   display: none;
 }
 
+/* "From Spotify" section (src/components/SpotifyResults.jsx) — external,
+   link-out-only results below the local ones. Cards/rows reuse
+   .artist-card / .result-row; everything here is the Spotify-specific
+   extras. */
+.spotify-section {
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+}
+
+.spotify-group {
+  margin-bottom: 1.25rem;
+}
+
+.spotify-group-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin: 0 0 0.5rem 0;
+  padding: 0 1rem;
+}
+
+.spotify-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  padding: 0 1rem;
+  margin: 0;
+}
+
+.spotify-loading-spinner {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-text-muted);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.search-result-type-badge.spotify-badge {
+  background: rgba(30, 215, 96, 0.9);
+  color: #0b2e17;
+}
+
+.spotify-card-subtitle {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: 0.25rem 0 0 0;
+}
+
+/* Small pill: both the "this is external" marker and the actual link. */
+.spotify-open-link {
+  display: inline-block;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  margin-top: 0.4rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid #1db954;
+  border-radius: 999px;
+  color: #1a9e48;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.spotify-open-link:hover {
+  background: #1db954;
+  color: white;
+}
+
+.result-row .spotify-open-link {
+  margin-top: 0;
+}
+
+.result-row.spotify-result {
+  cursor: default;
+}
+
+.artist-card.spotify-result {
+  cursor: default;
+}
+
+.spotify-image-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1.5rem;
+  color: var(--color-text-faint);
+  background-color: var(--color-bg-surface-muted, var(--color-border));
+}
+
+.spotify-track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .spotify-track-list {
+    gap: 0.4rem;
+    padding: 0 0.5rem;
+  }
+
+  .spotify-group-title {
+    padding: 0 0.5rem;
+  }
+
+  /* The mobile block further down gives every .artist-grid-container a
+     3rem !important bottom margin (sized for a page's single trailing
+     grid); stacked Spotify groups would get that gap between each one. */
+  .spotify-group .artist-grid-container {
+    margin-bottom: 0 !important;
+  }
+}
+
 /* =================================
    TRACK LIST STYLES
    ================================= */

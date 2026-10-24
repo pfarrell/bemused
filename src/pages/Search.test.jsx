@@ -7,6 +7,7 @@ import { useProfileFilterStore } from '../stores/profileFilterStore';
 vi.mock('../services/api', () => ({
   apiService: {
     search: vi.fn(),
+    searchSpotify: vi.fn(),
     getImageUrl: () => '/img/sm/x.jpg',
   },
 }));
@@ -33,6 +34,10 @@ beforeEach(() => {
   // from earlier tests in the file and fail spuriously when run together,
   // even though each test still sets its own fresh mockResolvedValue(Once).
   apiService.search.mockClear();
+  // Default: Spotify unconfigured, so tests that predate the Spotify section
+  // see exactly the page they always did. Spotify tests override this.
+  apiService.searchSpotify.mockReset();
+  apiService.searchSpotify.mockResolvedValue({ data: { configured: false, tracks: [], albums: [], artists: [] } });
   useProfileFilterStore.setState({ activeProfileId: null });
 });
 
@@ -494,4 +499,255 @@ test('a failed loadMore keeps existing results in place and shows an inline erro
   expect(screen.getByText('Kept Page One Artist')).toBeInTheDocument();
   expect(screen.getByText('Results (2)')).toBeInTheDocument();
   expect(screen.getByText('Artists 2')).toBeInTheDocument();
+});
+
+// ---------------------------------------------------------------------------
+// "From Spotify" section
+// ---------------------------------------------------------------------------
+
+const LOCAL_WITH_TRACK = {
+  data: {
+    results: [{ type: 'artist', data: { id: 1, name: 'Local Artist', image_path: 'a.jpg' } }],
+    hasMore: false,
+    resultCounts: { album: 0, artist: 1, playlist: 0, collection: 0 },
+    tracks: [{ id: 9, title: 'Dreams', duration: 180, artist: { id: 1, name: 'Fleetwood Mac' } }],
+    count: 2,
+  },
+};
+
+const spotifyResponse = (overrides = {}) => ({
+  data: {
+    configured: true,
+    artists: [{ uri: 'spotify:artist:r1', id: 'r1', name: 'Spotify Artist', imageUrl: 'https://i.scdn.co/r1.jpg', externalUrl: 'https://open.spotify.com/artist/r1' }],
+    albums: [{ uri: 'spotify:album:a1', id: 'a1', name: 'Spotify Album', artists: [{ id: 'x', name: 'Album Artist' }, { id: 'y', name: 'Guest' }], releaseYear: 1999, totalTracks: 10, imageUrl: 'https://i.scdn.co/a1.jpg', externalUrl: 'https://open.spotify.com/album/a1' }],
+    tracks: [{ uri: 'spotify:track:t1', id: 't1', name: 'Spotify Track', artists: [{ id: 'x', name: 'Track Artist' }], album: { id: 'a1', name: 'Spotify Album', imageUrl: null }, durationMs: 185000, explicit: false, externalUrl: 'https://open.spotify.com/track/t1' }],
+    ...overrides,
+  },
+});
+
+const httpError = (status, data = {}) => Object.assign(new Error(`HTTP ${status}`), { response: { status, data } });
+
+test('renders a From Spotify section below the local results when configured', async () => {
+  apiService.search.mockResolvedValue(LOCAL_WITH_TRACK);
+  apiService.searchSpotify.mockResolvedValue(spotifyResponse());
+
+  renderSearch('spot');
+
+  const heading = await screen.findByText('From Spotify');
+  expect(apiService.searchSpotify).toHaveBeenCalledWith('spot');
+  expect(screen.getByText('Spotify Artist')).toBeInTheDocument();
+  expect(screen.getByText('Spotify Album')).toBeInTheDocument();
+  expect(screen.getByText('Album Artist, Guest · 1999')).toBeInTheDocument();
+  expect(screen.getByText('Spotify Track')).toBeInTheDocument();
+  expect(screen.getByText('Track Artist · Spotify Album · 3:05')).toBeInTheDocument();
+
+  // Below every local section, including the local Tracks list.
+  const localTracksHeading = screen.getByText('Tracks (1)');
+  expect(localTracksHeading.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+  const link = screen.getByRole('link', { name: 'Open Spotify Track in Spotify' });
+  expect(link).toHaveAttribute('href', 'https://open.spotify.com/track/t1');
+  expect(link).toHaveAttribute('target', '_blank');
+  expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+});
+
+test('renders local results while Spotify is still pending, with a loading indicator', async () => {
+  apiService.search.mockResolvedValue(LOCAL_WITH_TRACK);
+  let resolveSpotify;
+  apiService.searchSpotify.mockReturnValue(new Promise((resolve) => { resolveSpotify = resolve; }));
+
+  renderSearch('slow');
+
+  expect(await screen.findByText('Local Artist')).toBeInTheDocument();
+  expect(screen.getByTestId('spotify-loading')).toBeInTheDocument();
+  expect(screen.queryByText('From Spotify')).toBeNull();
+
+  await act(async () => { resolveSpotify(spotifyResponse()); });
+
+  expect(await screen.findByText('From Spotify')).toBeInTheDocument();
+  expect(screen.queryByTestId('spotify-loading')).toBeNull();
+});
+
+test('renders no Spotify section when Spotify is not configured', async () => {
+  apiService.search.mockResolvedValue(LOCAL_WITH_TRACK);
+  apiService.searchSpotify.mockResolvedValue(spotifyResponse({ configured: false }));
+
+  renderSearch('unconfigured');
+
+  await screen.findByText('Local Artist');
+  await waitFor(() => expect(screen.queryByTestId('spotify-loading')).toBeNull());
+  expect(screen.queryByText('From Spotify')).toBeNull();
+  expect(screen.queryByText('Spotify Artist')).toBeNull();
+});
+
+test.each([
+  ['502', () => httpError(502, { error: 'Spotify search failed' })],
+  ['429', () => httpError(429, { error: 'Spotify rate limit exceeded', retryAfter: 30 })],
+  ['network', () => new Error('Network Error')],
+])('renders local results and no Spotify section when Spotify fails (%s)', async (_label, makeError) => {
+  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  apiService.search.mockResolvedValue(LOCAL_WITH_TRACK);
+  apiService.searchSpotify.mockRejectedValue(makeError());
+
+  renderSearch('failing');
+
+  expect(await screen.findByText('Local Artist')).toBeInTheDocument();
+  await waitFor(() => expect(screen.queryByTestId('spotify-loading')).toBeNull());
+  expect(screen.queryByText('From Spotify')).toBeNull();
+  expect(screen.getByText(/Dreams/)).toBeInTheDocument();
+  expect(errorSpy.mock.calls.length + warnSpy.mock.calls.length).toBeGreaterThan(0);
+  errorSpy.mockRestore();
+  warnSpy.mockRestore();
+});
+
+test('still renders local results when Spotify rejects before the local search resolves', async () => {
+  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  let resolveLocal;
+  apiService.search.mockReturnValue(new Promise((resolve) => { resolveLocal = resolve; }));
+  apiService.searchSpotify.mockRejectedValue(httpError(502));
+
+  renderSearch('order');
+  await waitFor(() => expect(errorSpy).toHaveBeenCalled());
+
+  await act(async () => { resolveLocal(LOCAL_WITH_TRACK); });
+
+  expect(await screen.findByText('Local Artist')).toBeInTheDocument();
+  expect(screen.queryByText('From Spotify')).toBeNull();
+  errorSpy.mockRestore();
+});
+
+test('hides a Spotify track that matches a local track by normalized title and first artist', async () => {
+  apiService.search.mockResolvedValue(LOCAL_WITH_TRACK);
+  apiService.searchSpotify.mockResolvedValue(spotifyResponse({
+    artists: [],
+    albums: [],
+    tracks: [
+      { id: 'dup', name: 'DREAMS!', artists: [{ id: 'f', name: 'fleetwood mac' }], album: { name: 'Rumours', imageUrl: null }, durationMs: 1000, externalUrl: 'https://open.spotify.com/track/dup' },
+      { id: 'keep', name: 'Dreams', artists: [{ id: 'c', name: 'The Cranberries' }], album: { name: 'Everybody Else', imageUrl: null }, durationMs: 1000, externalUrl: 'https://open.spotify.com/track/keep' },
+    ],
+  }));
+
+  renderSearch('dreams');
+
+  await screen.findByText('From Spotify');
+  expect(screen.getByRole('link', { name: 'Open Dreams in Spotify' })).toHaveAttribute('href', 'https://open.spotify.com/track/keep');
+  expect(screen.queryByRole('link', { name: 'Open DREAMS! in Spotify' })).toBeNull();
+});
+
+test('omits the whole section when every Spotify result is a local duplicate', async () => {
+  apiService.search.mockResolvedValue(LOCAL_WITH_TRACK);
+  apiService.searchSpotify.mockResolvedValue(spotifyResponse({
+    artists: [{ id: 'r', name: 'Local Artist', imageUrl: null, externalUrl: 'https://open.spotify.com/artist/r' }],
+    albums: [],
+    tracks: [],
+  }));
+
+  renderSearch('alldupes');
+
+  await screen.findByText('Local Artist');
+  await waitFor(() => expect(screen.queryByTestId('spotify-loading')).toBeNull());
+  expect(screen.queryByText('From Spotify')).toBeNull();
+});
+
+test('tolerates null imageUrl, empty/missing artists arrays, and missing fields', async () => {
+  apiService.search.mockResolvedValue({ data: { results: [], tracks: [], count: 0 } });
+  apiService.searchSpotify.mockResolvedValue({
+    data: {
+      configured: true,
+      artists: [{ id: 'r', name: 'Imageless Artist', imageUrl: null, externalUrl: null }],
+      albums: [{ id: 'a', name: 'Artistless Album', artists: [], imageUrl: null, releaseYear: null }],
+      tracks: [
+        { id: 't', name: 'Bare Track', artists: [], album: null, durationMs: null },
+        { id: 'u', name: 'No Artists Key' },
+      ],
+    },
+  });
+
+  renderSearch('sparse');
+
+  expect(await screen.findByText('From Spotify')).toBeInTheDocument();
+  expect(screen.getByText('Imageless Artist')).toBeInTheDocument();
+  expect(screen.getByText('Artistless Album')).toBeInTheDocument();
+  expect(screen.getByText('Bare Track')).toBeInTheDocument();
+  expect(screen.getByText('No Artists Key')).toBeInTheDocument();
+  // No externalUrl → no link rendered rather than a dead href.
+  expect(screen.queryByRole('link', { name: 'Open Imageless Artist in Spotify' })).toBeNull();
+  // Local "no results" message still shows alongside the Spotify section.
+  expect(screen.getByText('No results found for "sparse"')).toBeInTheDocument();
+});
+
+test('does not refetch Spotify when loading more local results', async () => {
+  apiService.search.mockResolvedValueOnce({
+    data: {
+      results: [{ type: 'artist', data: { id: 1, name: 'Page One Artist', image_path: 'a.jpg' } }],
+      hasMore: true,
+      resultCounts: { album: 0, artist: 2, playlist: 0, collection: 0 },
+      tracks: [],
+      count: 1,
+      pageSize: 30,
+    },
+  });
+  apiService.searchSpotify.mockResolvedValue(spotifyResponse());
+
+  renderSearch('paged');
+  await screen.findByText('Page One Artist');
+  await screen.findByText('From Spotify');
+
+  apiService.search.mockResolvedValueOnce({
+    data: {
+      results: [{ type: 'artist', data: { id: 2, name: 'Page Two Artist', image_path: 'a.jpg' } }],
+      hasMore: false,
+      resultCounts: { album: 0, artist: 2, playlist: 0, collection: 0 },
+      tracks: [],
+      count: 1,
+    },
+  });
+
+  await waitFor(() => expect(intersectionCallback).not.toBeNull());
+  triggerIntersection();
+
+  await screen.findByText('Page Two Artist');
+  expect(apiService.search).toHaveBeenCalledTimes(2);
+  expect(apiService.searchSpotify).toHaveBeenCalledTimes(1);
+  expect(screen.getByText('From Spotify')).toBeInTheDocument();
+});
+
+test('ignores a stale Spotify response from a previous query', async () => {
+  let resolveFirstSpotify;
+  apiService.search.mockResolvedValue(LOCAL_WITH_TRACK);
+  apiService.searchSpotify
+    .mockReturnValueOnce(new Promise((resolve) => { resolveFirstSpotify = resolve; }))
+    .mockResolvedValueOnce(spotifyResponse({
+      artists: [],
+      albums: [],
+      tracks: [{ id: 'n', name: 'New Query Track', artists: [{ name: 'X' }], album: { name: 'Y', imageUrl: null }, durationMs: 60000, externalUrl: 'https://open.spotify.com/track/n' }],
+    }));
+
+  const SearchWithNavHelper = () => {
+    const navigate = useNavigate();
+    return (
+      <>
+        <button onClick={() => navigate('/search?q=second')}>go to second search</button>
+        <Search />
+      </>
+    );
+  };
+
+  render(
+    <MemoryRouter initialEntries={['/search?q=first']}>
+      <Routes>
+        <Route path="/search" element={<SearchWithNavHelper />} />
+      </Routes>
+    </MemoryRouter>
+  );
+
+  await screen.findByText('Local Artist');
+  fireEvent.click(screen.getByText('go to second search'));
+  expect(await screen.findByText('New Query Track')).toBeInTheDocument();
+
+  await act(async () => { resolveFirstSpotify(spotifyResponse()); });
+
+  expect(screen.getByText('New Query Track')).toBeInTheDocument();
+  expect(screen.queryByText('Spotify Artist')).toBeNull();
 });

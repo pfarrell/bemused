@@ -78,7 +78,7 @@ Images are served externally: `https://patf.net/images/` in production, `/images
 - `Home` — random artists or albums grid (controlled by `homeModeStore`), tag-filtered via `tagFilterStore`
 - `Artist` (`/artist/:id`) — fetches `getArtist(id)` → `{ artist, summary, albums }`; clicking artist name reloads
 - `Album` (`/album/:id`) — fetches `getAlbum(id)` → `{ artist, album, tracks, summary }`; clicking album title reloads
-- `Search` (`/search?q=...`) — fetches `search(query)` → `{ artists, albums, tracks, playlists }`
+- `Search` (`/search?q=...`) — fetches `search(query)` → `{ artists, albums, tracks, playlists }`; also fires `searchSpotify(query)` in parallel (first page only, never blocking local results) and renders a link-out-only "From Spotify" section (`SpotifyResults`) below them, de-duped against local results via `utils/spotifyDedupe.js` and silently omitted when unconfigured or on any error
 - `Library` — user's personal library view
 - `Playlists` — list all playlists
 - `Playlist` — single playlist with track list
